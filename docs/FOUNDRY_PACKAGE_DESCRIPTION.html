@@ -1,0 +1,79 @@
+<h2>D35E Piecemeal Armor And Called Shots</h2>
+
+<p><strong>D35E Piecemeal Armor And Called Shots</strong> adds optional-rule helpers for D35E worlds. It supports two table-facing workflows: configurable piecemeal armor components and called-shot handling inside D35E's native attack flow.</p>
+
+<p>This module is an adaptation aid for D&amp;D 3.5e tables. It does not claim that piecemeal armor or called shots are official D&amp;D 3.5 RAW. The bundled defaults are compact, editable scaffolding informed by Pathfinder 1e variant-rule references, and the GM remains in control of final adjudication.</p>
+
+<h3>Install</h3>
+
+<p>In Foundry, open <strong>Add-on Modules &gt; Install Module</strong>, paste this into <strong>Manifest URL</strong>, and install:</p>
+
+<pre>https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/latest/download/module.json</pre>
+
+<p>After installation, enable <strong>D35E Piecemeal Armor And Called Shots</strong> in a D35E world and reload when Foundry asks.</p>
+
+<h3>Screenshots</h3>
+
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/native-called-shot-dropdown.png" alt="Native D35E attack dialog with Called Shot dropdown" /></p>
+
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/full-attack-picker.png" alt="Full attack called-shot picker" /></p>
+
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/called-shot-chat-card.png" alt="Called-shot GM outcome chat card" /></p>
+
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/piecemeal-armor-sync.png" alt="Piecemeal armor sync dialog" /></p>
+
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/profile-editor.png" alt="Called-shot profile editor" /></p>
+
+<h3>What It Adds</h3>
+
+<ul>
+  <li>Marks D35E equipment as piecemeal armor components.</li>
+  <li>Previews, syncs, and restores one D35E-native aggregate armor item so D35E keeps doing the actual AC math.</li>
+  <li>Adds a <code>Called Shot</code> dropdown inside D35E's native attack/use dialog.</li>
+  <li>Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as <code>Called Shot: Ear -10</code>.</li>
+  <li>Supports full-attack policies: ask per attack, first attack only, every attack, or disabled.</li>
+  <li>Posts GM-confirmed called-shot outcome chat cards.</li>
+  <li>Includes an in-Foundry profile editor for locations, penalties, coverage slots, and outcome effects.</li>
+</ul>
+
+<h3>Piecemeal Armor Workflow</h3>
+
+<p>Equipment items can be configured as armor components with module-owned flags. When the actor is ready, the GM can preview the combined profile, sync one aggregate D35E armor item, and restore component armor fields later if needed.</p>
+
+<p>The module uses D35E-native item data for the final armor contribution. Components remain visible as component records, while the aggregate item is the one intended to contribute armor math.</p>
+
+<h3>Called-Shot Workflow</h3>
+
+<p>Players use the normal D35E attack or item controls. The native attack dialog gains a <strong>Called Shot</strong> selector. Choosing a location applies the configured attack penalty through D35E's existing roll breakdown and posts a GM-facing outcome card after the roll.</p>
+
+<p>Full attacks can ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections, depending on module settings.</p>
+
+<h3>GM-Controlled Outcomes</h3>
+
+<p>The module does not automatically decide whether a called shot hit, crit, or qualifies as a debilitating blow. It also does not automatically kill, sever, suffocate, or permanently maim a creature. The chat card presents configured outcome buttons so the GM can apply normal, critical, or debilitating effects deliberately.</p>
+
+<h3>Configuration</h3>
+
+<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable each workflow, choose full-attack handling, show location armor overlays, and edit called-shot profiles.</p>
+
+<p>Profiles control location labels, attack penalties, enabled state, matching armor coverage slots, and outcome effects. Effect snippets are JSON because they map directly to the module's declarative effect engine.</p>
+
+<h3>Compatibility</h3>
+
+<ul>
+  <li>Foundry VTT: minimum 14, verified 14.362.</li>
+  <li>D35E system: minimum 3.0.2, verified 3.0.2.</li>
+  <li>Module version: 1.0.0.</li>
+</ul>
+
+<h3>Documentation And Support</h3>
+
+<p>For full usage details, see the <a href="https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/blob/main/docs/USER_GUIDE.md">User Guide</a>, <a href="https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/blob/main/docs/D35E_INTEGRATION_NOTE.md">D35E Integration Note</a>, and <a href="https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/blob/main/docs/RAW_COVERAGE_MATRIX.md">RAW Coverage Matrix</a>.</p>
+
+<p>Use <a href="https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/issues">GitHub issues</a> for bugs, compatibility reports, and feature requests. Please include Foundry version, D35E version, module version, browser console errors, and a short reproduction path.</p>
+
+<h3>Boundaries</h3>
+
+<p>The module is additive. It does not edit D35E system files, mutate actors on world load, or enable optional automation without the world enabling the module.</p>
+
+<p>This is independent community tooling for Foundry VTT and D35E. It is not affiliated with Foundry Gaming LLC, the D35E system maintainers, Paizo, Wizards of the Coast, or any tabletop publisher.</p>
