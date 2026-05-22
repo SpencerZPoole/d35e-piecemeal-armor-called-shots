@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to publish, such as v1.0.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release.outputs.tag }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate module
+        run: npm run validate
+
+      - name: Confirm tag matches package version
+        shell: bash
+        run: |
+          package_version="$(node -p "require('./package.json').version")"
+          if [ "v${package_version}" != "${{ steps.release.outputs.tag }}" ]; then
+            echo "Tag ${{ steps.release.outputs.tag }} does not match package version v${package_version}" >&2
+            exit 1
+          fi
+
+      - name: Build release package
+        run: npm run build:release
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          notes_file="docs/release-notes/${{ steps.release.outputs.tag }}.md"
+          if [ ! -f "$notes_file" ]; then
+            echo "Missing release notes file: $notes_file" >&2
+            exit 1
+          fi
+          gh release create "${{ steps.release.outputs.tag }}" \
+            dist/module.json \
+            dist/d35e-piecemeal-armor-called-shots-${{ steps.release.outputs.tag }}.zip \
+            --title "${{ steps.release.outputs.tag }}" \
+            --notes-file "$notes_file" \
+            --verify-tag

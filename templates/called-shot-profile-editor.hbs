@@ -1,0 +1,51 @@
+<div class="d35e-pacs-profile-editor">
+  <header class="d35e-pacs-profile-toolbar">
+    <div class="form-group">
+      <label>Profile</label>
+      <select name="activeProfileId">
+        {{#each profiles}}
+          <option value="{{id}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+        {{/each}}
+      </select>
+    </div>
+    <button type="button" data-action="clone-profile"><i class="fas fa-copy"></i> Clone</button>
+    <button type="button" data-action="reset-defaults"><i class="fas fa-undo"></i> Reset Defaults</button>
+    <button type="submit"><i class="fas fa-save"></i> Save</button>
+  </header>
+
+  <section class="d35e-pacs-profile-summary">
+    <label>Label <input type="text" name="profileLabel" value="{{activeProfileLabel}}"></label>
+    <label>Source <input type="text" name="profileSource" value="{{activeProfileSource}}"></label>
+    <label>Notes <textarea name="profileNotes" rows="2">{{activeProfileNotes}}</textarea></label>
+  </section>
+
+  <section class="d35e-pacs-profile-locations">
+    {{#each locations}}
+      <article class="d35e-pacs-location-editor" data-location-id="{{id}}">
+        <header>
+          <label><input type="checkbox" name="location.{{id}}.enabled" {{#if enabled}}checked{{/if}}> Enabled</label>
+          <strong>{{label}}</strong>
+          <code>{{id}}</code>
+        </header>
+        <div class="d35e-pacs-location-grid">
+          <label>Label <input type="text" name="location.{{id}}.label" value="{{label}}"></label>
+          <label>Penalty <input type="number" name="location.{{id}}.penalty" value="{{penalty}}"></label>
+          <label>Coverage <input type="text" name="location.{{id}}.coverageSlot" value="{{coverageSlot}}"></label>
+          <label>Difficulty <input type="text" name="location.{{id}}.difficulty" value="{{difficulty}}"></label>
+        </div>
+        <div class="d35e-pacs-outcome-grid">
+          <label>Normal effects <textarea name="location.{{id}}.normalJson" rows="5" spellcheck="false">{{normalJson}}</textarea></label>
+          <label>Critical effects <textarea name="location.{{id}}.criticalJson" rows="5" spellcheck="false">{{criticalJson}}</textarea></label>
+          <label>Debilitating effects <textarea name="location.{{id}}.debilitatingJson" rows="5" spellcheck="false">{{debilitatingJson}}</textarea></label>
+        </div>
+      </article>
+    {{/each}}
+  </section>
+
+  <details class="d35e-pacs-advanced-json">
+    <summary>Advanced JSON import/export</summary>
+    <p class="notes">Use this only for full-profile backup, import, or bulk editing.</p>
+    <textarea name="profileJson" rows="12" spellcheck="false">{{profileJson}}</textarea>
+    <button type="button" data-action="import-json"><i class="fas fa-file-import"></i> Import JSON</button>
+  </details>
+</div>

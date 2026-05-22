@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+.foundry/
+.tmp/
+coverage/
+*.zip
+*.log
+*.tmp
+*.bak
+*.db
+*.sqlite
+*.sqlite3

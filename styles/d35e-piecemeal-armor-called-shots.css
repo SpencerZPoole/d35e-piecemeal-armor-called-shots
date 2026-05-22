@@ -1,0 +1,170 @@
+.d35e-pacs-fieldset {
+  border: 1px solid rgba(120, 120, 120, 0.35);
+  margin: 10px 0;
+  padding: 8px;
+}
+
+.d35e-pacs-fieldset legend {
+  font-weight: 700;
+  padding: 0 4px;
+}
+
+.d35e-pacs-grid {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  margin-top: 8px;
+}
+
+.d35e-pacs-grid label {
+  display: grid;
+  gap: 2px;
+}
+
+.d35e-pacs-header-button {
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.d35e-pacs-profile-toolbar,
+.d35e-pacs-location-editor header {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.d35e-pacs-chip {
+  border: 1px solid rgba(120, 120, 120, 0.35);
+  display: inline-block;
+  font-size: 11px;
+  line-height: 1.2;
+  margin-left: 6px;
+  padding: 1px 4px;
+  vertical-align: middle;
+}
+
+.d35e-pacs-chip-piece {
+  background: rgba(40, 105, 150, 0.12);
+}
+
+.d35e-pacs-chip-aggregate {
+  background: rgba(40, 130, 75, 0.12);
+}
+
+.d35e-pacs-chip-synced {
+  background: rgba(150, 105, 30, 0.12);
+}
+
+.d35e-pacs-chip-muted {
+  opacity: 0.72;
+}
+
+.d35e-pacs-called-shot-control {
+  border-top: 1px solid rgba(120, 120, 120, 0.18);
+  margin-top: 6px;
+  padding-top: 6px;
+}
+
+.d35e-pacs-per-attack-form {
+  display: grid;
+  gap: 6px;
+  min-width: 320px;
+}
+
+.d35e-pacs-profile-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.d35e-pacs-profile-editor textarea {
+  font-family: Consolas, "Liberation Mono", monospace;
+  resize: vertical;
+  width: 100%;
+}
+
+.d35e-pacs-editor-actions,
+.d35e-pacs-chat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.d35e-pacs-profile-toolbar {
+  border-bottom: 1px solid rgba(120, 120, 120, 0.3);
+  padding-bottom: 6px;
+}
+
+.d35e-pacs-profile-toolbar .form-group {
+  flex: 1;
+}
+
+.d35e-pacs-profile-summary,
+.d35e-pacs-location-grid,
+.d35e-pacs-outcome-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.d35e-pacs-profile-summary {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.d35e-pacs-profile-summary label,
+.d35e-pacs-location-grid label,
+.d35e-pacs-outcome-grid label {
+  display: grid;
+  gap: 3px;
+}
+
+.d35e-pacs-profile-locations {
+  display: grid;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.d35e-pacs-location-editor {
+  border: 1px solid rgba(120, 120, 120, 0.28);
+  padding: 8px;
+}
+
+.d35e-pacs-location-grid {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  margin: 8px 0;
+}
+
+.d35e-pacs-outcome-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.d35e-pacs-advanced-json {
+  border-top: 1px solid rgba(120, 120, 120, 0.28);
+  padding-top: 8px;
+}
+
+.d35e-pacs-chat-card h3 {
+  margin: 0 0 6px;
+}
+
+.d35e-pacs-chat-card p {
+  margin: 4px 0;
+}
+
+.d35e-pacs-armor-preview table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  width: 100%;
+}
+
+.d35e-pacs-armor-preview th,
+.d35e-pacs-armor-preview td {
+  border-bottom: 1px solid rgba(120, 120, 120, 0.25);
+  padding: 4px;
+  text-align: left;
+}

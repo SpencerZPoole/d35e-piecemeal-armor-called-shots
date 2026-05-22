@@ -1,0 +1,283 @@
+import { FLAGS, MODULE_ID, SETTINGS } from "./constants.js";
+import { applyCalledShotOutcome } from "./called-shots.js";
+import { isAggregateArmorItem, isPiecemealArmorPiece, previewArmorSync, restoreArmorComponents, syncArmorAggregate } from "./armor.js";
+
+function isEnabled(settingKey, fallback = true) {
+  try {
+    return game.settings.get(MODULE_ID, settingKey);
+  } catch (_error) {
+    return fallback;
+  }
+}
+
+function htmlRoot(html) {
+  return html?.[0] ?? html;
+}
+
+function escapeHtml(value) {
+  const div = document.createElement("div");
+  div.innerText = value == null ? "" : String(value);
+  return div.innerHTML;
+}
+
+function appendIconText(element, iconClass, text) {
+  const icon = document.createElement("i");
+  for (const className of iconClass.split(" ")) icon.classList.add(className);
+  element.append(icon, document.createTextNode(` ${text}`));
+}
+
+function buildLabeledInput(labelText, type, name, value) {
+  const label = document.createElement("label");
+  label.append(document.createTextNode(labelText));
+  const input = document.createElement("input");
+  input.type = type;
+  input.name = name;
+  input.value = value == null ? "" : String(value);
+  label.append(input);
+  return label;
+}
+
+async function maybeConfirmSevereOutcome(severity) {
+  if (severity !== "debilitating") return true;
+  if (!globalThis.Dialog?.confirm) return window.confirm("Apply the debilitating called-shot outcome?");
+  return Dialog.confirm({
+    title: "Apply Debilitating Called Shot?",
+    content: "<p>This may create severe or long-lived target effects. Confirm that the table has adjudicated the result.</p>",
+    yes: () => true,
+    no: () => false,
+    defaultYes: false
+  });
+}
+
+export async function createCalledShotChatCard({ payload, actor, item, attackTotal, isCriticalThreat }) {
+  if (!globalThis.ChatMessage) return null;
+  const targetDocument = payload.targetUuid && globalThis.fromUuid ? await fromUuid(payload.targetUuid).catch(() => null) : null;
+  const targetName = targetDocument?.actor?.name ?? targetDocument?.name ?? "No target captured";
+  const gmOnlyDetails = game.user?.isGM && isEnabled(SETTINGS.showGmOnlyDetails, true);
+  const coverageText = isEnabled(SETTINGS.locationArmorOverlay, false) && payload.coverageSlot
+    ? `<p><strong>Coverage slot:</strong> ${escapeHtml(payload.coverageSlot)}</p>`
+    : "";
+  const gmDetails = gmOnlyDetails
+    ? `<p><strong>Profile:</strong> ${escapeHtml(payload.profileLabel)}. Outcomes are GM-confirmed and editable in module settings.</p>`
+    : "";
+  const buttons = ["normal", "critical", "debilitating"].map((severity) => (
+    `<button type="button" data-d35e-pacs-apply="${severity}">${severity}</button>`
+  )).join("");
+  const content = `
+    <div class="d35e-pacs-chat-card">
+      <h3>Called Shot: ${escapeHtml(payload.locationLabel)}</h3>
+      <p><strong>Penalty:</strong> ${payload.penalty}</p>
+      <p><strong>Target:</strong> ${escapeHtml(targetName)}</p>
+      <p><strong>Attack total:</strong> ${attackTotal ?? "unknown"}${isCriticalThreat ? " (critical threat)" : ""}</p>
+      ${coverageText}
+      ${gmDetails}
+      <div class="d35e-pacs-chat-actions">${buttons}</div>
+    </div>`;
+  return ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    content,
+    flags: {
+      [MODULE_ID]: {
+        calledShot: {
+          ...payload,
+          actorUuid: actor?.uuid ?? null,
+          itemUuid: item?.uuid ?? null
+        }
+      }
+    }
+  });
+}
+
+export async function openArmorSyncDialog(actor) {
+  const plan = previewArmorSync(actor);
+  const rows = plan.summary.pieces.map((piece) => (
+    `<tr><td>${escapeHtml(piece.name)}</td><td>${escapeHtml(piece.slot)}</td><td>${piece.armorBonus}</td><td>${piece.acp}</td><td>${piece.spellFailure}%</td></tr>`
+  )).join("");
+  const content = `
+    <div class="d35e-pacs-armor-preview">
+      <p>This creates or updates one D35E aggregate armor item and neutralizes native armor math on the component pieces. Restore reverses backed-up fields.</p>
+      <table>
+        <thead><tr><th>Piece</th><th>Slot</th><th>Armor</th><th>ACP</th><th>ASF</th></tr></thead>
+        <tbody>${rows || "<tr><td colspan='5'>No equipped piecemeal armor pieces found.</td></tr>"}</tbody>
+      </table>
+      <p><strong>Total:</strong> armor ${plan.summary.armorBonus + plan.summary.enhancementBonus}, max Dex ${plan.summary.maxDex ?? "none"}, ACP ${plan.summary.acp}, ASF ${plan.summary.spellFailure}%.</p>
+    </div>`;
+  return new Promise((resolve) => {
+    new Dialog({
+      title: "Sync Piecemeal Armor",
+      content,
+      buttons: {
+        sync: {
+          label: "Sync",
+          callback: async () => {
+            const result = await syncArmorAggregate(actor);
+            ui.notifications.info("Piecemeal armor aggregate synced.");
+            resolve(result);
+          }
+        },
+        restore: {
+          label: "Restore",
+          callback: async () => {
+            const result = await restoreArmorComponents(actor);
+            ui.notifications.info("Piecemeal armor component fields restored.");
+            resolve(result);
+          }
+        },
+        close: {
+          label: "Close",
+          callback: () => resolve(null)
+        }
+      },
+      default: "sync"
+    }).render(true);
+  });
+}
+
+function createIconAction({ title, iconClass, dataset, className = "item-control" }) {
+  const action = document.createElement("a");
+  action.href = "#";
+  action.title = title;
+  action.className = className;
+  for (const [key, value] of Object.entries(dataset)) action.dataset[key] = value;
+  const icon = document.createElement("i");
+  for (const classPart of iconClass.split(" ")) icon.classList.add(classPart);
+  action.appendChild(icon);
+  return action;
+}
+
+function appendInventoryIndicators(app, root) {
+  if (!isEnabled(SETTINGS.enableArmor, true)) return;
+  const actor = app?.actor ?? app?.document;
+  if (!actor?.items) return;
+  for (const row of root.querySelectorAll("[data-item-id]")) {
+    if (row.querySelector("[data-d35e-pacs-armor-chip]")) continue;
+    const item = actor.items.get(row.dataset.itemId);
+    if (item?.type !== "equipment") continue;
+    const controls = row.querySelector(".item-controls") ?? row.querySelector(".item-control")?.parentElement ?? row;
+    const configure = createIconAction({
+      title: "Configure piecemeal armor",
+      iconClass: "fas fa-shield-alt",
+      dataset: { d35ePacsConfigurePiece: "true", itemId: item.id }
+    });
+    controls.prepend(configure);
+    const name = row.querySelector(".item-name") ?? row;
+    const chip = document.createElement("span");
+    chip.classList.add("d35e-pacs-chip");
+    chip.dataset.d35ePacsArmorChip = "true";
+    if (isAggregateArmorItem(item)) {
+      chip.textContent = "aggregate";
+      chip.classList.add("d35e-pacs-chip-aggregate");
+    } else if (isPiecemealArmorPiece(item)) {
+      const flag = item.getFlag?.(MODULE_ID, FLAGS.piecemeal) ?? {};
+      chip.textContent = `piece: ${flag.slot ?? "armor"}`;
+      chip.classList.add("d35e-pacs-chip-piece");
+    } else if (item.getFlag?.(MODULE_ID, FLAGS.nativeBackup)) {
+      chip.textContent = "synced component";
+      chip.classList.add("d35e-pacs-chip-synced");
+    } else {
+      chip.textContent = "piecemeal?";
+      chip.classList.add("d35e-pacs-chip-muted");
+    }
+    name.appendChild(chip);
+  }
+}
+
+function appendItemSheetControls(app, html) {
+  const item = app?.item ?? app?.document;
+  if (!item) return;
+  const root = htmlRoot(html);
+  const form = root?.querySelector?.("form");
+  if (!form) return;
+
+  if (item.type === "equipment" && isEnabled(SETTINGS.enableArmor, true)) {
+    const flag = item.getFlag?.(MODULE_ID, FLAGS.piecemeal) ?? {};
+    const fieldset = document.createElement("fieldset");
+    fieldset.classList.add("d35e-pacs-fieldset");
+    const legend = document.createElement("legend");
+    legend.textContent = "Piecemeal Armor";
+    const enabledLabel = document.createElement("label");
+    const enabled = document.createElement("input");
+    enabled.type = "checkbox";
+    enabled.name = `flags.${MODULE_ID}.${FLAGS.piecemeal}.enabled`;
+    enabled.checked = flag.enabled === true;
+    enabledLabel.append(enabled, document.createTextNode(" Treat as armor piece"));
+    const grid = document.createElement("div");
+    grid.classList.add("d35e-pacs-grid");
+    grid.append(
+      buildLabeledInput("Slot ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.slot`, flag.slot ?? "torso"),
+      buildLabeledInput("Armor ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.armorBonus`, flag.armorBonus ?? item.system?.armor?.value ?? 0),
+      buildLabeledInput("Enh ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.enhancementBonus`, flag.enhancementBonus ?? item.system?.armor?.enh ?? 0),
+      buildLabeledInput("Max Dex ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.maxDex`, flag.maxDex ?? item.system?.armor?.dex ?? ""),
+      buildLabeledInput("ACP ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.acp`, flag.acp ?? item.system?.armor?.acp ?? 0),
+      buildLabeledInput("ASF ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.spellFailure`, flag.spellFailure ?? item.system?.spellFailure ?? 0)
+    );
+    fieldset.append(legend, enabledLabel, grid);
+    form.appendChild(fieldset);
+  }
+
+}
+
+function appendActorSheetControls(app, html) {
+  const actor = app?.actor ?? app?.document;
+  if (!actor?.isOwner) return;
+  const root = htmlRoot(html);
+  const title = root?.querySelector?.(".window-header .window-title");
+  const form = root?.querySelector?.("form");
+  if ((title || form) && !root.querySelector("[data-d35e-pacs-armor-sync]") && isEnabled(SETTINGS.enableArmor, true)) {
+    const button = document.createElement("a");
+    button.classList.add("d35e-pacs-header-button");
+    button.dataset.d35ePacsArmorSync = "true";
+    appendIconText(button, "fas fa-shield-alt", "Piecemeal Armor");
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      void openArmorSyncDialog(actor);
+    });
+    if (title) title.after(button);
+    else form.prepend(button);
+  }
+  appendInventoryIndicators(app, root);
+  root.addEventListener("click", (event) => {
+    const armorButton = event.target.closest("[data-d35e-pacs-configure-piece]");
+    if (armorButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      actor.items.get(armorButton.dataset.itemId)?.sheet?.render(true);
+    }
+  });
+}
+
+function wireChatCard(message, html) {
+    const root = htmlRoot(html);
+    const payload = message.getFlag?.(MODULE_ID, "calledShot");
+    if (!payload || !root?.querySelectorAll) return;
+    for (const button of root.querySelectorAll("[data-d35e-pacs-apply]")) {
+      button.addEventListener("click", async (event) => {
+        event.preventDefault();
+        if (!game.user?.isGM) {
+          ui.notifications.warn("Only the GM can apply called shot outcomes.");
+          return;
+        }
+        const severity = button.dataset.d35ePacsApply;
+        if (!await maybeConfirmSevereOutcome(severity)) return;
+        const targetActor = payload.targetUuid ? await fromUuid(payload.targetUuid).then((doc) => doc?.actor ?? doc).catch(() => null) : null;
+        await applyCalledShotOutcome({
+          targetActor,
+          targetUuid: payload.targetUuid,
+          locationId: payload.locationId,
+          profileId: payload.profileId,
+          severity
+        });
+        ui.notifications.info(`Applied ${severity} called shot outcome.`);
+      });
+    }
+}
+
+function registerChatActionListeners() {
+  Hooks.on("renderChatMessageHTML", wireChatCard);
+}
+
+export function registerUiHooks() {
+  Hooks.on("renderItemSheet", appendItemSheetControls);
+  Hooks.on("renderActorSheet", appendActorSheetControls);
+  registerChatActionListeners();
+}
