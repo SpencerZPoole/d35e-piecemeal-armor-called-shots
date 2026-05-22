@@ -103,3 +103,12 @@ node <path-to-local-security-scan.mjs> --root <module-root> --changed-only
 ## Support
 
 Use [GitHub issues](https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/issues) for bugs, compatibility reports, and feature requests. Please include Foundry version, D35E version, module version, browser console errors, and a short reproduction path.
+
+## Donate
+
+If this project helped your D35E table, donations are welcome. GitHub Sponsors is best for recurring sponsorships; PayPal works well for one-time donations.
+
+[![Sponsor on GitHub](https://img.shields.io/badge/GitHub%20Sponsors-Donate-ea4aaa?style=flat&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/SpencerZPoole)
+[![Donate with PayPal](https://img.shields.io/badge/PayPal-One--time%20donation-00457C?style=flat&logo=paypal&logoColor=white)](https://paypal.me/mrpooley92)
+
+Donations support Spencer's compatibility testing, release packaging, documentation, and maintenance for this module. They do not fund or represent the D35E system, Foundry Virtual Tabletop, Paizo, Wizards of the Coast, or any upstream/rightsholder work.
