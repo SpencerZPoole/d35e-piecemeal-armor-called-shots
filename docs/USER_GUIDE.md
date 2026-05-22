@@ -15,7 +15,7 @@ The module has two main workflows:
 4. Open a weapon or attack from the normal D35E sheet controls.
 5. Choose a location from the native attack dialog's `Called Shot` dropdown, or leave it on `None`.
 6. Roll the attack and expand the result to see the called-shot modifier in D35E's native breakdown.
-7. Open module settings and use `Edit called shot profiles` when your table wants different locations, penalties, or effects.
+7. Open the module settings when your table wants different locations, penalties, effects, or full-attack behavior.
 
 ## Where The Controls Live
 
@@ -28,6 +28,21 @@ The module has two main workflows:
 | Full-attack picker | Opens after `Full Attack` when configured | Lets the user choose `None` or a location for each D35E attack label. |
 | Outcome buttons | Called-shot chat card | Lets the GM confirm normal, critical, or debilitating effects. |
 | Profile editor | Module settings | Edits locations, penalties, coverage slots, and outcome effects. |
+
+## Module Settings
+
+Open Foundry's right sidebar, click the gear icon, choose `Game Settings`, then select `D35E Piecemeal Armor And Called Shots` from the category list on the left.
+
+![D35E Piecemeal Armor And Called Shots module settings](assets/module-settings.png)
+
+Settings:
+
+- `Edit called shot profiles`: opens the profile editor for locations, attack penalties, severity tiers, coverage slots, and GM-confirmed effects.
+- `Enable piecemeal armor automation`: shows piecemeal armor fields on equipment items and adds GM sync/restore controls to actor sheets.
+- `Enable called shot helper`: adds the `Called Shot` selector to D35E's native attack dialog and applies the configured attack penalty to the native roll breakdown.
+- `Called shots on full attacks`: controls whether full attacks ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections. See [Full Attacks](#full-attacks).
+- `Show location armor overlay`: adds the matching piecemeal armor coverage slot to called-shot chat cards as advisory information only.
+- `Show GM-only called shot details`: shows source/profile metadata and outcome context to GM users. This is a client setting, so each GM can choose whether they want the extra detail.
 
 ## Called Shots
 
@@ -88,7 +103,7 @@ Inventory chips:
 
 ## Profile Editor
 
-Open **Configure Settings > Module Settings > D35E Piecemeal Armor And Called Shots > Edit called shot profiles**.
+Open the right sidebar gear tab, choose `Game Settings`, select `D35E Piecemeal Armor And Called Shots`, then click `Open Profile Editor` next to `Edit called shot profiles`.
 
 ![Called-shot profile editor](assets/profile-editor.png)
 

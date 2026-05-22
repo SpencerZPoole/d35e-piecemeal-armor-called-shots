@@ -63,6 +63,7 @@ Use these repository paths after the repo is public:
 
 - `https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/native-called-shot-dropdown.png`
 - `https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/full-attack-picker.png`
+- `https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/module-settings.png`
 - `https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/piecemeal-armor-sync.png`
 - `https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/profile-editor.png`
 

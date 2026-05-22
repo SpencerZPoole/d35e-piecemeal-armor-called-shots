@@ -44,6 +44,7 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 4. Click a normal D35E weapon or attack use control and choose a target from the native dialog's `Called Shot` dropdown.
 5. Roll normally. The called-shot penalty appears in the D35E attack breakdown.
 6. Let the GM apply any normal, critical, or debilitating called-shot outcome from the chat card.
+7. For table-specific behavior, open Foundry's right sidebar gear icon, choose `Game Settings`, then select `D35E Piecemeal Armor And Called Shots`.
 
 See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for the full end-user guide.
 
@@ -57,7 +58,7 @@ The module is additive. It does not edit D35E system files, mutate actors on wor
 
 ## Configuration
 
-The called-shot profile editor is available from module settings. Profiles are world settings, so a GM can clone or replace the bundled defaults with table-specific locations, penalties, and effects.
+Module settings live in Foundry's right sidebar gear tab under `Game Settings > D35E Piecemeal Armor And Called Shots`. The called-shot profile editor is available there. Profiles are world settings, so a GM can clone or replace the bundled defaults with table-specific locations, penalties, and effects.
 
 Supported v1 effect specs:
 
