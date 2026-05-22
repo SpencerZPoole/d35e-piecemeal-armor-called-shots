@@ -6,7 +6,7 @@ This module is an adaptation aid for tables that want configurable piecemeal arm
 
 ## Install
 
-Use this manifest URL in Foundry's **Add-on Modules > Install Module > Manifest URL** field:
+In Foundry, open **Add-on Modules > Install Module**, paste this into **Manifest URL**, and install:
 
 ```text
 https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/latest/download/module.json
