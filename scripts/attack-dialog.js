@@ -5,6 +5,9 @@ export const CALLED_SHOT_SELECT_NAME = "d35e-pacs-called-shot-location";
 export const CALLED_SHOT_QUEUE_NAME = "d35e-pacs-called-shot-queue";
 
 function htmlRoot(html) {
+  if (typeof Element !== "undefined" && html instanceof Element) return html;
+  if (typeof Document !== "undefined" && html instanceof Document) return html;
+  if (typeof DocumentFragment !== "undefined" && html instanceof DocumentFragment) return html;
   return html?.[0] ?? html;
 }
 
@@ -211,9 +214,8 @@ export function injectCalledShotControls(html, {
   if (fullAttackButton && !dialogRoot.dataset.d35ePacsCalledShotWired) {
     dialogRoot.dataset.d35ePacsCalledShotWired = "true";
     fullAttackButton.dataset.d35ePacsCalledShotWired = "true";
-    dialogRoot.addEventListener("click", async (event) => {
-      const clickedButton = event.target?.closest?.("button[data-button='multi']");
-      if (!clickedButton) return;
+    fullAttackButton.addEventListener("click", async (event) => {
+      const clickedButton = event.currentTarget;
       if (form.dataset.d35ePacsPerAttackReady === "true") return;
       if (getCalledShotFullAttackMode() !== FULL_ATTACK_MODES.perAttack) return;
       const locationId = readCalledShotSelection(form);

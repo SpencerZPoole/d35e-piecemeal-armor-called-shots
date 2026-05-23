@@ -33,18 +33,18 @@ This repository publishes Foundry VTT module releases through GitHub release ass
    - armor sync and restore still work;
    - profile editor opens and saves.
 
-## v1.0.0 GitHub Release
+## GitHub Release
 
-Expected assets:
+Expected assets for each `vX.Y.Z` release:
 
 - `module.json`
-- `d35e-piecemeal-armor-called-shots-v1.0.0.zip`
+- `d35e-piecemeal-armor-called-shots-vX.Y.Z.zip`
 
 Expected URLs:
 
 - Latest install manifest: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/latest/download/module.json`
-- Versioned manifest: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.0/module.json`
-- Versioned zip: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.0/d35e-piecemeal-armor-called-shots-v1.0.0.zip`
+- Versioned manifest: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/vX.Y.Z/module.json`
+- Versioned zip: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/vX.Y.Z/d35e-piecemeal-armor-called-shots-vX.Y.Z.zip`
 
 ## Automated Release
 
@@ -53,7 +53,7 @@ The `Release` GitHub Action runs when a `v*.*.*` tag is pushed. It validates the
 Manual publish can use the same artifact layout:
 
 ```powershell
-gh release create v1.0.0 dist/module.json dist/d35e-piecemeal-armor-called-shots-v1.0.0.zip --title v1.0.0 --notes-file docs/release-notes/v1.0.0.md
+gh release create vX.Y.Z dist/module.json dist/d35e-piecemeal-armor-called-shots-vX.Y.Z.zip --title vX.Y.Z --notes-file docs/release-notes/vX.Y.Z.md
 ```
 
 ## Foundry Package Listing

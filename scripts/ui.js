@@ -11,6 +11,9 @@ function isEnabled(settingKey, fallback = true) {
 }
 
 function htmlRoot(html) {
+  if (typeof Element !== "undefined" && html instanceof Element) return html;
+  if (typeof Document !== "undefined" && html instanceof Document) return html;
+  if (typeof DocumentFragment !== "undefined" && html instanceof DocumentFragment) return html;
   return html?.[0] ?? html;
 }
 
@@ -60,8 +63,13 @@ export async function createCalledShotChatCard({ payload, actor, item, attackTot
   const gmDetails = gmOnlyDetails
     ? `<p><strong>Profile:</strong> ${escapeHtml(payload.profileLabel)}. Outcomes are GM-confirmed and editable in module settings.</p>`
     : "";
-  const buttons = ["normal", "critical", "debilitating"].map((severity) => (
-    `<button type="button" data-d35e-pacs-apply="${severity}">${severity}</button>`
+  const severityLabels = {
+    normal: "Normal",
+    critical: "Critical",
+    debilitating: "Debilitating"
+  };
+  const buttons = Object.entries(severityLabels).map(([severity, label]) => (
+    `<button type="button" data-d35e-pacs-apply="${severity}" aria-label="Apply ${label} called-shot outcome">${label}</button>`
   )).join("");
   const content = `
     <div class="d35e-pacs-chat-card">
@@ -88,14 +96,31 @@ export async function createCalledShotChatCard({ payload, actor, item, attackTot
   });
 }
 
+function getActorItems(actor) {
+  if (actor?.items?.contents) return actor.items.contents;
+  if (Array.isArray(actor?.items)) return actor.items;
+  return [];
+}
+
+function hasRestorableArmorState(actor, plan) {
+  if (plan.aggregateId) return true;
+  return getActorItems(actor).some((item) => Boolean(item.getFlag?.(MODULE_ID, FLAGS.nativeBackup) ?? item.flags?.[MODULE_ID]?.[FLAGS.nativeBackup]));
+}
+
 export async function openArmorSyncDialog(actor) {
   const plan = previewArmorSync(actor);
+  const hasPieces = plan.summary.pieces.length > 0;
+  const canRestore = hasRestorableArmorState(actor, plan);
   const rows = plan.summary.pieces.map((piece) => (
     `<tr><td>${escapeHtml(piece.name)}</td><td>${escapeHtml(piece.slot)}</td><td>${piece.armorBonus}</td><td>${piece.acp}</td><td>${piece.spellFailure}%</td></tr>`
   )).join("");
+  const emptyGuidance = hasPieces
+    ? ""
+    : "<p><strong>No syncable pieces found.</strong> Mark and equip at least one equipment item as a piecemeal armor component before syncing.</p>";
   const content = `
     <div class="d35e-pacs-armor-preview">
       <p>This creates or updates one D35E aggregate armor item and neutralizes native armor math on the component pieces. Restore reverses backed-up fields.</p>
+      ${emptyGuidance}
       <table>
         <thead><tr><th>Piece</th><th>Slot</th><th>Armor</th><th>ACP</th><th>ASF</th></tr></thead>
         <tbody>${rows || "<tr><td colspan='5'>No equipped piecemeal armor pieces found.</td></tr>"}</tbody>
@@ -103,32 +128,36 @@ export async function openArmorSyncDialog(actor) {
       <p><strong>Total:</strong> armor ${plan.summary.armorBonus + plan.summary.enhancementBonus}, max Dex ${plan.summary.maxDex ?? "none"}, ACP ${plan.summary.acp}, ASF ${plan.summary.spellFailure}%.</p>
     </div>`;
   return new Promise((resolve) => {
+    const buttons = {};
+    if (hasPieces) {
+      buttons.sync = {
+        label: "Sync",
+        callback: async () => {
+          const result = await syncArmorAggregate(actor);
+          ui.notifications.info("Piecemeal armor aggregate synced.");
+          resolve(result);
+        }
+      };
+    }
+    if (canRestore) {
+      buttons.restore = {
+        label: "Restore",
+        callback: async () => {
+          const result = await restoreArmorComponents(actor);
+          ui.notifications.info("Piecemeal armor component fields restored.");
+          resolve(result);
+        }
+      };
+    }
+    buttons.close = {
+      label: "Close",
+      callback: () => resolve(null)
+    };
     new Dialog({
       title: "Sync Piecemeal Armor",
       content,
-      buttons: {
-        sync: {
-          label: "Sync",
-          callback: async () => {
-            const result = await syncArmorAggregate(actor);
-            ui.notifications.info("Piecemeal armor aggregate synced.");
-            resolve(result);
-          }
-        },
-        restore: {
-          label: "Restore",
-          callback: async () => {
-            const result = await restoreArmorComponents(actor);
-            ui.notifications.info("Piecemeal armor component fields restored.");
-            resolve(result);
-          }
-        },
-        close: {
-          label: "Close",
-          callback: () => resolve(null)
-        }
-      },
-      default: "sync"
+      buttons,
+      default: hasPieces ? "sync" : "close"
     }).render(true);
   });
 }

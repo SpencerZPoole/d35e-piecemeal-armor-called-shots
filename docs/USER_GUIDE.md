@@ -9,7 +9,7 @@ The module has two main workflows:
 
 ## First Five Minutes
 
-1. Enable the module in a D35E world.
+1. Open a D35E world, go to `Game Settings > Manage Modules`, enable the module, and reload if Foundry asks.
 2. Open an actor sheet.
 3. Click `Piecemeal Armor` in the actor sheet header to preview, sync, or restore armor pieces.
 4. Open a weapon or attack from the normal D35E sheet controls.
@@ -134,6 +134,14 @@ Check the `Called shots on full attacks` setting. The picker opens only in `Ask 
 ### Armor totals look doubled
 
 Use the actor `Piecemeal Armor` dialog and choose Restore, then Sync again. The aggregate item should be the only D35E-native armor item contributing armor math; components should be component records.
+
+### The armor dialog says no syncable pieces were found
+
+Open the equipment item, check `Treat as armor piece`, confirm the item has armor-piece values, and equip the item on the actor. The sync button appears only when at least one equipped component is available.
+
+### The aggregate armor item is not contributing AC
+
+After syncing, confirm the item named `Piecemeal Armor Aggregate` is equipped. Version 1.0.1 and later explicitly re-equips the generated aggregate after D35E creates or updates it.
 
 ### I want D&D 3.5 RAW only
 

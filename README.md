@@ -12,10 +12,10 @@ In Foundry, open **Add-on Modules > Install Module**, paste this into **Manifest
 https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/latest/download/module.json
 ```
 
-Versioned release assets are published on GitHub. For v1.0.0, the release manifest is:
+Versioned release assets are published on GitHub. For v1.0.1, the release manifest is:
 
 ```text
-https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.0/module.json
+https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.1/module.json
 ```
 
 ## Features
@@ -38,7 +38,7 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 
 ## Quick Start
 
-1. Enable the module in a D35E world.
+1. Open a D35E world, go to `Game Settings > Manage Modules`, enable the module, and reload if Foundry asks.
 2. Open an actor sheet and use the `Piecemeal Armor` header button for armor preview, sync, or restore.
 3. Open equipment items and configure the `Piecemeal Armor` fieldset when an item should count as a component.
 4. Click a normal D35E weapon or attack use control and choose a target from the native dialog's `Called Shot` dropdown.

@@ -31,10 +31,10 @@ The module is intentionally explicit that the bundled defaults are PF1e-derived 
 
 ## Version Entry
 
-- Version: `1.0.0`
-- Package Manifest URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.0/module.json`
-- Download URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.0/d35e-piecemeal-armor-called-shots-v1.0.0.zip`
-- Release Notes URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/tag/v1.0.0`
+- Version: `1.0.1`
+- Package Manifest URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.1/module.json`
+- Download URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.1/d35e-piecemeal-armor-called-shots-v1.0.1.zip`
+- Release Notes URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/tag/v1.0.1`
 
 ## User Install URL
 

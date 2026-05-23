@@ -4,7 +4,8 @@ import {
   buildNeutralizeUpdate,
   buildRestoreUpdate,
   calculatePiecemealArmor,
-  previewArmorSync
+  previewArmorSync,
+  syncArmorAggregate
 } from "../scripts/armor.js";
 
 const MODULE_ID = "d35e-piecemeal-armor-called-shots";
@@ -93,5 +94,48 @@ const actor = {
 const plan = previewArmorSync(actor);
 assert.equal(plan.componentUpdates.length, 2);
 assert.equal(plan.summary.armorBonus, 4);
+
+let emptyCreateCalled = false;
+const emptySync = await syncArmorAggregate({
+  id: "empty-actor",
+  items: [],
+  async createEmbeddedDocuments() {
+    emptyCreateCalled = true;
+  }
+});
+assert.equal(emptySync.skipped, true);
+assert.equal(emptySync.reason, "noPieces");
+assert.equal(emptyCreateCalled, false);
+
+let aggregateEquipUpdate = null;
+let aggregateEquipOptions = null;
+let aggregateCreateOptions = null;
+let componentUpdate = null;
+const syncItem = {
+  ...torso,
+  update: async (update) => {
+    componentUpdate = update;
+  }
+};
+const syncItems = [syncItem];
+syncItems.get = (id) => syncItems.find((entry) => entry.id === id);
+await syncArmorAggregate({
+  id: "sync-actor",
+  items: syncItems,
+  async createEmbeddedDocuments(_type, _data, options) {
+    aggregateCreateOptions = options;
+    return [{
+      update: async (update, options) => {
+        aggregateEquipUpdate = update;
+        aggregateEquipOptions = options;
+      }
+    }];
+  }
+});
+assert.deepEqual(aggregateCreateOptions, { _slotBypass: true });
+assert.deepEqual(aggregateEquipUpdate, { "system.equipped": true });
+assert.deepEqual(aggregateEquipOptions, { _slotBypass: true });
+assert.equal(componentUpdate["system.armor.value"], 0);
+assert.ok(componentUpdate[`flags.${MODULE_ID}.nativeBackup`]);
 
 console.log("test-armor: ok");

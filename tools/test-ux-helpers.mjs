@@ -68,6 +68,23 @@ assert.ok(control.includes("Eye (-10)"));
 assert.equal(normalizeCalledShotLocation("none"), "");
 assert.deepEqual(normalizeCalledShotQueue("[\"\", \"ear\", \"none\", {\"locationId\":\"eye\"}]"), ["", "ear", "", "eye"]);
 
+const attackForm = {
+  0: { name: "attack-bonus" },
+  matches: (selector) => selector === "form.attack-form",
+  querySelector(selector) {
+    if (selector === `[name="${CALLED_SHOT_SELECT_NAME}"]`) return { value: "ear" };
+    if (selector === `[name="${CALLED_SHOT_QUEUE_NAME}"]`) return { value: "[\"ear\",\"\"]" };
+    return null;
+  }
+};
+globalThis.Element = function Element() {};
+globalThis.Document = function Document() {};
+globalThis.DocumentFragment = function DocumentFragment() {};
+Object.setPrototypeOf(attackForm, globalThis.Element.prototype);
+const { readCalledShotQueue, readCalledShotSelection } = await import("../scripts/attack-dialog.js?html-root-test");
+assert.equal(readCalledShotSelection(attackForm), "ear");
+assert.deepEqual(readCalledShotQueue(attackForm), ["ear", ""]);
+
 const formLike = {
   matches: () => true,
   querySelector(selector) {

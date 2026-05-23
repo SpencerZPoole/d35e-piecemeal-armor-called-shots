@@ -153,12 +153,17 @@ export class CalledShotProfileEditor extends HandlebarsApplication {
     });
     root.querySelector("[data-action='import-json']")?.addEventListener("click", async (event) => {
       event.preventDefault();
-      const textarea = root.querySelector("[name='profileJson']");
-      const parsed = normalizeCalledShotProfiles(textarea?.value ?? "");
-      await game.settings.set(MODULE_ID, SETTINGS.calledShotProfiles, parsed);
-      this.activeProfileId = parsed.activeProfileId;
-      ui.notifications.info("Called shot profiles imported.");
-      this.render({ force: true });
+      try {
+        const textarea = root.querySelector("[name='profileJson']");
+        const parsed = normalizeCalledShotProfiles(textarea?.value ?? "");
+        await game.settings.set(MODULE_ID, SETTINGS.calledShotProfiles, parsed);
+        this.activeProfileId = parsed.activeProfileId;
+        ui.notifications.info("Called shot profiles imported.");
+        this.render({ force: true });
+      } catch (error) {
+        console.error(`${MODULE_ID} | Failed to import called-shot profiles.`, error);
+        ui.notifications.error(error.message ?? String(error));
+      }
     });
   }
 

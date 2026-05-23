@@ -4,6 +4,16 @@
 
 - No unreleased changes yet.
 
+## 1.0.1
+
+- Fixed piecemeal armor sync so generated aggregate armor is explicitly equipped after D35E creates or updates it.
+- Made armor sync a no-op when no equipped piecemeal armor pieces are present, preventing zero-value aggregate armor items.
+- Fixed native attack-form parsing when Foundry passes an actual HTML form element, preserving called-shot selection and per-attack full-attack queues.
+- Improved the empty armor-sync dialog with direct setup guidance and only relevant action buttons.
+- Improved called-shot chat outcome button labels and accessibility text.
+- Added friendly error reporting for invalid called-shot profile JSON imports.
+- Polished README, user guide, package listing, and release docs for end-user install and configuration discovery.
+
 ## 1.0.0
 
 - Prepared the first public GitHub release package.

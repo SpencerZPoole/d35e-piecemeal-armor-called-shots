@@ -189,18 +189,35 @@ export function previewArmorSync(actor, options = {}) {
   };
 }
 
+async function ensureEquipped(item) {
+  if (!item?.update || item.system?.equipped === true) return;
+  await item.update({ "system.equipped": true }, { _slotBypass: true });
+}
+
 export async function syncArmorAggregate(actor, { dryRun = false, equippedOnly = true } = {}) {
   if (!actor) throw new Error("syncArmorAggregate requires an actor.");
   const plan = previewArmorSync(actor, { equippedOnly });
   if (dryRun) return plan;
-
-  const aggregate = actor.items?.find?.(isAggregateArmorItem);
-  if (aggregate) await aggregate.update(plan.aggregateData);
-  else await actor.createEmbeddedDocuments("Item", [plan.aggregateData]);
+  if (plan.summary.pieces.length === 0) {
+    return {
+      ...plan,
+      skipped: true,
+      reason: "noPieces"
+    };
+  }
 
   for (const update of plan.componentUpdates) {
     const item = actor.items?.get?.(update.itemId);
     if (item) await item.update(update.update);
+  }
+
+  const aggregate = actor.items?.find?.(isAggregateArmorItem);
+  if (aggregate) {
+    await aggregate.update(plan.aggregateData);
+    await ensureEquipped(aggregate);
+  } else {
+    const created = await actor.createEmbeddedDocuments("Item", [plan.aggregateData], { _slotBypass: true });
+    await ensureEquipped(created?.[0]);
   }
   return plan;
 }
