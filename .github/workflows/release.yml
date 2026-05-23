@@ -16,6 +16,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      FOUNDRY_PACKAGE_RELEASE_TOKEN: ${{ secrets.FOUNDRY_PACKAGE_RELEASE_TOKEN }}
 
     steps:
       - name: Resolve release tag
@@ -69,3 +71,11 @@ jobs:
             --title "${{ steps.release.outputs.tag }}" \
             --notes-file "$notes_file" \
             --verify-tag
+
+      - name: Publish Foundry package version
+        if: env.FOUNDRY_PACKAGE_RELEASE_TOKEN != ''
+        run: npm run publish:foundry
+
+      - name: Skip Foundry package publish
+        if: env.FOUNDRY_PACKAGE_RELEASE_TOKEN == ''
+        run: echo "FOUNDRY_PACKAGE_RELEASE_TOKEN is not configured; update the Foundry package listing manually."

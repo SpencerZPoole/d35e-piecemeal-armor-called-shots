@@ -33,6 +33,10 @@ This repository publishes Foundry VTT module releases through GitHub release ass
    - armor sync and restore still work;
    - profile editor opens and saves.
 
+## Foundry Package Release Token
+
+The automated Foundry publish step expects a GitHub Actions secret named `FOUNDRY_PACKAGE_RELEASE_TOKEN`. The token comes from the Foundry package edit page and is package-specific. Store it only as a GitHub Actions secret or local environment variable; do not commit it to the repository, print it in logs, or paste it into release notes.
+
 ## GitHub Release
 
 Expected assets for each `vX.Y.Z` release:
@@ -48,14 +52,16 @@ Expected URLs:
 
 ## Automated Release
 
-The `Release` GitHub Action runs when a `v*.*.*` tag is pushed. It validates the module, confirms that the tag matches `package.json`, builds the release zip, and publishes the GitHub release assets.
+The `Release` GitHub Action runs when a `v*.*.*` tag is pushed. It validates the module, confirms that the tag matches `package.json`, builds the release zip, publishes the GitHub release assets, and then publishes the version to the Foundry package listing when `FOUNDRY_PACKAGE_RELEASE_TOKEN` is configured.
 
 Manual publish can use the same artifact layout:
 
 ```powershell
 gh release create vX.Y.Z dist/module.json dist/d35e-piecemeal-armor-called-shots-vX.Y.Z.zip --title vX.Y.Z --notes-file docs/release-notes/vX.Y.Z.md
+npm run publish:foundry:dry-run
+npm run publish:foundry
 ```
 
 ## Foundry Package Listing
 
-Use `docs/foundry-package-listing.md` as the submission packet. Foundry's version entry should use the versioned release manifest, not the `latest` manifest URL.
+Use `docs/foundry-package-listing.md` as the submission packet. Foundry's version entry should use the versioned release manifest, not the `latest` manifest URL. After any public GitHub release, verify the Foundry package page shows the new version, compatibility, and current description.

@@ -2,6 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
+const moduleManifest = JSON.parse(fs.readFileSync(path.join(root, "module.json"), "utf8"));
+const currentVersion = moduleManifest.version;
+const moduleId = moduleManifest.id;
 const blocked = [
   { id: "windows-user-path", pattern: new RegExp(["C:", "Users"].join("[\\\\/]"), "i") },
   { id: "workspace-path", pattern: new RegExp(["Dungeons", "And", "Dragons", "DM", "Folder"].join(""), "i") },
@@ -71,6 +74,22 @@ const requiredPublicText = [
   {
     file: "scripts/ui.js",
     text: "Mark at least one carried, unbroken equipment item"
+  },
+  {
+    file: "README.md",
+    text: `/releases/download/v${currentVersion}/module.json`
+  },
+  {
+    file: "docs/foundry-package-listing.md",
+    text: `Version: \`${currentVersion}\``
+  },
+  {
+    file: "docs/foundry-package-listing.md",
+    text: `/releases/download/v${currentVersion}/${moduleId}-v${currentVersion}.zip`
+  },
+  {
+    file: "docs/FOUNDRY_PACKAGE_DESCRIPTION.html",
+    text: `Module version: ${currentVersion}.`
   }
 ];
 

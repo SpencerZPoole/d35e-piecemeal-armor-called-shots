@@ -4,6 +4,13 @@
 
 - No unreleased changes yet.
 
+## 1.0.3
+
+- Added a Foundry Package Release API publisher for the GitHub release workflow.
+- Updated public package listing docs and Foundry package-page text to the current release.
+- Replaced public package screenshots with live Foundry VTT captures.
+- Tightened public-surface validation so stale release-version examples are caught before handoff.
+
 ## 1.0.2
 
 - Fixed the D35E equipment item sheet placement for the `Piecemeal Armor` fieldset so it appears in the visible `Details` tab instead of being appended outside the tab layout.
