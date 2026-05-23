@@ -12,6 +12,8 @@ In Foundry, open **Add-on Modules > Install Module**, paste this into **Manifest
 https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/latest/download/module.json
 ```
 
+After installation, open a D35E world, go to **Game Settings > Manage Modules**, enable **D35E Piecemeal Armor And Called Shots**, and reload if Foundry asks.
+
 Versioned release assets are published on GitHub. For v1.0.1, the release manifest is:
 
 ```text
@@ -34,6 +36,8 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 
 ![Full attack called-shot picker](docs/assets/full-attack-picker.png)
 
+![Module settings for D35E Piecemeal Armor And Called Shots](docs/assets/module-settings.png)
+
 ![Piecemeal armor sync dialog](docs/assets/piecemeal-armor-sync.png)
 
 ## Quick Start
@@ -54,7 +58,7 @@ See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for the full end-user guide.
 - D35E: verified on D35E 3.0.2.
 - Foundry v13: not marked verified until a real v13 smoke test is completed.
 
-The module is additive. It does not edit D35E system files, mutate actors on world load, or enable optional automation without the world enabling the module.
+The module is additive. It does not edit D35E system files, mutate actors on world load, or run in worlds where the module has not been enabled.
 
 ## Configuration
 
