@@ -17,6 +17,10 @@ function htmlRoot(html) {
   return html?.[0] ?? html;
 }
 
+function sheetDocument(app) {
+  return app?.item ?? app?.actor ?? app?.document ?? app?.object;
+}
+
 function escapeHtml(value) {
   const div = document.createElement("div");
   div.innerText = value == null ? "" : String(value);
@@ -38,6 +42,46 @@ function buildLabeledInput(labelText, type, name, value) {
   input.value = value == null ? "" : String(value);
   label.append(input);
   return label;
+}
+
+function buildLabeledSelect(labelText, name, value, options) {
+  const label = document.createElement("label");
+  label.append(document.createTextNode(labelText));
+  const select = document.createElement("select");
+  select.name = name;
+  for (const [optionValue, optionLabel] of options) {
+    const option = document.createElement("option");
+    option.value = optionValue;
+    option.textContent = optionLabel;
+    option.selected = optionValue === value;
+    select.appendChild(option);
+  }
+  label.append(select);
+  return label;
+}
+
+function readPanelControlValue(control) {
+  if (control.type === "checkbox") return control.checked;
+  if (control.type === "number") {
+    const value = Number(control.value);
+    return Number.isFinite(value) ? value : 0;
+  }
+  return control.value;
+}
+
+function isPiecemealPanelControl(control) {
+  return control instanceof HTMLInputElement || control instanceof HTMLSelectElement
+    ? control.name?.startsWith(`flags.${MODULE_ID}.${FLAGS.piecemeal}.`)
+    : false;
+}
+
+function persistPiecemealPanelControl(item, root, form, control) {
+  void item.update({ [control.name]: readPanelControlValue(control) }).then(() => {
+    schedulePiecemealItemPanelRefresh(item, root, form);
+  }).catch((error) => {
+    console.error(`${MODULE_ID} | Failed to save piecemeal armor field`, error);
+    ui.notifications?.error("Could not save the piecemeal armor field. Check the console for details.");
+  });
 }
 
 async function maybeConfirmSevereOutcome(severity) {
@@ -116,14 +160,14 @@ export async function openArmorSyncDialog(actor) {
   )).join("");
   const emptyGuidance = hasPieces
     ? ""
-    : "<p><strong>No syncable pieces found.</strong> Mark and equip at least one equipment item as a piecemeal armor component before syncing.</p>";
+    : "<p><strong>No syncable pieces found.</strong> Mark at least one carried, unbroken equipment item as a piecemeal armor component before syncing.</p>";
   const content = `
     <div class="d35e-pacs-armor-preview">
       <p>This creates or updates one D35E aggregate armor item and neutralizes native armor math on the component pieces. Restore reverses backed-up fields.</p>
       ${emptyGuidance}
       <table>
         <thead><tr><th>Piece</th><th>Slot</th><th>Armor</th><th>ACP</th><th>ASF</th></tr></thead>
-        <tbody>${rows || "<tr><td colspan='5'>No equipped piecemeal armor pieces found.</td></tr>"}</tbody>
+        <tbody>${rows || "<tr><td colspan='5'>No syncable piecemeal armor pieces found.</td></tr>"}</tbody>
       </table>
       <p><strong>Total:</strong> armor ${plan.summary.armorBonus + plan.summary.enhancementBonus}, max Dex ${plan.summary.maxDex ?? "none"}, ACP ${plan.summary.acp}, ASF ${plan.summary.spellFailure}%.</p>
     </div>`;
@@ -176,78 +220,134 @@ function createIconAction({ title, iconClass, dataset, className = "item-control
 
 function appendInventoryIndicators(app, root) {
   if (!isEnabled(SETTINGS.enableArmor, true)) return;
-  const actor = app?.actor ?? app?.document;
+  const actor = sheetDocument(app);
   if (!actor?.items) return;
   for (const row of root.querySelectorAll("[data-item-id]")) {
-    if (row.querySelector("[data-d35e-pacs-armor-chip]")) continue;
     const item = actor.items.get(row.dataset.itemId);
     if (item?.type !== "equipment") continue;
     const controls = row.querySelector(".item-controls") ?? row.querySelector(".item-control")?.parentElement ?? row;
-    const configure = createIconAction({
-      title: "Configure piecemeal armor",
-      iconClass: "fas fa-shield-alt",
-      dataset: { d35ePacsConfigurePiece: "true", itemId: item.id }
-    });
-    controls.prepend(configure);
+    if (!row.querySelector("[data-d35e-pacs-configure-piece]")) {
+      const configure = createIconAction({
+        title: "Configure piecemeal armor",
+        iconClass: "fas fa-shield-alt",
+        dataset: { d35ePacsConfigurePiece: "true", itemId: item.id }
+      });
+      controls.prepend(configure);
+    }
+    if (row.querySelector("[data-d35e-pacs-armor-chip]")) continue;
     const name = row.querySelector(".item-name") ?? row;
     const chip = document.createElement("span");
     chip.classList.add("d35e-pacs-chip");
     chip.dataset.d35ePacsArmorChip = "true";
+    let chipText = "";
+    let chipClass = "";
     if (isAggregateArmorItem(item)) {
-      chip.textContent = "aggregate";
-      chip.classList.add("d35e-pacs-chip-aggregate");
+      chipText = "aggregate";
+      chipClass = "d35e-pacs-chip-aggregate";
     } else if (isPiecemealArmorPiece(item)) {
       const flag = item.getFlag?.(MODULE_ID, FLAGS.piecemeal) ?? {};
-      chip.textContent = `piece: ${flag.slot ?? "armor"}`;
-      chip.classList.add("d35e-pacs-chip-piece");
+      chipText = `piece: ${flag.slot ?? "armor"}`;
+      chipClass = "d35e-pacs-chip-piece";
     } else if (item.getFlag?.(MODULE_ID, FLAGS.nativeBackup)) {
-      chip.textContent = "synced component";
-      chip.classList.add("d35e-pacs-chip-synced");
-    } else {
-      chip.textContent = "piecemeal?";
-      chip.classList.add("d35e-pacs-chip-muted");
+      chipText = "synced component";
+      chipClass = "d35e-pacs-chip-synced";
     }
-    name.appendChild(chip);
+    if (chipText) {
+      chip.textContent = chipText;
+      chip.classList.add(chipClass);
+      name.appendChild(chip);
+    }
+  }
+}
+
+function injectPiecemealItemPanel(item, root, form) {
+  if (root.querySelector("[data-d35e-pacs-piece-panel]")) return;
+  const flag = item.getFlag?.(MODULE_ID, FLAGS.piecemeal) ?? {};
+  const detailsTab = root.querySelector('.tab[data-tab="details"]') ?? root.querySelector(".tab.details");
+  const insertTarget = detailsTab ?? form;
+  const fieldset = document.createElement("fieldset");
+  fieldset.classList.add("d35e-pacs-fieldset");
+  fieldset.dataset.d35ePacsPiecePanel = "true";
+  const legend = document.createElement("legend");
+  legend.textContent = "Piecemeal Armor";
+  const help = document.createElement("p");
+  help.classList.add("d35e-pacs-help");
+  help.textContent = "Use this item as a module-managed armor component. It can be armor, shield, or miscellaneous equipment; the generated aggregate item is what contributes D35E armor AC.";
+  const enabledLabel = document.createElement("label");
+  enabledLabel.classList.add("d35e-pacs-checkbox");
+  const enabled = document.createElement("input");
+  enabled.type = "checkbox";
+  enabled.name = `flags.${MODULE_ID}.${FLAGS.piecemeal}.enabled`;
+  enabled.checked = flag.enabled === true;
+  enabledLabel.append(enabled, document.createTextNode(" Include in piecemeal armor sync"));
+  const grid = document.createElement("div");
+  grid.classList.add("d35e-pacs-grid");
+  const category = flag.equipmentSubtype ?? item.system?.equipmentSubtype ?? "lightArmor";
+  grid.append(
+    buildLabeledInput("Coverage slot ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.slot`, flag.slot ?? "torso"),
+    buildLabeledInput("Armor bonus ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.armorBonus`, flag.armorBonus ?? item.system?.armor?.value ?? 0),
+    buildLabeledInput("Enhancement bonus ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.enhancementBonus`, flag.enhancementBonus ?? item.system?.armor?.enh ?? 0),
+    buildLabeledInput("Max Dex ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.maxDex`, flag.maxDex ?? item.system?.armor?.dex ?? ""),
+    buildLabeledInput("Armor check penalty ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.acp`, flag.acp ?? item.system?.armor?.acp ?? 0),
+    buildLabeledInput("Arcane failure % ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.spellFailure`, flag.spellFailure ?? item.system?.spellFailure ?? 0),
+    buildLabeledInput("Weight ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.weight`, flag.weight ?? item.system?.weight ?? 0),
+    buildLabeledSelect("Armor category ", `flags.${MODULE_ID}.${FLAGS.piecemeal}.equipmentSubtype`, category, [
+      ["clothing", "Clothing"],
+      ["lightArmor", "Light armor"],
+      ["mediumArmor", "Medium armor"],
+      ["heavyArmor", "Heavy armor"]
+    ])
+  );
+  fieldset.append(legend, help, enabledLabel, grid);
+  fieldset.addEventListener("input", (event) => {
+    const control = event.target;
+    if (!isPiecemealPanelControl(control) || !["number", "text"].includes(control.type)) return;
+    event.stopPropagation();
+    window.clearTimeout(control._d35ePacsInputTimer);
+    control._d35ePacsInputTimer = window.setTimeout(() => {
+      persistPiecemealPanelControl(item, root, form, control);
+    }, 250);
+  });
+  fieldset.addEventListener("change", (event) => {
+    const control = event.target;
+    if (!isPiecemealPanelControl(control)) return;
+    event.stopPropagation();
+    persistPiecemealPanelControl(item, root, form, control);
+  });
+  const detailsHeader = insertTarget.querySelector?.(".form-header");
+  if (detailsHeader?.after) detailsHeader.after(fieldset);
+  else insertTarget.prepend(fieldset);
+}
+
+function schedulePiecemealItemPanelRefresh(item, root, form) {
+  for (const delay of [0, 100, 500]) {
+    window.setTimeout(() => injectPiecemealItemPanel(item, root, form), delay);
   }
 }
 
 function appendItemSheetControls(app, html) {
-  const item = app?.item ?? app?.document;
+  const item = sheetDocument(app);
   if (!item) return;
   const root = htmlRoot(html);
   const form = root?.querySelector?.("form");
   if (!form) return;
 
   if (item.type === "equipment" && isEnabled(SETTINGS.enableArmor, true)) {
-    const flag = item.getFlag?.(MODULE_ID, FLAGS.piecemeal) ?? {};
-    const fieldset = document.createElement("fieldset");
-    fieldset.classList.add("d35e-pacs-fieldset");
-    const legend = document.createElement("legend");
-    legend.textContent = "Piecemeal Armor";
-    const enabledLabel = document.createElement("label");
-    const enabled = document.createElement("input");
-    enabled.type = "checkbox";
-    enabled.name = `flags.${MODULE_ID}.${FLAGS.piecemeal}.enabled`;
-    enabled.checked = flag.enabled === true;
-    enabledLabel.append(enabled, document.createTextNode(" Treat as armor piece"));
-    const grid = document.createElement("div");
-    grid.classList.add("d35e-pacs-grid");
-    grid.append(
-      buildLabeledInput("Slot ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.slot`, flag.slot ?? "torso"),
-      buildLabeledInput("Armor ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.armorBonus`, flag.armorBonus ?? item.system?.armor?.value ?? 0),
-      buildLabeledInput("Enh ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.enhancementBonus`, flag.enhancementBonus ?? item.system?.armor?.enh ?? 0),
-      buildLabeledInput("Max Dex ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.maxDex`, flag.maxDex ?? item.system?.armor?.dex ?? ""),
-      buildLabeledInput("ACP ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.acp`, flag.acp ?? item.system?.armor?.acp ?? 0),
-      buildLabeledInput("ASF ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.spellFailure`, flag.spellFailure ?? item.system?.spellFailure ?? 0)
-    );
-    fieldset.append(legend, enabledLabel, grid);
-    form.appendChild(fieldset);
+    injectPiecemealItemPanel(item, root, form);
+    schedulePiecemealItemPanelRefresh(item, root, form);
+    if (root.dataset?.d35ePacsPieceRefresh !== "true") {
+      root.dataset.d35ePacsPieceRefresh = "true";
+      root.addEventListener("click", (event) => {
+        if (!event.target.closest?.('[data-tab="details"]')) return;
+        schedulePiecemealItemPanelRefresh(item, root, form);
+      });
+    }
   }
 
 }
 
 function appendActorSheetControls(app, html) {
-  const actor = app?.actor ?? app?.document;
+  const actor = sheetDocument(app);
   if (!actor?.isOwner) return;
   const root = htmlRoot(html);
   const title = root?.querySelector?.(".window-header .window-title");

@@ -47,4 +47,38 @@ if (findings.length) {
   throw new Error("Public surface check failed.");
 }
 
+const requiredPublicText = [
+  {
+    file: "README.md",
+    text: "go to the `Details` tab"
+  },
+  {
+    file: "docs/USER_GUIDE.md",
+    text: "module-managed component record"
+  },
+  {
+    file: "docs/USER_GUIDE.md",
+    text: "GitHub issues are the preferred place"
+  },
+  {
+    file: "docs/USER_GUIDE.md",
+    text: "The generated aggregate item is the piece that contributes D35E armor AC after sync."
+  },
+  {
+    file: "scripts/ui.js",
+    text: "app?.object"
+  },
+  {
+    file: "scripts/ui.js",
+    text: "Mark at least one carried, unbroken equipment item"
+  }
+];
+
+for (const requirement of requiredPublicText) {
+  const text = fs.readFileSync(path.join(root, requirement.file), "utf8");
+  if (!text.includes(requirement.text)) {
+    throw new Error(`${requirement.file} is missing required public guidance: ${requirement.text}`);
+  }
+}
+
 console.log("check-public-surface: ok");

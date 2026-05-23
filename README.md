@@ -44,7 +44,7 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 
 1. Open a D35E world, go to `Game Settings > Manage Modules`, enable the module, and reload if Foundry asks.
 2. Open an actor sheet and use the `Piecemeal Armor` header button for armor preview, sync, or restore.
-3. Open equipment items and configure the `Piecemeal Armor` fieldset when an item should count as a component.
+3. Open equipment items, go to the `Details` tab, and configure the `Piecemeal Armor` fieldset when an item should count as a component.
 4. Click a normal D35E weapon or attack use control and choose a target from the native dialog's `Called Shot` dropdown.
 5. Roll normally. The called-shot penalty appears in the D35E attack breakdown.
 6. Let the GM apply any normal, critical, or debilitating called-shot outcome from the chat card.
@@ -107,7 +107,7 @@ node <path-to-local-security-scan.mjs> --root <module-root> --changed-only
 
 ## Support
 
-Use [GitHub issues](https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/issues) for bugs, compatibility reports, and feature requests. Please include Foundry version, D35E version, module version, browser console errors, and a short reproduction path.
+Use [GitHub issues](https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/issues) for bugs, compatibility reports, and feature requests. That is the preferred support path. Please include Foundry version, D35E version, module version, browser console errors, and a short reproduction path.
 
 ## Donate
 

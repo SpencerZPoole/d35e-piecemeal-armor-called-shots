@@ -9,6 +9,17 @@
   padding: 0 4px;
 }
 
+.d35e-pacs-help {
+  margin: 0 0 8px;
+}
+
+.d35e-pacs-checkbox {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
 .d35e-pacs-grid {
   display: grid;
   gap: 6px;

@@ -4,6 +4,14 @@
 
 - No unreleased changes yet.
 
+## 1.0.2
+
+- Fixed the D35E equipment item sheet placement for the `Piecemeal Armor` fieldset so it appears in the visible `Details` tab instead of being appended outside the tab layout.
+- Changed piecemeal armor sync to treat flagged component items as module-managed records by default, so pieces no longer need to occupy D35E armor slots before syncing.
+- Added component support for miscellaneous equipment records that carry armor values through the module fieldset.
+- Reduced inventory noise by showing armor chips only on marked, synced, or aggregate items.
+- Clarified support and armor-component workflow docs for GitHub issue reports, armor-vs-miscellaneous items, and aggregate-only D35E AC math.
+
 ## 1.0.1
 
 - Fixed piecemeal armor sync so generated aggregate armor is explicitly equipped after D35E creates or updates it.

@@ -38,11 +38,14 @@ export function isAggregateArmorItem(item) {
   return item?.type === "equipment" && flag?.isAggregate === true;
 }
 
-export function getPiecemealArmorPieces(source, { equippedOnly = true } = {}) {
+export function getPiecemealArmorPieces(source, { equippedOnly = false } = {}) {
   return getItems(source).filter((item) => {
     if (!isPiecemealArmorPiece(item)) return false;
-    if (!equippedOnly) return true;
-    return item.system?.equipped === true && item.system?.melded !== true && item.broken !== true;
+    if (item.system?.melded === true) return false;
+    if (item.system?.carried === false) return false;
+    if (item.broken === true || item.system?.broken === true) return false;
+    if (equippedOnly && item.system?.equipped !== true) return false;
+    return true;
   });
 }
 
@@ -194,7 +197,7 @@ async function ensureEquipped(item) {
   await item.update({ "system.equipped": true }, { _slotBypass: true });
 }
 
-export async function syncArmorAggregate(actor, { dryRun = false, equippedOnly = true } = {}) {
+export async function syncArmorAggregate(actor, { dryRun = false, equippedOnly = false } = {}) {
   if (!actor) throw new Error("syncArmorAggregate requires an actor.");
   const plan = previewArmorSync(actor, { equippedOnly });
   if (dryRun) return plan;

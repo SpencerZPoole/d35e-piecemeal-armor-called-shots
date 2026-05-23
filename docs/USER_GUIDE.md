@@ -11,11 +11,12 @@ The module has two main workflows:
 
 1. Open a D35E world, go to `Game Settings > Manage Modules`, enable the module, and reload if Foundry asks.
 2. Open an actor sheet.
-3. Click `Piecemeal Armor` in the actor sheet header to preview, sync, or restore armor pieces.
-4. Open a weapon or attack from the normal D35E sheet controls.
-5. Choose a location from the native attack dialog's `Called Shot` dropdown, or leave it on `None`.
-6. Roll the attack and expand the result to see the called-shot modifier in D35E's native breakdown.
-7. Open the module settings when your table wants different locations, penalties, effects, or full-attack behavior.
+3. Open each component equipment item, switch to its `Details` tab, and check `Include in piecemeal armor sync` in the `Piecemeal Armor` fieldset.
+4. Click `Piecemeal Armor` in the actor sheet header to preview and sync the aggregate item.
+5. Open a weapon or attack from the normal D35E sheet controls.
+6. Choose a location from the native attack dialog's `Called Shot` dropdown, or leave it on `None`.
+7. Roll the attack and expand the result to see the called-shot modifier in D35E's native breakdown.
+8. Open the module settings when your table wants different locations, penalties, effects, or full-attack behavior.
 
 ## Where The Controls Live
 
@@ -23,7 +24,7 @@ The module has two main workflows:
 | --- | --- | --- |
 | `Piecemeal Armor` | Actor sheet header | Preview, sync, or restore aggregate armor math. |
 | Shield icon | Actor inventory rows | Opens an equipment item so it can be configured as a piecemeal armor component. |
-| `Piecemeal Armor` fieldset | Equipment item sheet | Stores armor-piece values and coverage slot. |
+| `Piecemeal Armor` fieldset | Equipment item sheet `Details` tab | Stores armor-piece values and coverage slot. |
 | `Called Shot` dropdown | D35E attack/use dialog | Applies a configured called-shot penalty through the native attack workflow. |
 | Full-attack picker | Opens after `Full Attack` when configured | Lets the user choose `None` or a location for each D35E attack label. |
 | Outcome buttons | Called-shot chat card | Lets the GM confirm normal, critical, or debilitating effects. |
@@ -79,9 +80,11 @@ The GM decides whether to apply a normal, critical, or debilitating outcome. Thi
 
 ## Piecemeal Armor
 
-Open an equipment item and use the `Piecemeal Armor` fieldset. The item can remain in inventory as a component record.
+Open an equipment item, switch to the `Details` tab, and use the `Piecemeal Armor` fieldset. The item can remain in inventory as a module-managed component record.
 
 ![Piecemeal armor item fields](assets/item-armor-fields.png)
+
+Component items can be D35E armor, shield, or miscellaneous equipment. Use the module fields for armor math and coverage. After sync, only the generated `Piecemeal Armor Aggregate` item should be equipped for D35E armor AC; component records do not need to occupy D35E body slots.
 
 When the actor is ready, click `Piecemeal Armor` on the actor sheet to preview the aggregate.
 
@@ -96,7 +99,6 @@ Syncing changes actor item data:
 
 Inventory chips:
 
-- `piecemeal?`: this equipment can be configured as a piece.
 - `piece: <slot>`: this item is currently a piecemeal armor component.
 - `aggregate`: this is the generated D35E armor item used for actual armor math.
 - `synced component`: this item has native D35E armor fields backed up by the module.
@@ -137,7 +139,15 @@ Use the actor `Piecemeal Armor` dialog and choose Restore, then Sync again. The 
 
 ### The armor dialog says no syncable pieces were found
 
-Open the equipment item, check `Treat as armor piece`, confirm the item has armor-piece values, and equip the item on the actor. The sync button appears only when at least one equipped component is available.
+Open the equipment item, switch to the `Details` tab, check `Include in piecemeal armor sync`, and confirm the item has armor-piece values. The sync button appears when at least one carried, unbroken, non-melded component is available.
+
+### Should pieces be armor or miscellaneous equipment?
+
+Either works. If a component needs D35E-native armor fields for ordinary item bookkeeping, make it armor or shield. If it is easier to track by body slot, make it miscellaneous equipment and enter the armor values in the module fieldset. The generated aggregate item is the piece that contributes D35E armor AC after sync.
+
+### Where should I report issues?
+
+GitHub issues are the preferred place for bug reports, compatibility notes, and follow-up testing notes.
 
 ### The aggregate armor item is not contributing AC
 

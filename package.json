@@ -1,6 +1,6 @@
 {
   "name": "d35e-piecemeal-armor-called-shots",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Optional PF1e-derived piecemeal armor and configurable called-shot support for the D35E Foundry system.",
   "private": true,
   "type": "module",

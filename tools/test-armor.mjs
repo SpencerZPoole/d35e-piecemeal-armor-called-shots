@@ -62,6 +62,38 @@ assert.equal(summary.spellFailure, 20);
 assert.equal(summary.equipmentSubtype, "mediumArmor");
 assert.deepEqual(summary.componentIds, ["a", "b"]);
 
+const unequippedHelmet = item("d", "Helmet", {
+  enabled: true,
+  slot: "head",
+  armorBonus: 2,
+  equipmentSubtype: "lightArmor"
+}, {
+  equipped: false,
+  carried: true,
+  equipmentType: "miscellaneous",
+  slot: "head"
+});
+const notCarried = item("e", "Dropped vambrace", {
+  enabled: true,
+  slot: "arms",
+  armorBonus: 1
+}, { equipped: false, carried: false });
+const melded = item("f", "Melded plate", {
+  enabled: true,
+  slot: "torso",
+  armorBonus: 5
+}, { equipped: false, melded: true });
+const broken = item("g", "Broken guard", {
+  enabled: true,
+  slot: "arms",
+  armorBonus: 1
+}, { equipped: false, broken: true });
+const moduleManaged = calculatePiecemealArmor([unequippedHelmet, notCarried, melded, broken]);
+assert.equal(moduleManaged.armorBonus, 2);
+assert.deepEqual(moduleManaged.componentIds, ["d"]);
+assert.equal(moduleManaged.equipmentSubtype, "lightArmor");
+assert.equal(calculatePiecemealArmor([unequippedHelmet], { equippedOnly: true }).armorBonus, 0);
+
 const aggregate = buildAggregateItemData(summary);
 assert.equal(aggregate.name, "Piecemeal Armor Aggregate");
 assert.equal(aggregate.system.armor.value, 4);
