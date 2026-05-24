@@ -227,7 +227,7 @@ function appendInventoryIndicators(app, root) {
     const item = actor.items.get(row.dataset.itemId);
     if (item?.type !== "equipment") continue;
     const controls = row.querySelector(".item-controls") ?? row.querySelector(".item-control")?.parentElement ?? row;
-    if (!row.querySelector("[data-d35e-pacs-configure-piece]")) {
+    if (!isAggregateArmorItem(item) && !row.querySelector("[data-d35e-pacs-configure-piece]")) {
       const configure = createIconAction({
         title: "Configure piecemeal armor",
         iconClass: "fas fa-shield-alt",
@@ -333,7 +333,7 @@ function appendItemSheetControls(app, html) {
   const form = root?.querySelector?.("form");
   if (!form) return;
 
-  if (item.type === "equipment" && isEnabled(SETTINGS.enableArmor, true)) {
+  if (item.type === "equipment" && !isAggregateArmorItem(item) && isEnabled(SETTINGS.enableArmor, true)) {
     injectPiecemealItemPanel(item, root, form);
     schedulePiecemealItemPanelRefresh(item, root, form);
     if (root.dataset?.d35ePacsPieceRefresh !== "true") {

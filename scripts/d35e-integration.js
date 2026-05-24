@@ -199,18 +199,8 @@ export async function patchD35EAttackRolls() {
         };
       }
     }
-    const previousCalledShot = this[ACTIVE_CALLED_SHOT];
-    this[ACTIVE_CALLED_SHOT] = calledShot;
-    let result;
-    try {
-      result = await original.call(this, options);
-    } finally {
-      if (previousCalledShot === undefined) {
-        delete this[ACTIVE_CALLED_SHOT];
-      } else {
-        this[ACTIVE_CALLED_SHOT] = previousCalledShot;
-      }
-    }
+    if (calledShot) this[ACTIVE_CALLED_SHOT] = calledShot;
+    const result = await original.call(this, options);
     if (calledShot) {
       const payload = buildCalledShotCardPayload(calledShot);
       await createCalledShotChatCard({

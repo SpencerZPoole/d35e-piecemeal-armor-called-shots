@@ -4,6 +4,11 @@
 
 - No unreleased changes yet.
 
+## 1.0.5
+
+- Fixed called-shot location metadata on native D35E damage cards so live Apply Damage clicks can apply local armor AC.
+- Removed piecemeal-component configuration controls from generated aggregate armor items to avoid confusing the sync workflow.
+
 ## 1.0.4
 
 - Added optional called-shot local armor AC support in D35E's native Apply Damage workflow.
