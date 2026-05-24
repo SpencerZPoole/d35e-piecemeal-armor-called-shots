@@ -18,10 +18,10 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/late
 
 After installation, open a D35E world, go to **Game Settings > Manage Modules**, enable **D35E Piecemeal Armor And Called Shots**, and reload if Foundry asks.
 
-Versioned release assets are published on GitHub. For v1.0.3, the release manifest is:
+Versioned release assets are published on GitHub. For v1.0.4, the release manifest is:
 
 ```text
-https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.3/module.json
+https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.4/module.json
 ```
 
 ## Features
@@ -30,6 +30,7 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 - Previews, syncs, and restores one D35E-native aggregate armor item so D35E keeps doing the actual AC math.
 - Adds a `Called Shot` dropdown inside D35E's native attack/use dialog.
 - Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as `Called Shot: Ear -10`.
+- Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.
 - Supports full-attack policies: ask per attack, first attack only, every attack, or disabled.
 - Posts GM-confirmed called-shot outcome chat cards.
 - Includes an in-Foundry profile editor for locations, penalties, coverage slots, and outcome effects.
@@ -51,8 +52,9 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 3. Open equipment items, go to the `Details` tab, and configure the `Piecemeal Armor` fieldset when an item should count as a component.
 4. Click a normal D35E weapon or attack use control and choose a target from the native dialog's `Called Shot` dropdown.
 5. Roll normally. The called-shot penalty appears in the D35E attack breakdown.
-6. Let the GM apply any normal, critical, or debilitating called-shot outcome from the chat card.
-7. For table-specific behavior, open Foundry's right sidebar gear icon, choose `Game Settings`, then select `D35E Piecemeal Armor And Called Shots`.
+6. Use D35E's native Apply Damage button. If local armor AC is enabled, AC Details shows the location adjustment.
+7. Let the GM apply any normal, critical, or debilitating called-shot outcome from the chat card.
+8. For table-specific behavior, open Foundry's right sidebar gear icon, choose `Game Settings`, then select `D35E Piecemeal Armor And Called Shots`.
 
 See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for the full end-user guide.
 
@@ -68,6 +70,8 @@ The module is additive. It does not edit D35E system files, mutate actors on wor
 
 Module settings live in Foundry's right sidebar gear tab under `Game Settings > D35E Piecemeal Armor And Called Shots`. The called-shot profile editor is available there. Profiles are world settings, so a GM can clone or replace the bundled defaults with table-specific locations, penalties, and effects.
 
+`Called-shot local armor AC` controls whether the native Apply Damage check replaces the aggregate armor contribution with the called location's piecemeal armor value, shows that adjustment only, or disables local armor AC entirely.
+
 Supported v1 effect specs:
 
 - `note`: creates an ActiveEffect note with module flags.
@@ -77,7 +81,7 @@ Supported v1 effect specs:
 
 ## Caveats
 
-- The module does not automatically decide whether a called shot hit, crit, or qualified as a debilitating blow.
+- Local armor AC can change the native D35E Apply Damage hit and crit check when enabled, but the GM still decides called-shot outcome severity.
 - The module does not automatically kill, sever, suffocate, or permanently maim a creature without GM confirmation.
 - The bundled defaults are optional-rule scaffolding, not D&D 3.5 RAW.
 - Fast-forward attacks keep D35E's no-dialog behavior and do not show the called-shot selector.

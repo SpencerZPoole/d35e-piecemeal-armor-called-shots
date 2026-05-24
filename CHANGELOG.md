@@ -4,6 +4,14 @@
 
 - No unreleased changes yet.
 
+## 1.0.4
+
+- Added optional called-shot local armor AC support in D35E's native Apply Damage workflow.
+- Called-shot damage cards now carry location metadata into the D35E hit check without editing D35E system files.
+- Added a world setting for local armor AC modes: adjust AC, show adjustment only, or disabled.
+- Added local armor tests for slot normalization, weaker and stronger locations, missing data, touch AC skipping, and Apply Damage context handling.
+- Updated public docs and package listing notes for the new Apply Damage AC behavior.
+
 ## 1.0.3
 
 - Added a Foundry Package Release API publisher for the GitHub release workflow.

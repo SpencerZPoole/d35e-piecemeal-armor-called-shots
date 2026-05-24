@@ -25,5 +25,7 @@ Called shots use D35E's native attack dialog and attack math:
 - `ItemUse.prototype.rollAttack` is wrapped to read the submitted location.
 - `D35E.ItemUse.preRollAllAttacks` is used to capture the real full-attack sequence before dice roll.
 - `ChatAttack.addAttack` is wrapped to inject a D35E attack modifier such as `Called Shot: Ear -10`.
+- `ChatAttack` damage card builders are wrapped to carry called-shot metadata into D35E's stored chat template data.
+- `D35E.DamageRoll.preHitCheck` is used to adjust the target AC for called-shot local armor before D35E decides hit or crit.
 
 If D35E changes those methods or class names, check `game.d35ePiecemealCalledShots.getIntegrationStatus()` and the browser console before trusting called-shot roll integration.

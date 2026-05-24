@@ -6,6 +6,7 @@ export const SETTINGS = Object.freeze({
   enableArmor: "enableArmorAutomation",
   enableCalledShots: "enableCalledShots",
   calledShotFullAttackMode: "calledShotFullAttackMode",
+  calledShotLocalArmorMode: "calledShotLocalArmorMode",
   calledShotProfiles: "calledShotProfiles",
   locationArmorOverlay: "locationArmorOverlay",
   showGmOnlyDetails: "showGmOnlyDetails"
@@ -15,6 +16,12 @@ export const FULL_ATTACK_MODES = Object.freeze({
   perAttack: "perAttack",
   first: "first",
   all: "all",
+  disabled: "disabled"
+});
+
+export const LOCAL_ARMOR_MODES = Object.freeze({
+  adjust: "adjust",
+  display: "display",
   disabled: "disabled"
 });
 

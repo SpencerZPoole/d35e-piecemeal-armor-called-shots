@@ -17,13 +17,17 @@ import {
   readCalledShotQueue,
   readCalledShotSelection
 } from "./attack-dialog.js";
+import { applyStagedCalledShotLocalArmor, attachCalledShotToDamageCard } from "./local-armor.js";
 import { createCalledShotChatCard } from "./ui.js";
 
 const CHAT_ATTACK_PATCHED = Symbol.for(`${MODULE_ID}.chatAttackPatched`);
+const CHAT_DAMAGE_CARDS_PATCHED = Symbol.for(`${MODULE_ID}.chatDamageCardsPatched`);
+const ACTIVE_CALLED_SHOT = Symbol.for(`${MODULE_ID}.activeCalledShot`);
 const ITEM_USE_PATCHED = Symbol.for(`${MODULE_ID}.itemUsePatched`);
 
 let attackDialogHookRegistered = false;
 let preRollAllAttacksHookRegistered = false;
+let preHitCheckHookRegistered = false;
 
 function settingEnabled(key, fallback = true) {
   try {
@@ -138,6 +142,31 @@ function registerPreRollAllAttacksHook() {
   preRollAllAttacksHookRegistered = true;
 }
 
+function registerPreHitCheckHook() {
+  if (preHitCheckHookRegistered || !globalThis.Hooks?.on) return;
+  Hooks.on("D35E.DamageRoll.preHitCheck", (actor, hookValues, userId) => {
+    if (!settingEnabled(SETTINGS.enableArmor, true) || !settingEnabled(SETTINGS.enableCalledShots, true)) return;
+    applyStagedCalledShotLocalArmor(actor, hookValues?.finalAc, userId);
+  });
+  preHitCheckHookRegistered = true;
+}
+
+function patchD35EDamageCards(ChatAttack) {
+  if (ChatAttack.prototype[CHAT_DAMAGE_CARDS_PATCHED] === true) return;
+  const originalCreateCard = ChatAttack.prototype.createChatCardData;
+  const originalCreateCriticalCard = ChatAttack.prototype.createCriticalChatCardData;
+
+  ChatAttack.prototype.createChatCardData = function d35ePacsCreateChatCardData(...args) {
+    return attachCalledShotToDamageCard(originalCreateCard.call(this, ...args), this[ACTIVE_CALLED_SHOT]);
+  };
+
+  ChatAttack.prototype.createCriticalChatCardData = function d35ePacsCreateCriticalChatCardData(...args) {
+    return attachCalledShotToDamageCard(originalCreateCriticalCard.call(this, ...args), this[ACTIVE_CALLED_SHOT]);
+  };
+
+  Object.defineProperty(ChatAttack.prototype, CHAT_DAMAGE_CARDS_PATCHED, { value: true });
+}
+
 export async function patchD35EAttackRolls() {
   if (globalThis.game?.system?.id !== "D35E") return false;
   const chatAttackModule = await import("/systems/D35E/module/item/chat/chatAttack.js");
@@ -147,12 +176,15 @@ export async function patchD35EAttackRolls() {
     return false;
   }
   if (ChatAttack.prototype[CHAT_ATTACK_PATCHED] === true) {
+    patchD35EDamageCards(ChatAttack);
     await patchD35EItemUse();
     registerAttackDialogHook();
     registerPreRollAllAttacksHook();
+    registerPreHitCheckHook();
     return true;
   }
 
+  patchD35EDamageCards(ChatAttack);
   const original = ChatAttack.prototype.addAttack;
   ChatAttack.prototype.addAttack = async function d35ePacsAddAttack(options = {}) {
     let calledShot = null;
@@ -167,8 +199,18 @@ export async function patchD35EAttackRolls() {
         };
       }
     }
-
-    const result = await original.call(this, options);
+    const previousCalledShot = this[ACTIVE_CALLED_SHOT];
+    this[ACTIVE_CALLED_SHOT] = calledShot;
+    let result;
+    try {
+      result = await original.call(this, options);
+    } finally {
+      if (previousCalledShot === undefined) {
+        delete this[ACTIVE_CALLED_SHOT];
+      } else {
+        this[ACTIVE_CALLED_SHOT] = previousCalledShot;
+      }
+    }
     if (calledShot) {
       const payload = buildCalledShotCardPayload(calledShot);
       await createCalledShotChatCard({
@@ -187,6 +229,7 @@ export async function patchD35EAttackRolls() {
   await patchD35EItemUse();
   registerAttackDialogHook();
   registerPreRollAllAttacksHook();
+  registerPreHitCheckHook();
   return true;
 }
 

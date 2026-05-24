@@ -1,6 +1,7 @@
 import { FLAGS, MODULE_ID, SETTINGS } from "./constants.js";
 import { applyCalledShotOutcome } from "./called-shots.js";
 import { isAggregateArmorItem, isPiecemealArmorPiece, previewArmorSync, restoreArmorComponents, syncArmorAggregate } from "./armor.js";
+import { extractCalledShotDamagePayloads, stageCalledShotDamageApplication } from "./local-armor.js";
 
 function isEnabled(settingKey, fallback = true) {
   try {
@@ -378,8 +379,8 @@ function appendActorSheetControls(app, html) {
 function wireChatCard(message, html) {
     const root = htmlRoot(html);
     const payload = message.getFlag?.(MODULE_ID, "calledShot");
-    if (!payload || !root?.querySelectorAll) return;
-    for (const button of root.querySelectorAll("[data-d35e-pacs-apply]")) {
+    if (!root?.querySelectorAll) return;
+    if (payload) for (const button of root.querySelectorAll("[data-d35e-pacs-apply]")) {
       button.addEventListener("click", async (event) => {
         event.preventDefault();
         if (!game.user?.isGM) {
@@ -399,6 +400,21 @@ function wireChatCard(message, html) {
         ui.notifications.info(`Applied ${severity} called shot outcome.`);
       });
     }
+    const chatTemplateData = message.getFlag?.("D35E", "chatTemplateData");
+    const damagePayloads = extractCalledShotDamagePayloads(chatTemplateData);
+    if (!damagePayloads.some(Boolean)) return;
+    const buttons = [...root.querySelectorAll("button[data-action='applyDamage'], button[data-action='applyDamageHalf']")];
+    buttons.forEach((button, index) => {
+      const damagePayload = damagePayloads[index];
+      if (!damagePayload) return;
+      button.dataset.d35ePacsCalledShotLocation = damagePayload.locationLabel ?? damagePayload.locationId;
+      button.addEventListener("click", () => {
+        stageCalledShotDamageApplication(damagePayload, {
+          messageId: message.id,
+          touch: button.dataset.touch === "true" || button.dataset.touch === "1"
+        });
+      }, { capture: true });
+    });
 }
 
 function registerChatActionListeners() {

@@ -42,6 +42,7 @@ Settings:
 - `Enable piecemeal armor automation`: shows piecemeal armor fields on equipment items and adds GM sync/restore controls to actor sheets.
 - `Enable called shot helper`: adds the `Called Shot` selector to D35E's native attack dialog and applies the configured attack penalty to the native roll breakdown.
 - `Called shots on full attacks`: controls whether full attacks ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections. See [Full Attacks](#full-attacks).
+- `Called-shot local armor AC`: controls whether D35E's native Apply Damage AC check uses the called location's piecemeal armor instead of the aggregate armor contribution, shows that adjustment only, or ignores local armor. See [Local Armor AC](#local-armor-ac).
 - `Show location armor overlay`: adds the matching piecemeal armor coverage slot to called-shot chat cards as advisory information only.
 - `Show GM-only called shot details`: shows source/profile metadata and outcome context to GM users. This is a client setting, so each GM can choose whether they want the extra detail.
 
@@ -54,6 +55,20 @@ Click the normal D35E use or attack control for a weapon or attack item. The nat
 Leave the selector on `None` for a normal attack. Choose a location when the attack is meant to be a called shot. The penalty is injected into D35E's normal attack calculation, so the expanded attack roll can show entries such as `Called Shot: Ear -10` alongside native modifiers.
 
 Fast-forward attacks keep D35E's no-dialog behavior. They do not show the called-shot dropdown.
+
+## Local Armor AC
+
+If `Called-shot local armor AC` is set to `Adjust AC in Apply Damage`, a called shot carries its location into D35E's native Apply Damage workflow. When the GM clicks Apply, the module adjusts the target's AC by replacing the synced aggregate armor contribution with the matching piecemeal armor location.
+
+Example: if the aggregate armor contributes 18 armor AC but the target's legs contribute 17, a called shot to the legs applies `Called Shot Local Armor: Leg -1` in AC Details before D35E checks hit and crit. If the called location is better protected than the aggregate, the adjustment can be positive.
+
+Modes:
+
+- `Adjust AC in Apply Damage`: changes the D35E hit and crit check and adds an AC Details row.
+- `Show adjustment only`: adds the AC Details row as advisory context but does not change the hit or crit check.
+- `Disabled`: leaves Apply Damage AC unchanged.
+
+Local armor AC needs a synced `Piecemeal Armor Aggregate`, a called-shot profile location with a matching coverage slot, and at least one piecemeal armor component for that slot. Touch AC, no-check damage, missing targets, and targets without matching piecemeal armor keep D35E's normal behavior.
 
 ## Full Attacks
 
@@ -85,6 +100,8 @@ Open an equipment item, switch to the `Details` tab, and use the `Piecemeal Armo
 ![Piecemeal armor item fields](assets/item-armor-fields.png)
 
 Component items can be D35E armor, shield, or miscellaneous equipment. Use the module fields for armor math and coverage. After sync, only the generated `Piecemeal Armor Aggregate` item should be equipped for D35E armor AC; component records do not need to occupy D35E body slots.
+
+Coverage slot names also drive local armor AC for called shots. A called-shot profile location with coverage slot `legs` looks for piecemeal armor components whose coverage slot normalizes to `legs`.
 
 When the actor is ready, click `Piecemeal Armor` on the actor sheet to preview the aggregate.
 
@@ -152,6 +169,10 @@ GitHub issues are the preferred place for bug reports, compatibility notes, and 
 ### The aggregate armor item is not contributing AC
 
 After syncing, confirm the item named `Piecemeal Armor Aggregate` is equipped. Version 1.0.1 and later explicitly re-equips the generated aggregate after D35E creates or updates it.
+
+### Local armor did not change the Apply Damage AC
+
+Confirm `Called-shot local armor AC` is set to `Adjust AC in Apply Damage`, the target has a synced aggregate armor item, and the called-shot location's coverage slot matches at least one piecemeal armor component. Touch AC and no-check damage intentionally skip local armor AC.
 
 ### I want D&D 3.5 RAW only
 

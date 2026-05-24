@@ -1,6 +1,6 @@
 {
   "name": "d35e-piecemeal-armor-called-shots",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Optional PF1e-derived piecemeal armor and configurable called-shot support for the D35E Foundry system.",
   "private": true,
   "type": "module",
@@ -14,8 +14,8 @@
   },
   "homepage": "https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots#readme",
   "scripts": {
-    "check:js": "node --check scripts/constants.js && node --check scripts/profiles.js && node --check scripts/armor.js && node --check scripts/effects.js && node --check scripts/called-shots.js && node --check scripts/attack-dialog.js && node --check scripts/settings.js && node --check scripts/ui.js && node --check scripts/d35e-integration.js && node --check scripts/api.js && node --check scripts/module.js",
-    "check:tools": "node --check tools/build-release.mjs && node --check tools/check-localization.mjs && node --check tools/check-public-surface.mjs && node --check tools/publish-foundry-release.mjs && node --check tools/test-armor.mjs && node --check tools/test-called-shots.mjs && node --check tools/test-ux-helpers.mjs && node --check tools/validate-module.mjs",
+    "check:js": "node --check scripts/constants.js && node --check scripts/profiles.js && node --check scripts/armor.js && node --check scripts/effects.js && node --check scripts/called-shots.js && node --check scripts/attack-dialog.js && node --check scripts/local-armor.js && node --check scripts/settings.js && node --check scripts/ui.js && node --check scripts/d35e-integration.js && node --check scripts/api.js && node --check scripts/module.js",
+    "check:tools": "node --check tools/build-release.mjs && node --check tools/check-localization.mjs && node --check tools/check-public-surface.mjs && node --check tools/publish-foundry-release.mjs && node --check tools/test-armor.mjs && node --check tools/test-called-shots.mjs && node --check tools/test-local-armor.mjs && node --check tools/test-ux-helpers.mjs && node --check tools/validate-module.mjs",
     "check:localization": "node tools/check-localization.mjs",
     "check:public": "node tools/check-public-surface.mjs",
     "build:release": "node tools/build-release.mjs",
@@ -23,8 +23,9 @@
     "publish:foundry:dry-run": "node tools/publish-foundry-release.mjs --dry-run",
     "test:armor": "node tools/test-armor.mjs",
     "test:called-shots": "node tools/test-called-shots.mjs",
+    "test:local-armor": "node tools/test-local-armor.mjs",
     "test:ux": "node tools/test-ux-helpers.mjs",
-    "validate": "node tools/validate-module.mjs && npm run check:js && npm run check:tools && npm run check:localization && npm run check:public && npm run test:armor && npm run test:called-shots && npm run test:ux",
+    "validate": "node tools/validate-module.mjs && npm run check:js && npm run check:tools && npm run check:localization && npm run check:public && npm run test:armor && npm run test:called-shots && npm run test:local-armor && npm run test:ux",
     "test": "npm run validate"
   }
 }

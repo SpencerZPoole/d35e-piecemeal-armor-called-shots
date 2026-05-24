@@ -1,4 +1,4 @@
-import { FULL_ATTACK_MODES, MODULE_ID, MODULE_TITLE, SETTINGS } from "./constants.js";
+import { FULL_ATTACK_MODES, LOCAL_ARMOR_MODES, MODULE_ID, MODULE_TITLE, SETTINGS } from "./constants.js";
 import { getDefaultCalledShotProfiles, normalizeCalledShotProfiles } from "./profiles.js";
 
 const HandlebarsApplication = globalThis.foundry?.applications?.api?.HandlebarsApplicationMixin?.(
@@ -217,6 +217,20 @@ export function registerSettings() {
       [FULL_ATTACK_MODES.disabled]: "Disable on full attacks"
     },
     default: FULL_ATTACK_MODES.perAttack
+  });
+
+  game.settings.register(MODULE_ID, SETTINGS.calledShotLocalArmorMode, {
+    name: "Called-shot local armor AC",
+    hint: "Controls whether called shots replace the aggregate armor contribution with the target location's piecemeal armor during D35E's Apply Damage AC check.",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      [LOCAL_ARMOR_MODES.adjust]: "Adjust AC in Apply Damage",
+      [LOCAL_ARMOR_MODES.display]: "Show adjustment only",
+      [LOCAL_ARMOR_MODES.disabled]: "Disabled"
+    },
+    default: LOCAL_ARMOR_MODES.adjust
   });
 
   game.settings.register(MODULE_ID, SETTINGS.locationArmorOverlay, {
