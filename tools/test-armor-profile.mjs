@@ -1,5 +1,16 @@
 import assert from "node:assert/strict";
-import { ARMOR_PROFILE_STATUS, applyArmorProfile, categoryForPacsEquipmentSlot, clearArmorProfile, migrateLegacyArmorProfile, registerPacsEquipmentSlots, resolveArmorProfile, setArmorProfileBaseline, setArmorProfileSlot } from "../scripts/armor-profile.js";
+import {
+  ARMOR_PROFILE_STATUS,
+  applyArmorProfile,
+  categoryForPacsEquipmentSlot,
+  clearArmorProfile,
+  migrateLegacyArmorProfile,
+  reconcileArmorProfile,
+  registerPacsEquipmentSlots,
+  resolveArmorProfile,
+  setArmorProfileBaseline,
+  setArmorProfileSlot
+} from "../scripts/armor-profile.js";
 import { FLAGS, MODULE_ID, PACS_EQUIPMENT_SLOTS } from "../scripts/constants.js";
 
 globalThis.game = {
@@ -95,7 +106,8 @@ function actor(items = [], flags = {}) {
       created.forEach((item) => this.items.push(item));
       return created;
     },
-    async deleteEmbeddedDocuments(_documentName, ids) {
+    async deleteEmbeddedDocuments(_documentName, ids, options = {}) {
+      this.lastDeleteOptions = options;
       for (const id of ids) {
         const index = this.items.findIndex((item) => item.id === id);
         if (index >= 0) this.items.splice(index, 1);
@@ -210,6 +222,7 @@ await setArmorProfileSlot(switchActor, "arms", null);
 resolved = resolveArmorProfile(switchActor);
 assert.equal(resolved.status, ARMOR_PROFILE_STATUS.empty);
 assert.equal(switchChain.system.equipmentType, "armor");
+assert.equal(switchActor.items.some((item) => item.id === "switch-chain"), true);
 assert.equal(switchActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
 
 const chainmail = equipment("chainmail", "Chainmail", {
@@ -242,6 +255,79 @@ assert.equal(studded.system.equipmentType, "armor");
 assert.equal(studded.system.armor.value, 3);
 assert.equal(chainmail.system.equipmentType, "armor");
 assert.equal(profileActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
+
+const reconcileActor = actor([], {
+  [MODULE_ID]: {
+    [FLAGS.armorProfile]: {
+      baselineItemId: "gone-baseline",
+      slots: { torso: "gone-torso", arms: null, legs: "gone-legs" }
+    }
+  }
+});
+const reconciliation = reconcileArmorProfile(reconcileActor);
+assert.equal(reconciliation.changed, true);
+assert.equal(reconciliation.prunedBaseline, "gone-baseline");
+assert.deepEqual(reconciliation.prunedSlots, [
+  { category: "torso", itemId: "gone-torso" },
+  { category: "legs", itemId: "gone-legs" }
+]);
+assert.equal(reconciliation.profile.baselineItemId, null);
+assert.equal(reconciliation.profile.slots.torso, null);
+assert.equal(reconciliation.profile.slots.legs, null);
+
+const deleteTorso = equipment("delete-torso", "Studded Leather", { equipped: false });
+const deleteArms = equipment("delete-arms", "Chainmail", { equipped: false, equipmentSubtype: "mediumArmor" });
+const deleteLegs = equipment("delete-legs", "Studded Leather", { equipped: false });
+const deleteOverrideActor = actor([deleteTorso, deleteArms, deleteLegs]);
+await setArmorProfileSlot(deleteOverrideActor, "torso", "delete-torso");
+await setArmorProfileSlot(deleteOverrideActor, "arms", "delete-arms");
+await setArmorProfileSlot(deleteOverrideActor, "legs", "delete-legs");
+assert.equal(resolveArmorProfile(deleteOverrideActor).summary.armorBonus, 4);
+await deleteOverrideActor.deleteEmbeddedDocuments("Item", ["delete-torso"]);
+const afterDeleteTorso = await applyArmorProfile(deleteOverrideActor, { migrateLegacy: false });
+assert.deepEqual(afterDeleteTorso.reconciliation.prunedSlots, [{ category: "torso", itemId: "delete-torso" }]);
+assert.equal(afterDeleteTorso.profile.slots.torso, null);
+assert.equal(afterDeleteTorso.profile.slots.arms, "delete-arms");
+assert.equal(afterDeleteTorso.profile.slots.legs, "delete-legs");
+assert.equal(afterDeleteTorso.summary.armorBonus, 2);
+assert.equal(deleteArms.system.equipmentType, "misc");
+assert.equal(deleteArms.system.slot, PACS_EQUIPMENT_SLOTS.arms);
+assert.equal(deleteLegs.system.equipmentType, "misc");
+assert.equal(deleteLegs.system.slot, PACS_EQUIPMENT_SLOTS.legs);
+assert.equal(deleteOverrideActor.items.find((item) => item.name === "PAcS Armor Profile").system.armor.value, 2);
+
+const finalOverride = equipment("final-override", "Studded Leather", { equipped: false });
+const finalOverrideActor = actor([finalOverride]);
+await setArmorProfileSlot(finalOverrideActor, "arms", "final-override");
+assert.equal(finalOverrideActor.items.some((item) => item.name === "PAcS Armor Profile"), true);
+await finalOverrideActor.deleteEmbeddedDocuments("Item", ["final-override"]);
+const afterFinalDelete = await applyArmorProfile(finalOverrideActor, { migrateLegacy: false });
+assert.equal(afterFinalDelete.status, ARMOR_PROFILE_STATUS.empty);
+assert.deepEqual(afterFinalDelete.reconciliation.prunedSlots, [{ category: "arms", itemId: "final-override" }]);
+assert.equal(afterFinalDelete.profile.slots.arms, null);
+assert.equal(finalOverrideActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
+assert.equal(finalOverrideActor.lastDeleteOptions.d35ePacsProfile, true);
+
+const deletedBaseline = equipment("deleted-baseline", "Studded Leather", {
+  equipped: true,
+  armor: { value: 3, enh: 0, dex: 5, acp: 0 },
+  spellFailure: 15,
+  weight: 20
+});
+const survivingLegs = equipment("surviving-legs", "Chainmail", { equipped: false, equipmentSubtype: "mediumArmor" });
+const baselineDeleteActor = actor([deletedBaseline, survivingLegs]);
+await setArmorProfileBaseline(baselineDeleteActor, "deleted-baseline");
+await setArmorProfileSlot(baselineDeleteActor, "legs", "surviving-legs");
+await baselineDeleteActor.deleteEmbeddedDocuments("Item", ["deleted-baseline"]);
+const afterBaselineDelete = await applyArmorProfile(baselineDeleteActor, { migrateLegacy: false });
+assert.equal(afterBaselineDelete.reconciliation.prunedBaseline, "deleted-baseline");
+assert.equal(afterBaselineDelete.profile.baselineItemId, null);
+assert.equal(afterBaselineDelete.profile.slots.legs, "surviving-legs");
+assert.equal(afterBaselineDelete.baselineItem, null);
+assert.equal(afterBaselineDelete.status, ARMOR_PROFILE_STATUS.compositeProfile);
+assert.equal(afterBaselineDelete.summary.armorBonus, 0);
+assert.equal(survivingLegs.system.equipmentType, "misc");
+assert.equal(survivingLegs.system.slot, PACS_EQUIPMENT_SLOTS.legs);
 
 const breastplate = equipment("breastplate", "Breastplate", { equipped: false });
 const singlePieceActor = actor([breastplate], {

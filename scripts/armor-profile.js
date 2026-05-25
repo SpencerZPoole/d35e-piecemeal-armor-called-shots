@@ -142,6 +142,39 @@ function hasExplicitProfile(profile) {
   return Boolean(profile.baselineItemId || Object.values(profile.slots).some(Boolean));
 }
 
+export function reconcileArmorProfile(actor, profile = readArmorProfile(actor)) {
+  const items = actor?.items ?? [];
+  const nextProfile = {
+    ...profile,
+    slots: {
+      [PIECE_CATEGORIES.torso]: profile?.slots?.[PIECE_CATEGORIES.torso] || null,
+      [PIECE_CATEGORIES.arms]: profile?.slots?.[PIECE_CATEGORIES.arms] || null,
+      [PIECE_CATEGORIES.legs]: profile?.slots?.[PIECE_CATEGORIES.legs] || null
+    }
+  };
+  const prunedSlots = [];
+  let prunedBaseline = null;
+
+  if (nextProfile.baselineItemId && !itemCollectionGet(items, nextProfile.baselineItemId)) {
+    prunedBaseline = nextProfile.baselineItemId;
+    nextProfile.baselineItemId = null;
+  }
+
+  for (const category of CATEGORY_ORDER) {
+    const itemId = nextProfile.slots[category];
+    if (!itemId || itemCollectionGet(items, itemId)) continue;
+    prunedSlots.push({ category, itemId });
+    nextProfile.slots[category] = null;
+  }
+
+  return {
+    profile: nextProfile,
+    changed: Boolean(prunedBaseline || prunedSlots.length),
+    prunedBaseline,
+    prunedSlots
+  };
+}
+
 function findProfileCarrier(actor) {
   return getItems(actor).find((item) => isInternalArmorProfileItem(item)) ??
     getItems(actor).find((item) => isAggregateArmorItem(item) && getFlagData(item, FLAGS.aggregate)?.internal === true) ??
@@ -299,7 +332,8 @@ function chooseBaselineItem(actor, profile, hasOverrides, unresolved, warnings) 
 }
 
 export function resolveArmorProfile(actor, options = {}) {
-  const profile = readArmorProfile(actor);
+  const reconciliation = reconcileArmorProfile(actor, options.profile ?? readArmorProfile(actor));
+  const profile = reconciliation.profile;
   const items = actor?.items ?? [];
   const explicitProfile = hasExplicitProfile(profile);
   const hasOverrides = Object.values(profile.slots).some(Boolean);
@@ -361,6 +395,7 @@ export function resolveArmorProfile(actor, options = {}) {
     sourceRoles,
     summary,
     status,
+    reconciliation,
     carrier: findProfileCarrier(actor),
     visibleLegacyAggregate: findVisibleLegacyAggregate(actor)
   };
@@ -392,7 +427,10 @@ async function restoreBackedUpItems(actor) {
     if (!update) continue;
     restored.push({ itemId: item.id, itemName: item.name, update });
     if (item.update) await item.update(update, { _slotBypass: true, d35ePacsProfile: true });
-    if (item.unsetFlag) await item.unsetFlag(MODULE_ID, FLAGS.nativeBackup);
+    if (item.unsetFlag) {
+      await item.unsetFlag(MODULE_ID, FLAGS.nativeBackup);
+      await item.unsetFlag(MODULE_ID, FLAGS.armorProfile);
+    }
   }
   return restored;
 }
@@ -400,7 +438,7 @@ async function restoreBackedUpItems(actor) {
 async function deleteItemIfPresent(actor, item) {
   if (!actor || !item?.id) return false;
   if (actor.deleteEmbeddedDocuments) {
-    await actor.deleteEmbeddedDocuments("Item", [item.id]);
+    await actor.deleteEmbeddedDocuments("Item", [item.id], { d35ePacsProfile: true });
     return true;
   }
   const items = getItems(actor);
@@ -489,6 +527,12 @@ async function upsertProfileCarrier(actor, resolution) {
   return data;
 }
 
+async function persistArmorProfileReconciliation(actor) {
+  const reconciliation = reconcileArmorProfile(actor);
+  if (reconciliation.changed) await setActorArmorProfile(actor, reconciliation.profile);
+  return reconciliation;
+}
+
 export async function migrateLegacyArmorProfile(actor, { dryRun = false } = {}) {
   const visibleAggregate = findVisibleLegacyAggregate(actor);
   const oldPieces = getItems(actor).filter(isPiecemealArmorPiece);
@@ -557,7 +601,8 @@ export async function applyArmorProfile(actor, { migrateLegacy = true } = {}) {
     await migrateLegacyArmorProfile(actor);
   }
 
-  const resolution = resolveArmorProfile(actor);
+  const reconciliation = await persistArmorProfileReconciliation(actor);
+  const resolution = resolveArmorProfile(actor, { profile: reconciliation.profile });
   if (resolution.status === ARMOR_PROFILE_STATUS.needsPieceValues) {
     const restored = await restoreBackedUpItems(actor);
     const carrier = findProfileCarrier(actor);
@@ -568,6 +613,7 @@ export async function applyArmorProfile(actor, { migrateLegacy = true } = {}) {
       skipped: true,
       reason: "needsPieceValues",
       restored,
+      reconciliation,
       carrierId: null
     };
   }
@@ -581,6 +627,7 @@ export async function applyArmorProfile(actor, { migrateLegacy = true } = {}) {
     return {
       ...resolution,
       restored,
+      reconciliation,
       carrierId: null
     };
   }
@@ -610,6 +657,7 @@ export async function applyArmorProfile(actor, { migrateLegacy = true } = {}) {
   return {
     ...resolution,
     restored,
+    reconciliation,
     carrierId: carrier?.id ?? null
   };
 }
@@ -652,9 +700,15 @@ export function registerArmorProfileHooks() {
     scheduleProfileApply(item.parent);
   });
   Hooks.on("deleteItem", (item, options = {}) => {
-    if (options.d35ePacsProfile || !item?.parent) return;
-    const profile = readArmorProfile(item.parent);
-    if (!hasExplicitProfile(profile) && !isInternalArmorProfileItem(item) && !isAggregateArmorItem(item)) return;
-    scheduleProfileApply(item.parent);
+    const actor = item?.parent ?? item?.actor ?? null;
+    if (options.d35ePacsProfile || !actor) return;
+    const profile = readArmorProfile(actor);
+    const deletedItemId = item.id ?? item._id ?? null;
+    const referencedByProfile = deletedItemId && (
+      profile.baselineItemId === deletedItemId ||
+      Object.values(profile.slots).includes(deletedItemId)
+    );
+    if (!referencedByProfile && !hasExplicitProfile(profile) && !isInternalArmorProfileItem(item) && !isAggregateArmorItem(item)) return;
+    scheduleProfileApply(actor);
   });
 }

@@ -4,6 +4,7 @@
 
 - Reworked the native profile presentation into D35E inventory slots: the normal `Armor` slot is the baseline and `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` are module-owned override slots.
 - Fixed profile baseline resolution and hidden carrier slot behavior so explicit PAcS-only setups do not inherit stale native armor AC and the hidden carrier no longer occupies the visible Armor slot.
+- Stabilized PAcS slot deletion so native item trash/delete clears only the referenced slot and preserves surviving piecemeal assignments.
 - Updated armor-profile tests and public docs for the native inventory-slot workflow.
 
 ## 1.2.0

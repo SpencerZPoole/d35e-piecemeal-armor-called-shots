@@ -125,6 +125,7 @@ Inventory slots:
 - `PAcS: Arms`: replaces only arm armor.
 - `PAcS: Legs`: replaces only leg armor.
 - Clear icon on a PAcS slot item: restores that item and empties the PAcS slot.
+- Native trash/delete on a PAcS slot item: deletes that inventory item and clears only the PAcS slot that referenced it. Use the clear icon when you want to keep the item.
 
 Empty PAcS slots inherit from the native Armor baseline when the baseline maps to that category. For example, studded leather in the Armor slot can fill torso, arms, and legs. A breastplate maps to torso only, so empty arms and legs remain unarmored unless a table assigns overrides.
 
