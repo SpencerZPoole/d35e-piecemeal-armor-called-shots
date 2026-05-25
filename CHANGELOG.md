@@ -2,10 +2,15 @@
 
 ## Unreleased
 
+## 1.2.1
+
 - Reworked the native profile presentation into D35E inventory slots: the normal `Armor` slot is the baseline and `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` are module-owned override slots.
 - Fixed profile baseline resolution and hidden carrier slot behavior so explicit PAcS-only setups do not inherit stale native armor AC and the hidden carrier no longer occupies the visible Armor slot.
 - Added support for moving a PAcS-worn armor item back to the native `Armor` slot as the baseline suit.
 - Stabilized PAcS slot deletion so native item trash/delete clears only the referenced slot and preserves surviving piecemeal assignments.
+- Expanded native AC hover/source details so composite PAcS profiles show torso, arms, legs, suit bonus, and enhancement rows instead of one opaque carrier line.
+- Cleaned up the module settings menu around user-facing controls and hid legacy rules/workflow switches from normal configuration.
+- Fixed called-shot Apply Damage context through the native Roll Defense dialog so `Called Shot Location Armor` appears in AC Details when location armor is active.
 - Updated armor-profile tests and public docs for the native inventory-slot workflow.
 
 ## 1.2.0

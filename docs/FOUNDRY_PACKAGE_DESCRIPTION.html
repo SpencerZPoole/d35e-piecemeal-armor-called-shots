@@ -1,8 +1,8 @@
 <h2>D35E Piecemeal Armor And Called Shots</h2>
 
-<p><strong>D35E Piecemeal Armor And Called Shots</strong> adds RAW-adapted optional-rule helpers for D35E worlds. It supports two table-facing workflows: a native-feeling piecemeal armor profile and called-shot handling inside D35E's native attack and Apply Damage flow.</p>
+<p><strong>D35E Piecemeal Armor And Called Shots</strong> adds RAW-adapted optional-rule helpers for D35E worlds. It supports native-feeling piecemeal armor slots in D35E's inventory and called-shot handling inside D35E's native attack and Apply Damage flow.</p>
 
-<p>This module is an adaptation aid for D&amp;D 3.5e tables. It does not claim that piecemeal armor or called shots are official D&amp;D 3.5 RAW. The bundled defaults are adapted from Pathfinder 1e Ultimate Combat optional rules where D35E can support them. A legacy v1.0 workflow is available for tables that prefer manual outcomes.</p>
+<p>This module is an adaptation aid for D&amp;D 3.5e tables. It does not claim that piecemeal armor or called shots are official D&amp;D 3.5 RAW. The bundled defaults are adapted from Pathfinder 1e Ultimate Combat optional rules where D35E can support them.</p>
 
 <p><strong>Support:</strong> If this module helps your table, donations are optional and support continued maintenance, compatibility testing, release packaging, and documentation.<br />
 <a href="https://github.com/sponsors/SpencerZPoole"><img src="https://img.shields.io/badge/GitHub%20Sponsors-Donate-ea4aaa?style=flat&amp;logo=githubsponsors&amp;logoColor=white" alt="Sponsor on GitHub" /></a>
@@ -24,44 +24,43 @@
 
 <p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/module-settings.png" alt="Module settings for D35E Piecemeal Armor And Called Shots" /></p>
 
-<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/piecemeal-armor-profile.png" alt="Piecemeal armor profile controls" /></p>
-
 <p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/profile-editor.png" alt="Called-shot profile editor" /></p>
 
 <h3>What It Adds</h3>
 
 <ul>
-  <li>Adds an actor-sheet Piecemeal Armor Profile with Baseline, Torso, Arms, and Legs controls.</li>
+  <li>Adds <code>PAcS: Torso</code>, <code>PAcS: Arms</code>, and <code>PAcS: Legs</code> slots directly to D35E's normal Armor and Equipment inventory list.</li>
+  <li>Uses the native D35E <code>Armor</code> slot as the baseline suit source, with PAcS slots overriding only the categories a table mixes.</li>
   <li>Provides a starter catalog for common RAW armor pieces such as padded, leather, studded leather, hide, chain, and plate arms/legs/torso.</li>
   <li>Keeps baseline-only armor native to D35E and uses a hidden zero-weight D35E carrier only when composite profile math is active.</li>
   <li>Marks profile source items as worn in profile while preventing duplicate armor AC and weight.</li>
   <li>Adds a <code>Called Shot</code> dropdown inside D35E's native attack/use dialog.</li>
   <li>Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as <code>Called Shot: Ear -10</code>.</li>
   <li>Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.</li>
-  <li>Enforces Improved/Greater Called Shot full-attack limits in RAW-adapted mode, with legacy permissive policies still available.</li>
+  <li>Enforces Improved/Greater Called Shot full-attack limits while still offering table-facing full-attack handling choices.</li>
   <li>Automatically applies called-shot severity outcomes after D35E Apply Damage and records a GM restore ledger.</li>
   <li>Includes an in-Foundry profile editor for locations, penalties, coverage slot(s), and outcome effects.</li>
 </ul>
 
 <h3>Piecemeal Armor Workflow</h3>
 
-<p>Equip ordinary armor normally. If no piece overrides are active, D35E remains the source of truth. When the actor mixes pieces, the actor sheet profile resolves a baseline and optional Torso, Arms, or Legs overrides into RAW-adapted piece math.</p>
+<p>Equip ordinary armor normally. If no PAcS slots are occupied, D35E remains the source of truth. When the actor mixes pieces, drag armor items into <code>PAcS: Torso</code>, <code>PAcS: Arms</code>, or <code>PAcS: Legs</code> in the same Armor and Equipment list users already use.</p>
 
-<p>The module uses D35E-native item data for the final armor contribution. Composite profiles use a hidden internal carrier and reversible source-item backups, so users no longer manage a visible aggregate item. Legacy aggregate sync remains available from module settings for older worlds.</p>
+<p>The module uses D35E-native item data for the final armor contribution. Composite profiles use a hidden zero-weight carrier and reversible source-item backups, so users no longer manage a visible aggregate item or a separate top-of-inventory profile panel.</p>
 
 <h3>Called-Shot Workflow</h3>
 
 <p>Players use the normal D35E attack or item controls. The native attack dialog gains a <strong>Called Shot</strong> selector. Choosing a location applies the configured attack penalty through D35E's existing roll breakdown and posts a GM-facing outcome card after the roll.</p>
 
-<p>RAW-adapted full attacks honor Improved Called Shot and Greater Called Shot. Legacy mode can ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections, depending on module settings.</p>
+<p>Full attacks honor Improved Called Shot and Greater Called Shot. Module settings can ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections on full attacks.</p>
 
 <h3>Automatic Outcomes And Restore</h3>
 
-<p>Local armor AC can change D35E's native Apply Damage hit and crit check when enabled. In RAW-adapted mode, D35E Apply Damage determines hit, crit, and post-DR damage; the module then determines normal, critical, or debilitating severity and applies the configured outcomes. Severe outcomes such as death or permanent maiming are recorded in a called-shot ledger so a GM can restore them from the target actor sheet if needed.</p>
+<p>When piecemeal armor and called shots are both enabled, location armor AC can change D35E's native Apply Damage hit and crit check. D35E Apply Damage determines hit, crit, and post-DR damage; the module then determines normal, critical, or debilitating severity and applies, confirms, or leaves advisory outcomes based on the table setting. Severe outcomes such as death or permanent maiming are recorded in a called-shot ledger so a GM can restore them from the target actor sheet if needed.</p>
 
 <h3>Configuration</h3>
 
-<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can choose RAW-adapted or legacy rules mode, choose native profile or legacy aggregate armor workflow, enable or disable each workflow, choose full-attack handling, enable local armor AC for Apply Damage, show location armor overlays, and edit called-shot profiles.</p>
+<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, show location armor overlays, and edit called-shot profiles.</p>
 
 <p>Profiles control location labels, attack penalties, enabled state, matching armor coverage slot(s), and outcome effects. Effect snippets are JSON because they map directly to the module's declarative effect engine.</p>
 
@@ -70,7 +69,7 @@
 <ul>
   <li>Foundry VTT: minimum 14, verified 14.362.</li>
   <li>D35E system: minimum 3.0.2, verified 3.0.2.</li>
-  <li>Module version: 1.2.0.</li>
+  <li>Module version: 1.2.1.</li>
 </ul>
 
 <h3>Documentation And Support</h3>

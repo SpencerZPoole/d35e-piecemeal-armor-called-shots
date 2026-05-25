@@ -18,10 +18,10 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/late
 
 After installation, open a D35E world, go to **Game Settings > Manage Modules**, enable **D35E Piecemeal Armor And Called Shots**, and reload if Foundry asks.
 
-Versioned release assets are published on GitHub. For v1.2.0, the release manifest is:
+Versioned release assets are published on GitHub. For v1.2.1, the release manifest is:
 
 ```text
-https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.2.0/module.json
+https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.2.1/module.json
 ```
 
 ## Features
