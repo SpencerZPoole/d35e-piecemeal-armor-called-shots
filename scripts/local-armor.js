@@ -13,7 +13,10 @@ import { ARMOR_PROFILE_STATUS, resolveArmorProfile } from "./armor-profile.js";
 
 export { normalizeArmorSlot };
 
-const DAMAGE_CONTEXT_TTL_MS = 30000;
+// D35E opens a Roll Defense dialog after Apply Damage; GMs may need time there
+// before choosing the final defense mode, so this context must outlive a quick
+// click-to-roll interaction.
+const DAMAGE_CONTEXT_TTL_MS = 5 * 60 * 1000;
 const damageContexts = new Map();
 
 function getProperty(source, path) {

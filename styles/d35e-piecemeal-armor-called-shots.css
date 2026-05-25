@@ -90,6 +90,12 @@
   outline: 2px solid rgba(40, 105, 150, 0.7);
 }
 
+.d35e-pacs-item-action {
+  color: inherit;
+  flex: 0 0 20px;
+  text-align: center;
+}
+
 .d35e-pacs-profile-slot-row {
   background: rgba(40, 105, 150, 0.06);
 }

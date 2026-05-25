@@ -247,7 +247,11 @@ resolved = resolveArmorProfile(switchActor);
 assert.equal(resolved.status, ARMOR_PROFILE_STATUS.empty);
 assert.equal(switchChain.system.equipmentType, "armor");
 assert.equal(switchActor.items.some((item) => item.id === "switch-chain"), true);
-assert.equal(switchActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
+carrier = switchActor.items.find((item) => item.name === "PAcS Armor Profile");
+assert.equal(Boolean(carrier), true);
+assert.equal(carrier.system.equipped, false);
+assert.equal(carrier.system.armor.value, 0);
+assert.equal(carrier.getFlag(MODULE_ID, FLAGS.internalArmor).suspended, true);
 
 const dragBackChain = equipment("drag-back-chain", "Chainmail", {
   equipped: false,
@@ -266,7 +270,11 @@ resolved = resolveArmorProfile(dragBackActor);
 assert.equal(resolved.status, ARMOR_PROFILE_STATUS.nativeArmor);
 assert.equal(resolved.profile.baselineItemId, "drag-back-chain");
 assert.equal(resolved.profile.slots.arms, null);
-assert.equal(dragBackActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
+carrier = dragBackActor.items.find((item) => item.name === "PAcS Armor Profile");
+assert.equal(Boolean(carrier), true);
+assert.equal(carrier.system.equipped, false);
+assert.equal(carrier.system.armor.value, 0);
+assert.equal(carrier.getFlag(MODULE_ID, FLAGS.internalArmor).suspended, true);
 assert.equal(dragBackChain.system.equipmentType, "armor");
 assert.equal(dragBackChain.system.equipped, true);
 assert.equal(dragBackChain.system.armor.value, 5);
@@ -328,6 +336,7 @@ let suspendCarrier = suspendActor.items.find((item) => item.name === "PAcS Armor
 assert.equal(Boolean(suspendCarrier), true);
 assert.equal(suspendCarrier.system.equipped, false);
 assert.equal(suspendCarrier.system.armor.value, 0);
+assert.equal(suspendCarrier.getFlag(MODULE_ID, FLAGS.internalArmor).suspended, true);
 assert.equal(suspendOverride.system.equipmentType, "armor");
 assert.equal(suspendOverride.system.equipped, false);
 assert.equal(suspendOverride.system.armor.value, 5);
@@ -337,11 +346,14 @@ assert.equal(applyWhileDisabled.suspended, true);
 suspendCarrier = suspendActor.items.find((item) => item.name === "PAcS Armor Profile");
 assert.equal(suspendCarrier.system.equipped, false);
 assert.equal(suspendCarrier.system.armor.value, 0);
+assert.equal(suspendCarrier.getFlag(MODULE_ID, FLAGS.internalArmor).suspended, true);
 armorAutomationEnabled = true;
 const resumed = await resumeArmorProfileAutomation(suspendActor);
 assert.equal(resumed.status, ARMOR_PROFILE_STATUS.compositeProfile);
 assert.equal(suspendActor.getFlag(MODULE_ID, FLAGS.armorProfile).suspended, false);
-assert.equal(suspendActor.items.some((item) => item.name === "PAcS Armor Profile"), true);
+suspendCarrier = suspendActor.items.find((item) => item.name === "PAcS Armor Profile");
+assert.equal(Boolean(suspendCarrier), true);
+assert.equal(suspendCarrier.getFlag(MODULE_ID, FLAGS.internalArmor).suspended, false);
 assert.equal(suspendOverride.system.equipmentType, "misc");
 assert.equal(suspendOverride.system.slot, PACS_EQUIPMENT_SLOTS.legs);
 
@@ -356,7 +368,7 @@ profileActor = actor([studded, chainmail]);
 await setArmorProfileSlot(profileActor, "legs", "chainmail");
 resolved = resolveArmorProfile(profileActor);
 assert.equal(resolved.status, ARMOR_PROFILE_STATUS.compositeProfile);
-assert.equal(resolved.profile.baselineItemId, null);
+assert.equal(resolved.profile.baselineItemId, "studded");
 assert.equal(resolved.baselineItem.id, "studded");
 assert.equal(resolved.summary.armorBonus, 2);
 assert.equal(resolved.summary.completeSuit, true);
@@ -404,6 +416,62 @@ assert.equal(armorProfileSourceValue(profileActor, FLAT_FOOTED_AC_PATH), carrier
 assert.equal(JSON.stringify(profileActor.sourceDetails[TOUCH_AC_PATH]), touchDetailsBefore);
 decoration = decorateArmorProfileSourceDetails(profileActor, resolved);
 assert.equal(profileActor.sourceDetails[NORMAL_AC_PATH].filter((row) => row.moduleId === MODULE_ID).length, 4);
+
+const clearBaselineStudded = equipment("clear-baseline-studded", "Studded Leather", {
+  equipped: true,
+  armor: { value: 3, enh: 0, dex: 5, acp: 0 },
+  spellFailure: 15,
+  weight: 20
+});
+const clearBaselineChain = equipment("clear-baseline-chain", "Chainmail", {
+  equipped: false,
+  equipmentSubtype: "mediumArmor",
+  armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+  spellFailure: 30,
+  weight: 40
+});
+const clearBaselineActor = actor([clearBaselineStudded, clearBaselineChain]);
+await setArmorProfileSlot(clearBaselineActor, "arms", "clear-baseline-chain");
+assert.equal(clearBaselineActor.getFlag(MODULE_ID, FLAGS.armorProfile).baselineItemId, "clear-baseline-studded");
+await setArmorProfileBaseline(clearBaselineActor, null);
+resolved = resolveArmorProfile(clearBaselineActor);
+assert.equal(resolved.status, ARMOR_PROFILE_STATUS.compositeProfile);
+assert.equal(resolved.profile.baselineItemId, null);
+assert.equal(resolved.baselineItem, null);
+assert.equal(resolved.summary.armorBonus, 1);
+assert.equal(clearBaselineStudded.system.equipmentType, "armor");
+assert.equal(clearBaselineStudded.system.equipped, false);
+assert.equal(clearBaselineStudded.system.armor.value, 3);
+assert.equal(clearBaselineChain.system.equipmentType, "misc");
+assert.equal(clearBaselineChain.system.slot, PACS_EQUIPMENT_SLOTS.arms);
+
+const explicitNoBaselineActor = actor([
+  equipment("ignored-equipped-armor", "Studded Leather", {
+    equipped: true,
+    armor: { value: 3, enh: 0, dex: 5, acp: 0 },
+    spellFailure: 15,
+    weight: 20
+  }),
+  equipment("explicit-chain-arms", "Chainmail", {
+    equipped: false,
+    equipmentSubtype: "mediumArmor",
+    armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+    spellFailure: 30,
+    weight: 40
+  })
+], {
+  [MODULE_ID]: {
+    [FLAGS.armorProfile]: {
+      baselineItemId: null,
+      slots: { torso: null, arms: "explicit-chain-arms", legs: null }
+    }
+  }
+});
+resolved = resolveArmorProfile(explicitNoBaselineActor);
+assert.equal(resolved.status, ARMOR_PROFILE_STATUS.compositeProfile);
+assert.equal(resolved.baselineItem, null);
+assert.equal(resolved.pieces.length, 1);
+assert.equal(resolved.summary.armorBonus, 1);
 
 const nativeSourceActor = actor([equipment("native", "Studded Leather", { equipped: true, armor: { value: 3, enh: 0, dex: 5, acp: 0 } })]);
 nativeSourceActor.sourceDetails = {
@@ -470,8 +538,12 @@ const afterFinalDelete = await applyArmorProfile(finalOverrideActor, { migrateLe
 assert.equal(afterFinalDelete.status, ARMOR_PROFILE_STATUS.empty);
 assert.deepEqual(afterFinalDelete.reconciliation.prunedSlots, [{ category: "arms", itemId: "final-override" }]);
 assert.equal(afterFinalDelete.profile.slots.arms, null);
-assert.equal(finalOverrideActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
-assert.equal(finalOverrideActor.lastDeleteOptions.d35ePacsProfile, true);
+carrier = finalOverrideActor.items.find((item) => item.name === "PAcS Armor Profile");
+assert.equal(Boolean(carrier), true);
+assert.equal(carrier.system.equipped, false);
+assert.equal(carrier.system.armor.value, 0);
+assert.equal(carrier.getFlag(MODULE_ID, FLAGS.internalArmor).suspended, true);
+assert.equal(finalOverrideActor.lastDeleteOptions.d35ePacsProfile, undefined);
 
 const deletedBaseline = equipment("deleted-baseline", "Studded Leather", {
   equipped: true,

@@ -405,8 +405,11 @@ function chooseBaselineItem(actor, profile, hasOverrides, unresolved, warnings) 
   const items = actor?.items ?? [];
   const profileBaseline = itemCollectionGet(items, profile.baselineItemId);
   const assignedProfileItems = profileSlotItemIds(profile);
+  if (profileBaseline && !assignedProfileItems.has(profileBaseline.id ?? profileBaseline._id) && !isPiecemealArmorPiece(profileBaseline)) return profileBaseline;
+
+  if (hasOverrides) return null;
+
   const candidates = findEquippedNativeBaselines(actor, assignedProfileItems);
-  if (profileBaseline && !assignedProfileItems.has(profileBaseline.id ?? profileBaseline._id) && candidates.some((item) => item.id === profileBaseline.id || item._id === profileBaseline._id)) return profileBaseline;
   if (candidates.length === 1) return candidates[0];
   if (candidates.length > 1) {
     const note = {
@@ -418,7 +421,6 @@ function chooseBaselineItem(actor, profile, hasOverrides, unresolved, warnings) 
     else warnings.push(note);
     return null;
   }
-  if (profileBaseline && !assignedProfileItems.has(profileBaseline.id ?? profileBaseline._id) && !isPiecemealArmorPiece(profileBaseline)) return profileBaseline;
   return null;
 }
 
@@ -644,6 +646,7 @@ function buildProfileCarrierData(resolution) {
     isInternal: true,
     sourceItemIds: resolution.sourceItemIds,
     status: resolution.status,
+    suspended: false,
     generatedAt: new Date().toISOString()
   };
   data.flags[MODULE_ID][FLAGS.aggregate].componentIds = resolution.sourceItemIds;
@@ -706,10 +709,24 @@ export async function migrateLegacyArmorProfile(actor, { dryRun = false } = {}) 
 
 export async function setArmorProfileBaseline(actor, itemId) {
   const profile = readArmorProfile(actor);
+  const previousBaselineId = profile.baselineItemId || null;
   profile.baselineItemId = itemId || null;
   if (itemId) {
     for (const category of CATEGORY_ORDER) {
       if (profile.slots[category] === itemId) profile.slots[category] = null;
+    }
+  } else if (previousBaselineId) {
+    const previousBaseline = itemCollectionGet(actor?.items ?? [], previousBaselineId);
+    const backup = previousBaseline ? getFlagData(previousBaseline, FLAGS.nativeBackup) : null;
+    if (backup?.native) {
+      const native = {
+        ...backup.native,
+        equipped: false,
+        slot: "slotless"
+      };
+      await previousBaseline.update?.({
+        [`flags.${MODULE_ID}.${FLAGS.nativeBackup}.native`]: native
+      }, { _slotBypass: true, d35ePacsProfile: true });
     }
   }
   await setActorArmorProfile(actor, profile);
@@ -721,6 +738,14 @@ export async function setArmorProfileSlot(actor, category, itemId) {
   if (!normalized) throw new Error(`Unknown armor profile category: ${category}`);
   const profile = readArmorProfile(actor);
   if (itemId) {
+    if (profile.baselineItemId === itemId) {
+      profile.baselineItemId = null;
+    } else if (!profile.baselineItemId) {
+      const excludedItemIds = profileSlotItemIds(profile);
+      excludedItemIds.add(itemId);
+      const candidates = findEquippedNativeBaselines(actor, excludedItemIds);
+      if (candidates.length === 1) profile.baselineItemId = candidates[0].id ?? candidates[0]._id ?? null;
+    }
     for (const existingCategory of CATEGORY_ORDER) {
       if (existingCategory !== normalized && profile.slots[existingCategory] === itemId) profile.slots[existingCategory] = null;
     }
@@ -794,12 +819,12 @@ export async function applyArmorProfile(actor, { migrateLegacy = true } = {}) {
   if (resolution.status === ARMOR_PROFILE_STATUS.nativeArmor || resolution.status === ARMOR_PROFILE_STATUS.empty) {
     const restored = await restoreBackedUpItems(actor);
     if (resolution.status === ARMOR_PROFILE_STATUS.nativeArmor) await ensureNativeBaselineEquipped(actor, resolution);
-    const carrier = findProfileCarrier(actor);
-    if (carrier) await deleteItemIfPresent(actor, carrier);
+    const zeroedCarriers = await zeroArmorProfileCarriers(actor);
     await refreshActorArmorMath(actor);
     return {
       ...resolution,
       restored,
+      zeroedCarriers,
       reconciliation,
       carrierId: null
     };

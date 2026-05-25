@@ -390,7 +390,7 @@ function wireNativeArmorProfileSlots(actor, root) {
   }, { capture: true });
 }
 
-function createIconAction({ title, iconClass, dataset, className = "item-control" }) {
+function createIconAction({ title, iconClass, dataset, className = "d35e-pacs-item-action" }) {
   const action = document.createElement("a");
   action.href = "#";
   action.title = title;
@@ -702,7 +702,7 @@ function appendActorSheetControls(app, html) {
         item?.sheet?.render(true);
       }
     }
-  });
+  }, { capture: true });
 }
 
 function wireChatCard(message, html) {
