@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   buildAggregateItemData,
+  buildArmorProfileSourceDetailRows,
   buildNeutralizeUpdate,
   buildRestoreUpdate,
   calculatePiecemealArmor,
@@ -127,6 +128,15 @@ assert.equal(fullSuit.armorBonus, 10);
 assert.equal(fullSuit.suitArmorBonus, 1);
 assert.equal(fullSuit.acp, 4);
 assert.equal(fullSuit.spellFailure, 35);
+const fullSuitRows = buildArmorProfileSourceDetailRows(fullSuit);
+assert.deepEqual(fullSuitRows.map((row) => row.name), [
+  "PAcS Torso: Torso",
+  "PAcS Arms: Arms",
+  "PAcS Legs: Legs",
+  "PAcS Full Suit"
+]);
+assert.deepEqual(fullSuitRows.map((row) => row.value), [6, 1, 2, 1]);
+assert.equal(fullSuitRows.reduce((total, row) => total + row.value, 0), fullSuit.armorBonus + fullSuit.enhancementBonus);
 
 const mixedSuit = calculatePiecemealArmor([
   item("mixed-torso", "Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorFamily: "plate", armorBonus: 6, spellFailure: 35 }),
@@ -135,6 +145,30 @@ const mixedSuit = calculatePiecemealArmor([
 ]);
 assert.equal(mixedSuit.mixedSuit, true);
 assert.equal(mixedSuit.spellFailure, 40);
+
+const zeroValuePieces = calculatePiecemealArmor([
+  item("zero-arms", "Studded leather arms", { enabled: true, pieceCategory: "arms", coverageSlots: "arms", armorFamily: "studded-leather", armorBonus: 0 }),
+  item("zero-legs", "Chain legs", { enabled: true, pieceCategory: "legs", coverageSlots: "legs", armorFamily: "chain", armorBonus: 0 })
+]);
+const zeroValueRows = buildArmorProfileSourceDetailRows(zeroValuePieces);
+assert.deepEqual(zeroValueRows.map((row) => row.name), ["PAcS Arms: Studded leather arms", "PAcS Legs: Chain legs"]);
+assert.deepEqual(zeroValueRows.map((row) => row.value), [0, 0]);
+
+const enhancedPiece = calculatePiecemealArmor([
+  item("enhanced-torso", "Enhanced torso", {
+    enabled: true,
+    pieceCategory: "torso",
+    coverageSlots: "torso",
+    armorFamily: "plate",
+    armorBonus: 6,
+    enhancementBonus: 2,
+    magicMode: "separatePiece"
+  })
+]);
+const enhancedRows = buildArmorProfileSourceDetailRows(enhancedPiece);
+assert.equal(enhancedRows.at(-1).name, "PAcS Enhancement");
+assert.equal(enhancedRows.at(-1).value, 2);
+assert.equal(enhancedRows.reduce((total, row) => total + row.value, 0), enhancedPiece.armorBonus + enhancedPiece.enhancementBonus);
 
 const mithralSuit = calculatePiecemealArmor([
   item("mithral-torso", "Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorFamily: "chain", material: "mithral", armorBonus: 4, maxDex: 4, acp: 4, spellFailure: 25, equipmentSubtype: "mediumArmor", weight: 20 }),
@@ -151,6 +185,7 @@ const duplicateCategory = calculatePiecemealArmor([
 ]);
 assert.deepEqual(duplicateCategory.componentIds, ["strong-torso"]);
 assert.equal(duplicateCategory.ignoredPieces.length, 1);
+assert.deepEqual(buildArmorProfileSourceDetailRows(duplicateCategory).map((row) => row.name), ["PAcS Torso: Strong Torso"]);
 
 const neutralized = buildNeutralizeUpdate(torso);
 assert.equal(neutralized["system.armor.value"], 0);

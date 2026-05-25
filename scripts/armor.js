@@ -14,6 +14,12 @@ import {
 
 const COVERAGE_DELIMITER = /[,;|/\r\n]+/;
 const CATEGORY_ORDER = [PIECE_CATEGORIES.torso, PIECE_CATEGORIES.legs, PIECE_CATEGORIES.arms];
+const SOURCE_DETAIL_CATEGORY_ORDER = [PIECE_CATEGORIES.torso, PIECE_CATEGORIES.arms, PIECE_CATEGORIES.legs];
+const SOURCE_DETAIL_CATEGORY_LABELS = Object.freeze({
+  [PIECE_CATEGORIES.torso]: "Torso",
+  [PIECE_CATEGORIES.arms]: "Arms",
+  [PIECE_CATEGORIES.legs]: "Legs"
+});
 const MISC_VISUAL_SLOTS = new Set([
   "slotless",
   "head",
@@ -475,6 +481,52 @@ export function calculateArmorPieceLocalTotal(summary, piece) {
       ? numberOr(activeMagic.enhancementBonus)
       : 0;
   return pieceArmorBonus(piece) + enhancement;
+}
+
+function sourceDetailCategoryIndex(category) {
+  const index = SOURCE_DETAIL_CATEGORY_ORDER.indexOf(category);
+  return index >= 0 ? index : SOURCE_DETAIL_CATEGORY_ORDER.length;
+}
+
+function sourceDetailPieceName(piece) {
+  const name = String(piece?.name ?? "Armor piece").trim() || "Armor piece";
+  const categoryLabel = SOURCE_DETAIL_CATEGORY_LABELS[piece?.pieceCategory];
+  return categoryLabel ? name.replace(new RegExp(`\\s+\\(${categoryLabel}\\)$`, "i"), "") : name;
+}
+
+export function buildArmorProfileSourceDetailRows(summary) {
+  const activePieces = Array.isArray(summary?.activePieces) ? summary.activePieces : [];
+  const rows = activePieces
+    .filter((piece) => piece?.pieceCategory)
+    .slice()
+    .sort((left, right) => sourceDetailCategoryIndex(left.pieceCategory) - sourceDetailCategoryIndex(right.pieceCategory))
+    .map((piece) => ({
+      name: `PAcS ${SOURCE_DETAIL_CATEGORY_LABELS[piece.pieceCategory] ?? "Piece"}: ${sourceDetailPieceName(piece)}`,
+      value: pieceArmorBonus(piece),
+      source: "piece",
+      pieceId: piece.id ?? null,
+      pieceCategory: piece.pieceCategory
+    }));
+
+  const suitArmorBonus = numberOr(summary?.suitArmorBonus);
+  if (suitArmorBonus !== 0) {
+    rows.push({
+      name: "PAcS Full Suit",
+      value: suitArmorBonus,
+      source: "suit"
+    });
+  }
+
+  const enhancementBonus = numberOr(summary?.enhancementBonus);
+  if (enhancementBonus !== 0) {
+    rows.push({
+      name: "PAcS Enhancement",
+      value: enhancementBonus,
+      source: "enhancement"
+    });
+  }
+
+  return rows;
 }
 
 export function buildAggregateItemData(summary, { internal = false } = {}) {

@@ -10,6 +10,7 @@ import {
 } from "./constants.js";
 import {
   buildAggregateItemData,
+  buildArmorProfileSourceDetailRows,
   buildNeutralizeUpdate,
   buildRestoreUpdate,
   calculatePiecemealArmorFromPieces,
@@ -46,6 +47,10 @@ const PACS_SLOT_LABEL_KEYS = Object.freeze({
   [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.arms]]: "D35E.EquipSlotPacsArms",
   [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.legs]]: "D35E.EquipSlotPacsLegs"
 });
+const AC_SOURCE_DETAIL_PATHS = Object.freeze([
+  "system.attributes.ac.normal.total",
+  "system.attributes.ac.flatFooted.total"
+]);
 
 function keyForValue(value) {
   return String(value ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -78,6 +83,88 @@ export function profileSlotForCategory(category) {
 
 export function isPacsEquipmentSlot(slot) {
   return Boolean(categoryForPacsEquipmentSlot(slot));
+}
+
+function getSourceDetailRows(actor, path) {
+  if (!actor?.sourceDetails) return null;
+  const rows = actor.sourceDetails[path];
+  if (Array.isArray(rows)) return rows;
+  if (rows === undefined) {
+    actor.sourceDetails[path] = [];
+    return actor.sourceDetails[path];
+  }
+  return null;
+}
+
+function isArmorProfileCarrierSourceDetail(row) {
+  return String(row?.name ?? "").includes(INTERNAL_ARMOR_PROFILE_NAME);
+}
+
+function isArmorProfileBreakdownSourceDetail(row) {
+  return row?.moduleId === MODULE_ID && row?.pacsArmorProfileBreakdown === true;
+}
+
+function removeArmorProfileSourceDetails(actor) {
+  let removed = 0;
+  for (const path of AC_SOURCE_DETAIL_PATHS) {
+    const rows = getSourceDetailRows(actor, path);
+    if (!rows) continue;
+    const filtered = rows.filter((row) => !isArmorProfileBreakdownSourceDetail(row) && !isArmorProfileCarrierSourceDetail(row));
+    removed += rows.length - filtered.length;
+    actor.sourceDetails[path] = filtered;
+  }
+  return removed;
+}
+
+function toSourceDetailRow(row) {
+  return {
+    name: row.name,
+    value: row.value,
+    bonusType: "armor",
+    isItemBonus: true,
+    moduleId: MODULE_ID,
+    pacsArmorProfileBreakdown: true,
+    pacsSource: row.source,
+    pieceCategory: row.pieceCategory ?? null,
+    pieceId: row.pieceId ?? null
+  };
+}
+
+export function decorateArmorProfileSourceDetails(actor, resolution = null) {
+  if (!actor?.sourceDetails) return { decorated: false, reason: "noSourceDetails" };
+  const resolved = resolution ?? resolveArmorProfile(actor);
+  if (resolved.status !== ARMOR_PROFILE_STATUS.compositeProfile || !resolved.carrier) {
+    const removed = removeArmorProfileSourceDetails(actor);
+    return { decorated: false, reason: "noCompositeProfile", removed };
+  }
+
+  const profileRows = buildArmorProfileSourceDetailRows(resolved.summary);
+  if (!profileRows.length) {
+    const removed = removeArmorProfileSourceDetails(actor);
+    return { decorated: false, reason: "noRows", removed };
+  }
+
+  const detailRows = profileRows.map(toSourceDetailRow);
+  const decoratedPaths = [];
+  let removedCarrierRows = 0;
+  for (const path of AC_SOURCE_DETAIL_PATHS) {
+    const rows = getSourceDetailRows(actor, path);
+    if (!rows) continue;
+    const filtered = rows.filter((row) => {
+      const remove = isArmorProfileBreakdownSourceDetail(row) || isArmorProfileCarrierSourceDetail(row);
+      if (remove && isArmorProfileCarrierSourceDetail(row)) removedCarrierRows += 1;
+      return !remove;
+    });
+    actor.sourceDetails[path] = [...filtered, ...detailRows];
+    decoratedPaths.push(path);
+  }
+
+  return {
+    decorated: decoratedPaths.length > 0,
+    paths: decoratedPaths,
+    rows: profileRows,
+    removedCarrierRows
+  };
 }
 
 export function registerPacsEquipmentSlots() {
@@ -458,9 +545,11 @@ async function refreshActorArmorMath(actor) {
   // also rewrite armor values and hidden carrier data without a user equip click.
   if (actor.refresh) {
     await actor.refresh({ d35ePacsProfile: true });
+    decorateArmorProfileSourceDetails(actor);
     return;
   }
   await actor.update?.({}, { d35ePacsProfile: true });
+  decorateArmorProfileSourceDetails(actor);
 }
 
 async function ensureNativeBaselineEquipped(actor, resolution) {
@@ -696,6 +785,9 @@ function scheduleProfileApply(actor) {
 
 export function registerArmorProfileHooks() {
   if (!globalThis.Hooks?.on) return;
+  Hooks.on("updateActor", (actor) => {
+    decorateArmorProfileSourceDetails(actor);
+  });
   Hooks.on("createItem", (item, options = {}) => {
     if (options.d35ePacsProfile || !shouldRefreshProfileForItem(item)) return;
     scheduleProfileApply(item.parent);

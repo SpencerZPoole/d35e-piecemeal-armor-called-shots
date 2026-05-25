@@ -4,6 +4,7 @@ import {
   applyArmorProfile,
   categoryForPacsEquipmentSlot,
   clearArmorProfile,
+  decorateArmorProfileSourceDetails,
   migrateLegacyArmorProfile,
   reconcileArmorProfile,
   registerPacsEquipmentSlots,
@@ -12,6 +13,10 @@ import {
   setArmorProfileSlot
 } from "../scripts/armor-profile.js";
 import { FLAGS, MODULE_ID, PACS_EQUIPMENT_SLOTS } from "../scripts/constants.js";
+
+const NORMAL_AC_PATH = "system.attributes.ac.normal.total";
+const TOUCH_AC_PATH = "system.attributes.ac.touch.total";
+const FLAT_FOOTED_AC_PATH = "system.attributes.ac.flatFooted.total";
 
 globalThis.game = {
   settings: {
@@ -121,6 +126,12 @@ function actor(items = [], flags = {}) {
   };
 }
 
+function armorProfileSourceValue(actor, path) {
+  return actor.sourceDetails[path]
+    .filter((row) => row.moduleId === MODULE_ID && row.pacsArmorProfileBreakdown === true)
+    .reduce((total, row) => total + row.value, 0);
+}
+
 assert.equal(registerPacsEquipmentSlots(), true);
 assert.deepEqual(Object.keys(CONFIG.D35E.defaultSlotCapacities).slice(0, 5), ["armor", "pacsTorso", "pacsArms", "pacsLegs", "shield"]);
 assert.equal(CONFIG.D35E.equipmentSlots.misc.pacsTorso, "D35E.EquipSlotPacsTorso");
@@ -199,6 +210,15 @@ await setArmorProfileSlot(zeroActor, "legs", "zero-chain");
 resolved = resolveArmorProfile(zeroActor);
 assert.equal(resolved.summary.armorBonus, 0);
 assert.equal(zeroActor.items.find((item) => item.name === "PAcS Armor Profile").system.armor.value, 0);
+zeroActor.sourceDetails = {
+  [NORMAL_AC_PATH]: [{ name: "Base", value: 10 }],
+  [TOUCH_AC_PATH]: [{ name: "Base", value: 10 }, { name: "Dex", value: 3 }],
+  [FLAT_FOOTED_AC_PATH]: [{ name: "Base", value: 10 }]
+};
+const zeroDecoration = decorateArmorProfileSourceDetails(zeroActor, resolved);
+assert.equal(zeroDecoration.decorated, true);
+assert.deepEqual(zeroActor.sourceDetails[NORMAL_AC_PATH].filter((row) => row.moduleId === MODULE_ID).map((row) => row.value), [0, 0]);
+assert.deepEqual(zeroActor.sourceDetails[TOUCH_AC_PATH], [{ name: "Base", value: 10 }, { name: "Dex", value: 3 }]);
 await setArmorProfileSlot(zeroActor, "arms", "zero-chain");
 resolved = resolveArmorProfile(zeroActor);
 assert.equal(resolved.profile.slots.arms, "zero-chain");
@@ -307,6 +327,48 @@ assert.equal(chainmail.system.equipmentType, "misc");
 assert.equal(chainmail.system.slot, PACS_EQUIPMENT_SLOTS.legs);
 assert.equal(chainmail.system.armor.dex, null);
 assert.equal(carrier.system.armor.dex, 2);
+
+profileActor.sourceDetails = {
+  [NORMAL_AC_PATH]: [
+    { name: "Base", value: 10 },
+    { name: "Armor [Equipment -> PAcS Armor Profile]", value: carrier.system.armor.value, isItemBonus: true }
+  ],
+  [TOUCH_AC_PATH]: [
+    { name: "Base", value: 10 },
+    { name: "Dex", value: 3 }
+  ],
+  [FLAT_FOOTED_AC_PATH]: [
+    { name: "Base", value: 10 },
+    { name: "Armor [Equipment -> PAcS Armor Profile]", value: carrier.system.armor.value, isItemBonus: true }
+  ]
+};
+const touchDetailsBefore = JSON.stringify(profileActor.sourceDetails[TOUCH_AC_PATH]);
+let decoration = decorateArmorProfileSourceDetails(profileActor, resolved);
+assert.equal(decoration.decorated, true);
+assert.equal(decoration.removedCarrierRows, 2);
+assert.equal(profileActor.sourceDetails[NORMAL_AC_PATH].some((row) => String(row.name).includes("PAcS Armor Profile")), false);
+assert.deepEqual(profileActor.sourceDetails[NORMAL_AC_PATH].filter((row) => row.moduleId === MODULE_ID).map((row) => row.name), [
+  "PAcS Torso: Studded Leather",
+  "PAcS Arms: Studded Leather",
+  "PAcS Legs: Chainmail",
+  "PAcS Full Suit"
+]);
+assert.deepEqual(profileActor.sourceDetails[NORMAL_AC_PATH].filter((row) => row.moduleId === MODULE_ID).map((row) => row.value), [1, 0, 0, 1]);
+assert.equal(armorProfileSourceValue(profileActor, NORMAL_AC_PATH), carrier.system.armor.value);
+assert.equal(armorProfileSourceValue(profileActor, FLAT_FOOTED_AC_PATH), carrier.system.armor.value);
+assert.equal(JSON.stringify(profileActor.sourceDetails[TOUCH_AC_PATH]), touchDetailsBefore);
+decoration = decorateArmorProfileSourceDetails(profileActor, resolved);
+assert.equal(profileActor.sourceDetails[NORMAL_AC_PATH].filter((row) => row.moduleId === MODULE_ID).length, 4);
+
+const nativeSourceActor = actor([equipment("native", "Studded Leather", { equipped: true, armor: { value: 3, enh: 0, dex: 5, acp: 0 } })]);
+nativeSourceActor.sourceDetails = {
+  [NORMAL_AC_PATH]: [{ name: "Base", value: 10 }, { name: "Armor [Equipment -> Studded Leather]", value: 3 }],
+  [TOUCH_AC_PATH]: [{ name: "Base", value: 10 }],
+  [FLAT_FOOTED_AC_PATH]: [{ name: "Base", value: 10 }, { name: "Armor [Equipment -> Studded Leather]", value: 3 }]
+};
+decoration = decorateArmorProfileSourceDetails(nativeSourceActor);
+assert.equal(decoration.decorated, false);
+assert.deepEqual(nativeSourceActor.sourceDetails[NORMAL_AC_PATH], [{ name: "Base", value: 10 }, { name: "Armor [Equipment -> Studded Leather]", value: 3 }]);
 
 await clearArmorProfile(profileActor);
 assert.equal(studded.system.equipmentType, "armor");
