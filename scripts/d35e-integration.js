@@ -1,9 +1,12 @@
-import { FULL_ATTACK_MODES, MODULE_ID, SETTINGS } from "./constants.js";
+import { FULL_ATTACK_MODES, MODULE_ID, RULES_MODES, SETTINGS } from "./constants.js";
+import { getCurrentRulesMode } from "./armor.js";
 import {
+  applyAutomaticCalledShotOutcome,
   buildAttackExtraPart,
   buildCalledShotCardPayload,
   clearCalledShot,
   consumeCalledShot,
+  getCalledShotFeatState,
   getCalledShotOptions,
   noteCalledShotAttackSequence,
   stageCalledShot,
@@ -17,17 +20,28 @@ import {
   readCalledShotQueue,
   readCalledShotSelection
 } from "./attack-dialog.js";
-import { applyStagedCalledShotLocalArmor, attachCalledShotToDamageCard } from "./local-armor.js";
+import {
+  applyStagedCalledShotLocalArmor,
+  applyCalledShotConcealmentAdjustment,
+  attachCalledShotToDamageCard,
+  noteCalledShotDamageHit,
+  noteCalledShotFinalDamage,
+  takeCalledShotDamageContext
+} from "./local-armor.js";
 import { createCalledShotChatCard } from "./ui.js";
 
 const CHAT_ATTACK_PATCHED = Symbol.for(`${MODULE_ID}.chatAttackPatched`);
 const CHAT_DAMAGE_CARDS_PATCHED = Symbol.for(`${MODULE_ID}.chatDamageCardsPatched`);
 const ACTIVE_CALLED_SHOT = Symbol.for(`${MODULE_ID}.activeCalledShot`);
 const ITEM_USE_PATCHED = Symbol.for(`${MODULE_ID}.itemUsePatched`);
+const DAMAGE_HELPER_PATCHED = Symbol.for(`${MODULE_ID}.damageHelperPatched`);
 
 let attackDialogHookRegistered = false;
 let preRollAllAttacksHookRegistered = false;
 let preHitCheckHookRegistered = false;
+let damageHitHookRegistered = false;
+let damageCalculationHookRegistered = false;
+let concealmentHookRegistered = false;
 
 function settingEnabled(key, fallback = true) {
   try {
@@ -87,11 +101,14 @@ async function prepareCalledShotForRoll({ fullAttack, form, actor, item }) {
   if (!settingEnabled(SETTINGS.enableCalledShots, true) || !form) return false;
   const locationId = readCalledShotSelection(form);
   if (!locationId) return false;
+  const rulesMode = getCurrentRulesMode();
+  const feats = getCalledShotFeatState(actor);
 
   const options = {
     targetUuid: getSingleTargetUuid(),
     userId: getUserId(),
-    rollScoped: true
+    rollScoped: true,
+    rulesMode
   };
 
   if (!fullAttack) {
@@ -101,6 +118,15 @@ async function prepareCalledShotForRoll({ fullAttack, form, actor, item }) {
 
   const mode = getCalledShotFullAttackMode();
   if (mode === FULL_ATTACK_MODES.disabled) return false;
+  if (rulesMode === RULES_MODES.rawAdapted && !feats.improved) {
+    ui.notifications?.warn("RAW-adapted called shots cannot be combined with D35E Full Attack unless the attacker has Improved Called Shot.");
+    return false;
+  }
+  if (rulesMode === RULES_MODES.rawAdapted && feats.improved && !feats.greater) {
+    ui.notifications?.info("Improved Called Shot allows one called shot during a full attack; applying it to the first attack only.");
+    stageCalledShot(actor, item, locationId, options);
+    return true;
+  }
   if (mode === FULL_ATTACK_MODES.first) {
     stageCalledShot(actor, item, locationId, options);
     return true;
@@ -151,6 +177,30 @@ function registerPreHitCheckHook() {
   preHitCheckHookRegistered = true;
 }
 
+function registerDamageHitHook() {
+  if (damageHitHookRegistered || !globalThis.Hooks?.on) return;
+  Hooks.on("D35E.DamageRoll.hit", (actor, hookValues, userId) => {
+    noteCalledShotDamageHit(actor, hookValues, userId);
+  });
+  damageHitHookRegistered = true;
+}
+
+function registerDamageCalculationHook() {
+  if (damageCalculationHookRegistered || !globalThis.Hooks?.on) return;
+  Hooks.on("D35E.DamageRoll.calculateDamage", (actor, hookValues, userId) => {
+    noteCalledShotFinalDamage(actor, hookValues?.finalDamage, userId);
+  });
+  damageCalculationHookRegistered = true;
+}
+
+function registerConcealmentHook() {
+  if (concealmentHookRegistered || !globalThis.Hooks?.on) return;
+  Hooks.on("D35E.DamageRoll.preRollConcealment", (actor, hookValues, userId) => {
+    applyCalledShotConcealmentAdjustment(actor, hookValues, userId);
+  });
+  concealmentHookRegistered = true;
+}
+
 function patchD35EDamageCards(ChatAttack) {
   if (ChatAttack.prototype[CHAT_DAMAGE_CARDS_PATCHED] === true) return;
   const originalCreateCard = ChatAttack.prototype.createChatCardData;
@@ -178,9 +228,13 @@ export async function patchD35EAttackRolls() {
   if (ChatAttack.prototype[CHAT_ATTACK_PATCHED] === true) {
     patchD35EDamageCards(ChatAttack);
     await patchD35EItemUse();
+    await patchD35EDamageHelper();
     registerAttackDialogHook();
     registerPreRollAllAttacksHook();
     registerPreHitCheckHook();
+    registerDamageHitHook();
+    registerDamageCalculationHook();
+    registerConcealmentHook();
     return true;
   }
 
@@ -217,9 +271,13 @@ export async function patchD35EAttackRolls() {
   Object.defineProperty(ChatAttack.prototype, CHAT_ATTACK_PATCHED, { value: true });
   console.info(`${MODULE_ID} | D35E called-shot attack penalty patch applied.`);
   await patchD35EItemUse();
+  await patchD35EDamageHelper();
   registerAttackDialogHook();
   registerPreRollAllAttacksHook();
   registerPreHitCheckHook();
+  registerDamageHitHook();
+  registerDamageCalculationHook();
+  registerConcealmentHook();
   return true;
 }
 
@@ -250,5 +308,37 @@ async function patchD35EItemUse() {
 
   Object.defineProperty(ItemUse.prototype, ITEM_USE_PATCHED, { value: true });
   console.info(`${MODULE_ID} | D35E native attack dialog called-shot patch applied.`);
+  return true;
+}
+
+async function patchD35EDamageHelper() {
+  const damageModule = await import("/systems/D35E/module/actor/helpers/actorDamageHelper.js");
+  const ActorDamageHelper = damageModule.ActorDamageHelper;
+  if (!ActorDamageHelper?.applyDamage) {
+    console.warn(`${MODULE_ID} | D35E ActorDamageHelper.applyDamage was not found; automatic called-shot outcomes were not patched.`);
+    return false;
+  }
+  if (ActorDamageHelper[DAMAGE_HELPER_PATCHED] === true) return true;
+
+  const original = ActorDamageHelper.applyDamage;
+  ActorDamageHelper.applyDamage = async function d35ePacsApplyDamage(...args) {
+    const result = await original.call(this, ...args);
+    const context = takeCalledShotDamageContext(getUserId());
+    if (context?.payload?.rulesMode === RULES_MODES.rawAdapted && context.targetActor) {
+      try {
+        await applyAutomaticCalledShotOutcome({
+          targetActor: context.targetActor,
+          context
+        });
+      } catch (error) {
+        console.error(`${MODULE_ID} | Failed to apply automatic called-shot outcome.`, error);
+        ui.notifications?.error("Could not apply the called-shot outcome automatically. Check the console for details.");
+      }
+    }
+    return result;
+  };
+
+  Object.defineProperty(ActorDamageHelper, DAMAGE_HELPER_PATCHED, { value: true });
+  console.info(`${MODULE_ID} | D35E automatic called-shot outcome patch applied.`);
   return true;
 }

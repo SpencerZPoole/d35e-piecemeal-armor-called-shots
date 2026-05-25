@@ -1,6 +1,8 @@
 import { FLAGS, LOCAL_ARMOR_MODES, MODULE_ID, SETTINGS } from "./constants.js";
 import {
   armorCoverageOverlaps,
+  calculateArmorPieceLocalTotal,
+  calculatePiecemealArmor,
   getPiecemealArmorPieces,
   isAggregateArmorItem,
   normalizeArmorSlot,
@@ -63,6 +65,11 @@ function payloadMatchesActor(payload, actor) {
   return actorUuidCandidates(actor).has(payload.targetUuid);
 }
 
+export function stagedCalledShotMatchesActor(actor, userId = getUserId()) {
+  const context = getStagedCalledShotDamageApplication(userId);
+  return Boolean(context && payloadMatchesActor(context.payload, actor));
+}
+
 function findAggregateArmorItem(actor) {
   return getItems(actor).find((item) => {
     if (!isAggregateArmorItem(item)) return false;
@@ -76,8 +83,11 @@ function readAggregateArmorTotal(item) {
     numberOr(summary.enhancementBonus, numberOr(getProperty(item, "system.armor.enh"), 0));
 }
 
-function armorPieceTotal(piece) {
-  return numberOr(piece.armorBonus) + numberOr(piece.enhancementBonus);
+function pieceCoversCalledShot(piece, coverageSlot) {
+  if (armorCoverageOverlaps(piece.slot, coverageSlot)) return true;
+  const targetSlots = parseArmorCoverageSlots(coverageSlot);
+  if (piece.pieceCategory === "torso" && targetSlots.some((slot) => ["torso", "head", "neck"].includes(slot))) return true;
+  return false;
 }
 
 function formatSigned(value) {
@@ -111,6 +121,46 @@ function finalAcLooksLikeTouchAc(actor, finalAc) {
     (!Number.isFinite(normalAc) || normalAc !== touchAc);
 }
 
+function applyCalledShotNormalAcForTouch(actor, finalAc, { touch = false } = {}) {
+  if (!finalAc || finalAc.noCheck) return null;
+  if (!touch && !finalAcLooksLikeTouchAc(actor, finalAc)) return null;
+  const normalAc = Number(getProperty(actor, "system.attributes.ac.normal.total"));
+  const currentAc = Number(finalAc.ac);
+  if (!Number.isFinite(normalAc) || !Number.isFinite(currentAc) || normalAc === currentAc) return null;
+  const adjustment = normalAc - currentAc;
+  finalAc.acModifiers = Array.isArray(finalAc.acModifiers) ? finalAc.acModifiers : [];
+  finalAc.acModifiers.push({
+    sourceName: "Called Shot Normal AC",
+    value: formatSigned(adjustment)
+  });
+  finalAc.ac = normalAc;
+  return {
+    sourceName: "Called Shot Normal AC",
+    adjustment,
+    adjusted: true
+  };
+}
+
+function applyCalledShotCoverAdjustment(finalAc) {
+  if (!finalAc || finalAc.noCheck || finalAc._d35ePacsCoverAdjusted) return null;
+  const modifiers = Array.isArray(finalAc.acModifiers) ? finalAc.acModifiers : [];
+  const coverBonus = modifiers.reduce((total, entry) => {
+    const source = String(entry?.sourceName ?? "");
+    if (!/cover/i.test(source) || /soft/i.test(source)) return total;
+    const value = Number(String(entry?.value ?? "").replace(/^\+/, ""));
+    return total + (Number.isFinite(value) && value > 0 ? value : 0);
+  }, 0);
+  if (!coverBonus) return null;
+  finalAc.acModifiers = modifiers;
+  finalAc.acModifiers.push({
+    sourceName: "Called Shot Cover",
+    value: formatSigned(coverBonus)
+  });
+  if (Number.isFinite(Number(finalAc.ac))) finalAc.ac = Number(finalAc.ac) + coverBonus;
+  finalAc._d35ePacsCoverAdjusted = true;
+  return { adjustment: coverBonus, adjusted: true };
+}
+
 export function sanitizeCalledShotDamagePayload(payload) {
   if (!payload?.locationId) return null;
   return {
@@ -122,6 +172,10 @@ export function sanitizeCalledShotDamagePayload(payload) {
     locationId: payload.locationId,
     locationLabel: payload.locationLabel ?? payload.locationId,
     penalty: numberOr(payload.penalty),
+    rulesMode: payload.rulesMode ?? null,
+    calledShotFeats: payload.calledShotFeats ?? null,
+    debilitatingMinimum: payload.debilitatingMinimum ?? null,
+    attackLabel: payload.attackLabel ?? null,
     coverageSlot: payload.coverageSlot ?? null,
     stagedAt: payload.stagedAt ?? null
   };
@@ -155,7 +209,15 @@ export function stageCalledShotDamageApplication(payload, { userId = getUserId()
     payload: damagePayload,
     messageId,
     touch,
-    startedAt: Date.now()
+    startedAt: Date.now(),
+    hit: null,
+    crit: null,
+    roll: null,
+    finalAc: null,
+    finalDamage: null,
+    localArmor: null,
+    automaticHit: false,
+    finalized: false
   };
   damageContexts.set(userId, context);
   return context;
@@ -177,12 +239,13 @@ export function calculateLocalArmorAdjustment(actor, coverageSlot) {
   const aggregate = findAggregateArmorItem(actor);
   if (!aggregate) return null;
   const aggregateTotal = readAggregateArmorTotal(aggregate);
+  const summary = calculatePiecemealArmor(actor);
 
-  const pieces = getPiecemealArmorPieces(actor).map(readArmorPiece);
-  const matchingPieces = pieces.filter((piece) => armorCoverageOverlaps(piece.slot, coverageSlot));
+  const pieces = (summary.activePieces?.length ? summary.activePieces : getPiecemealArmorPieces(actor).map(readArmorPiece));
+  const matchingPieces = pieces.filter((piece) => pieceCoversCalledShot(piece, coverageSlot));
   if (!matchingPieces.length) return null;
 
-  const localTotal = matchingPieces.reduce((total, piece) => total + armorPieceTotal(piece), 0);
+  const localTotal = matchingPieces.reduce((total, piece) => total + calculateArmorPieceLocalTotal(summary, piece), 0);
   return {
     coverageSlot,
     normalizedSlot: normalizedSlots[0],
@@ -191,17 +254,18 @@ export function calculateLocalArmorAdjustment(actor, coverageSlot) {
     localTotal,
     adjustment: localTotal - aggregateTotal,
     pieceCount: matchingPieces.length,
-    pieces: matchingPieces.map((piece) => ({ id: piece.id, name: piece.name, total: armorPieceTotal(piece) }))
+    pieces: matchingPieces.map((piece) => ({ id: piece.id, name: piece.name, total: calculateArmorPieceLocalTotal(summary, piece) }))
   };
 }
 
 export function applyLocalArmorAdjustment(actor, finalAc, payload, { mode = LOCAL_ARMOR_MODES.adjust, touch = false } = {}) {
   if (!finalAc || finalAc.noCheck) return null;
+  const coverAdjustment = applyCalledShotCoverAdjustment(finalAc);
+  const touchAdjustment = applyCalledShotNormalAcForTouch(actor, finalAc, { touch });
   if (mode === LOCAL_ARMOR_MODES.disabled) return null;
-  if (touch || finalAcLooksLikeTouchAc(actor, finalAc)) return null;
 
   const localArmor = calculateLocalArmorAdjustment(actor, payload?.coverageSlot);
-  if (!localArmor) return null;
+  if (!localArmor) return touchAdjustment ?? coverAdjustment;
 
   finalAc.acModifiers = Array.isArray(finalAc.acModifiers) ? finalAc.acModifiers : [];
   const label = payload?.locationLabel ?? payload?.coverageSlot ?? localArmor.coverageSlot;
@@ -221,7 +285,9 @@ export function applyLocalArmorAdjustment(actor, finalAc, payload, { mode = LOCA
     ...localArmor,
     mode,
     sourceName,
-    adjusted: mode === LOCAL_ARMOR_MODES.adjust
+    adjusted: mode === LOCAL_ARMOR_MODES.adjust,
+    touchAdjustment,
+    coverAdjustment
   };
 }
 
@@ -232,6 +298,44 @@ export function applyStagedCalledShotLocalArmor(actor, finalAc, userId = getUser
     mode: localArmorMode(),
     touch: context.touch
   });
-  clearStagedCalledShotDamageApplication(userId);
+  context.localArmor = result;
   return result;
+}
+
+export function applyCalledShotConcealmentAdjustment(actor, hookValues, userId = getUserId()) {
+  if (!stagedCalledShotMatchesActor(actor, userId)) return null;
+  const current = Number(hookValues?.concealTarget ?? 0);
+  let adjusted = current;
+  if (current >= 50) adjusted = 100;
+  else if (current === 20) adjusted = 50;
+  else if (current > 0) adjusted = Math.min(100, current * 2);
+  if (adjusted === current) return null;
+  hookValues.concealTarget = adjusted;
+  return { original: current, adjusted };
+}
+
+export function noteCalledShotDamageHit(actor, hookValues, userId = getUserId()) {
+  const context = getStagedCalledShotDamageApplication(userId);
+  if (!context || !payloadMatchesActor(context.payload, actor)) return null;
+  context.hit = hookValues?.hit === true;
+  context.crit = hookValues?.crit === true;
+  context.roll = Number(hookValues?.roll);
+  context.automaticHit = Number(hookValues?.roll) === -1337 || hookValues?.automaticHit === true;
+  context.finalAc = hookValues?.finalAc ?? null;
+  context.targetActor = actor;
+  return context;
+}
+
+export function noteCalledShotFinalDamage(actor, finalDamage, userId = getUserId()) {
+  const context = getStagedCalledShotDamageApplication(userId);
+  if (!context || !payloadMatchesActor(context.payload, actor)) return null;
+  context.finalDamage = finalDamage ?? null;
+  context.targetActor = actor;
+  return context;
+}
+
+export function takeCalledShotDamageContext(userId = getUserId()) {
+  const context = getStagedCalledShotDamageApplication(userId);
+  if (context) clearStagedCalledShotDamageApplication(userId);
+  return context ?? null;
 }

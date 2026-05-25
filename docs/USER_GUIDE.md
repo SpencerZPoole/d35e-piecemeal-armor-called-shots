@@ -1,11 +1,11 @@
 # User Guide
 
-D35E Piecemeal Armor And Called Shots adds optional-rule helpers to the D35E Foundry VTT system. It is meant to support GM adjudication, not replace it.
+D35E Piecemeal Armor And Called Shots adds optional-rule helpers to the D35E Foundry VTT system. It defaults to RAW-adapted Ultimate Combat automation where D35E can support it, while staying explicit that these are not official D&D 3.5 RAW.
 
 The module has two main workflows:
 
 - Piecemeal armor: configure equipment pieces, preview the combined armor profile, then sync one D35E-native aggregate armor item.
-- Called shots: pick a called-shot location from D35E's normal attack dialog, roll normally, and let the GM apply any outcome from chat.
+- Called shots: pick a called-shot location from D35E's normal attack dialog, roll normally, and let D35E Apply Damage resolve hit, local armor AC, severity, and automatic outcomes.
 
 ## First Five Minutes
 
@@ -16,7 +16,7 @@ The module has two main workflows:
 5. Open a weapon or attack from the normal D35E sheet controls.
 6. Choose a location from the native attack dialog's `Called Shot` dropdown, or leave it on `None`.
 7. Roll the attack and expand the result to see the called-shot modifier in D35E's native breakdown.
-8. Open the module settings when your table wants different locations, penalties, effects, or full-attack behavior.
+8. Open the module settings when your table wants legacy behavior, different locations, penalties, effects, or full-attack behavior.
 
 ## Where The Controls Live
 
@@ -27,7 +27,7 @@ The module has two main workflows:
 | `Piecemeal Armor` fieldset | Equipment item sheet `Details` tab | Stores armor-piece values and coverage slot(s). |
 | `Called Shot` dropdown | D35E attack/use dialog | Applies a configured called-shot penalty through the native attack workflow. |
 | Full-attack picker | Opens after `Full Attack` when configured | Lets the user choose `None` or a location for each D35E attack label. |
-| Outcome buttons | Called-shot chat card | Lets the GM confirm normal, critical, or debilitating effects. |
+| Called Shot Effects | Actor sheet header after an automatic outcome | Lets a GM restore automatic called-shot effects if the wrong damage card or target was used. |
 | Profile editor | Module settings | Edits locations, penalties, coverage slots, and outcome effects. |
 
 ## Module Settings
@@ -38,7 +38,8 @@ Open Foundry's right sidebar, click the gear icon, choose `Game Settings`, then 
 
 Settings:
 
-- `Edit called shot profiles`: opens the profile editor for locations, attack penalties, severity tiers, coverage slots, and GM-confirmed effects.
+- `Rules mode`: `RAW-adapted automation` is the default and applies Ultimate Combat style formulas, feat limits, severity, saves, and outcomes where D35E can support them. `Legacy v1.0 workflow` keeps the older permissive full-attack behavior and manual outcome buttons.
+- `Edit called shot profiles`: opens the profile editor for locations, attack penalties, severity tiers, coverage slots, and automatic or legacy manual effects.
 - `Enable piecemeal armor automation`: shows piecemeal armor fields on equipment items and adds GM sync/restore controls to actor sheets.
 - `Enable called shot helper`: adds the `Called Shot` selector to D35E's native attack dialog and applies the configured attack penalty to the native roll breakdown.
 - `Called shots on full attacks`: controls whether full attacks ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections. See [Full Attacks](#full-attacks).
@@ -68,11 +69,11 @@ Modes:
 - `Show adjustment only`: adds the AC Details row as advisory context but does not change the hit or crit check.
 - `Disabled`: leaves Apply Damage AC unchanged.
 
-Local armor AC needs a synced `Piecemeal Armor Aggregate`, a called-shot profile location with matching coverage slot(s), and at least one piecemeal armor component for that coverage. Touch AC, no-check damage, missing targets, and targets without matching piecemeal armor keep D35E's normal behavior.
+Local armor AC needs a synced `Piecemeal Armor Aggregate`, a called-shot profile location with matching coverage slot(s), and at least one piecemeal armor component for that coverage. Called-shot touch attacks are checked against normal AC rather than touch AC. No-check damage, missing targets, and targets without matching piecemeal armor keep D35E's normal behavior.
 
 ## Full Attacks
 
-The `Called shots on full attacks` setting controls what happens when a location is selected and the native D35E `Full Attack` button is used.
+The `Called shots on full attacks` setting controls what happens when a location is selected and the native D35E `Full Attack` button is used. In RAW-adapted mode, those choices are still gated by the attacker feats.
 
 ![Full attack called-shot picker](assets/full-attack-picker.png)
 
@@ -85,13 +86,30 @@ Modes:
 
 If the per-attack picker is closed without confirming, the full attack continues with no called shots.
 
+RAW-adapted feat behavior:
+
+- No feat: a called shot is treated as a single full-round attack; the module blocks selected called shots from D35E Full Attack.
+- `Improved Called Shot`: adds `+2` to called-shot attacks and allows one called shot during a multiattack or full attack.
+- `Greater Called Shot`: allows multiple called shots in the same round, applies `-5` to each additional called shot after the first, and lowers the debilitating minimum damage from `50` to `40`.
+
 ## Called-Shot Chat Cards
 
-After a called-shot roll, the module posts a chat card for the GM. The card shows the selected location, attack penalty, and configurable outcome buttons.
+After a called-shot roll, the module posts a chat card for the GM. In RAW-adapted mode, the card is an audit cue: use D35E's native Apply Damage button, and the module resolves hit state, post-DR damage, severity, saves, and automatic effects after D35E finishes its damage workflow.
 
-![Called-shot chat outcome card](assets/called-shot-chat-card.png)
+Severity rules:
 
-The GM decides whether to apply a normal, critical, or debilitating outcome. This is intentional: the original D&D 3.5e system does not provide one universal called-shot subsystem, and the bundled defaults are table-editable optional-rule scaffolding.
+- Miss or damage fully negated by DR: no called-shot effect.
+- Hit under the debilitating threshold: normal outcome.
+- Confirmed critical under the debilitating threshold: critical outcome.
+- Damage at least half target maximum HP and at least the minimum threshold: debilitating outcome.
+
+Saving throw DCs use the attack total, matching the AC hit by the called shot. If D35E has no native field for an outcome, the module records a flagged actor note instead of silently faking native support.
+
+Legacy mode keeps the older manual chat buttons. In that mode, the GM decides whether to apply normal, critical, or debilitating outcomes from the card.
+
+## Restoring Called-Shot Effects
+
+Automatic effects are recorded on a target actor ledger with the source message, attacker, location, severity, save results, actor updates, and created ActiveEffects. If an outcome was applied to the wrong target or the table changes the adjudication, open the target sheet and click `Called Shot Effects` in the actor header. Restore reverses recorded actor updates and removes ActiveEffect notes created by that ledger entry.
 
 ## Piecemeal Armor
 
@@ -99,9 +117,11 @@ Open an equipment item, switch to the `Details` tab, and use the `Piecemeal Armo
 
 ![Piecemeal armor item fields](assets/item-armor-fields.png)
 
-Component items can begin as D35E armor, shield, or miscellaneous equipment. Use the module fields for armor math and coverage. After sync, only the generated `Piecemeal Armor Aggregate` item contributes D35E armor AC. Component records are converted to miscellaneous clothing-style records in sensible visual body slots while their native armor math is backed up and neutralized.
+Component items can begin as D35E armor, shield, or miscellaneous equipment. Use the module fields for armor math and coverage. RAW-adapted mode separates `Piece category` from `Coverage slot(s)`: category drives the arms/legs/torso armor formula, while coverage maps called-shot locations. After sync, only the generated `Piecemeal Armor Aggregate` item contributes D35E armor AC. Component records are converted to miscellaneous clothing-style records in sensible visual body slots while their native armor math is backed up and neutralized.
 
 Coverage slot names also drive local armor AC for called shots. A called-shot profile location with coverage slot `legs` looks for piecemeal armor components whose coverage slot normalizes to `legs`. Coverage fields can contain one value or several values separated by commas, semicolons, pipes, slashes, or line breaks. For example, `head; eyes; ears` lets one helmet component protect head, eye, and ear called shots, while `torso, arms, legs` lets a broad armor component cover several larger regions.
+
+The `Known piece` selector fills in a verified starter set of common Ultimate Combat pieces: padded, leather, chain, and plate arm/leg/torso pieces. Use `Manual values` for every other published piece, custom 3.5e adaptation, or table-specific armor.
 
 When the actor is ready, click `Piecemeal Armor` on the actor sheet to preview the aggregate.
 
@@ -110,7 +130,7 @@ When the actor is ready, click `Piecemeal Armor` on the actor sheet to preview t
 Syncing changes actor item data:
 
 - The module creates or updates one item named `Piecemeal Armor Aggregate`.
-- The aggregate item carries the D35E armor values that should contribute to actor math.
+- The aggregate item carries RAW-adapted D35E armor values: armor piece sum, `+1` for a complete suit, worst max Dex, worst ACP, worst ASF, mixed-suit ASF adjustment, and the D35E-representable speed category.
 - The aggregate item has zero weight so component item weight is not counted twice for encumbrance.
 - Component items keep module flags, have their native D35E armor fields backed up and neutralized, and become visual `misc`/`clothing` equipment records while synced.
 - Restore reverses the backed-up fields and removes the aggregate item.
@@ -137,6 +157,8 @@ Profiles control:
 
 Effect snippets use JSON because they map directly to the module's declarative effect engine. Use the Advanced JSON section for full-profile import/export backups.
 
+Supported effect types include `note`, `condition`, `abilityDamage`, `abilityDrain`, `bleed`, `speedPenalty`, `dropHeld`, `flag`, `death`, `saveBranch`, and custom `activeEffect`. Severe outcomes are intentionally reversible through the ledger.
+
 ## Troubleshooting
 
 ### I do not see the called-shot dropdown
@@ -149,11 +171,15 @@ Confirm the attack was rolled from the same native dialog where the location was
 
 ### The full-attack picker did not open
 
-Check the `Called shots on full attacks` setting. The picker opens only in `Ask for each attack` mode and only when a called-shot location was selected in the native dialog.
+Check the `Called shots on full attacks` setting. The picker opens only in `Ask for each attack` mode and only when a called-shot location was selected in the native dialog. In RAW-adapted mode, the attacker also needs `Improved Called Shot` for one called shot during a full attack or `Greater Called Shot` for multiple called shots.
+
+### A called shot killed or maimed the target
+
+That is expected in RAW-adapted mode for some critical and debilitating outcomes. Open the target actor sheet and use `Called Shot Effects` to restore the ledger entry if the wrong target, wrong damage card, or wrong table ruling was used.
 
 ### Armor totals or weight look doubled
 
-Use the actor `Piecemeal Armor` dialog and choose Restore, then Sync again. The aggregate item should be the only D35E-native armor item contributing armor math. Version 1.0.6 and later sets aggregate weight to zero so component item weight remains the encumbrance source.
+Use the actor `Piecemeal Armor` dialog and choose Restore, then Sync again. The aggregate item should be the only D35E-native armor item contributing armor math. Current releases set aggregate weight to zero so component item weight remains the encumbrance source.
 
 ### The armor dialog says no syncable pieces were found
 
@@ -169,7 +195,7 @@ GitHub issues are the preferred place for bug reports, compatibility notes, and 
 
 ### The aggregate armor item is not contributing AC
 
-After syncing, confirm the item named `Piecemeal Armor Aggregate` is equipped. Version 1.0.1 and later explicitly re-equips the generated aggregate after D35E creates or updates it.
+After syncing, confirm the item named `Piecemeal Armor Aggregate` is equipped. Current releases explicitly re-equip the generated aggregate after D35E creates or updates it.
 
 ### Local armor did not change the Apply Damage AC
 
@@ -177,4 +203,4 @@ Confirm `Called-shot local armor AC` is set to `Adjust AC in Apply Damage`, the 
 
 ### I want D&D 3.5 RAW only
 
-Leave called shots disabled and use piecemeal armor only if your table has adopted a house rule for it. The module is explicit that the bundled defaults are not official D&D 3.5 RAW.
+Leave called shots disabled and use piecemeal armor only if your table has adopted a house rule for it. The module is explicit that the bundled defaults are Ultimate Combat adaptation, not official D&D 3.5 RAW.

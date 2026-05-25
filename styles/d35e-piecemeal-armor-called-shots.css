@@ -167,14 +167,17 @@
   margin: 4px 0;
 }
 
-.d35e-pacs-armor-preview table {
+.d35e-pacs-armor-preview table,
+.d35e-pacs-ledger table {
   border-collapse: collapse;
   margin: 8px 0;
   width: 100%;
 }
 
 .d35e-pacs-armor-preview th,
-.d35e-pacs-armor-preview td {
+.d35e-pacs-armor-preview td,
+.d35e-pacs-ledger th,
+.d35e-pacs-ledger td {
   border-bottom: 1px solid rgba(120, 120, 120, 0.25);
   padding: 4px;
   text-align: left;

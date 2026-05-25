@@ -1,4 +1,4 @@
-import { FULL_ATTACK_MODES, LOCAL_ARMOR_MODES, MODULE_ID, MODULE_TITLE, SETTINGS } from "./constants.js";
+import { FULL_ATTACK_MODES, LOCAL_ARMOR_MODES, MODULE_ID, MODULE_TITLE, RULES_MODES, SETTINGS } from "./constants.js";
 import { getDefaultCalledShotProfiles, normalizeCalledShotProfiles } from "./profiles.js";
 
 const HandlebarsApplication = globalThis.foundry?.applications?.api?.HandlebarsApplicationMixin?.(
@@ -186,6 +186,19 @@ export class CalledShotProfileEditor extends HandlebarsApplication {
 }
 
 export function registerSettings() {
+  game.settings.register(MODULE_ID, SETTINGS.rulesMode, {
+    name: "Rules mode",
+    hint: "RAW-adapted mode follows the Ultimate Combat variant rules where D35E can support them, including automatic outcome effects and a restore ledger. Legacy mode preserves the v1.0 permissive workflow and advisory outcome style.",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      [RULES_MODES.rawAdapted]: "RAW-adapted automation",
+      [RULES_MODES.legacyWorkflow]: "Legacy v1.0 workflow"
+    },
+    default: RULES_MODES.rawAdapted
+  });
+
   game.settings.register(MODULE_ID, SETTINGS.enableArmor, {
     name: "Enable piecemeal armor automation",
     hint: "Adds item-sheet piecemeal armor fields and GM sync/restore controls.",
@@ -262,7 +275,7 @@ export function registerSettings() {
   game.settings.registerMenu(MODULE_ID, "calledShotProfileEditor", {
     name: "Edit called shot profiles",
     label: "Open Profile Editor",
-    hint: "Edit locations, penalties, severity tiers, and GM-confirmed effects as JSON.",
+    hint: "Edit locations, penalties, severity tiers, coverage mapping, and outcome effects as JSON.",
     icon: "fas fa-crosshairs",
     type: CalledShotProfileEditor,
     restricted: true

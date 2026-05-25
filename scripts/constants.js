@@ -3,6 +3,7 @@ export const MODULE_TITLE = "D35E Piecemeal Armor And Called Shots";
 export const AGGREGATE_ARMOR_NAME = "Piecemeal Armor Aggregate";
 
 export const SETTINGS = Object.freeze({
+  rulesMode: "rulesMode",
   enableArmor: "enableArmorAutomation",
   enableCalledShots: "enableCalledShots",
   calledShotFullAttackMode: "calledShotFullAttackMode",
@@ -10,6 +11,11 @@ export const SETTINGS = Object.freeze({
   calledShotProfiles: "calledShotProfiles",
   locationArmorOverlay: "locationArmorOverlay",
   showGmOnlyDetails: "showGmOnlyDetails"
+});
+
+export const RULES_MODES = Object.freeze({
+  rawAdapted: "rawAdapted",
+  legacyWorkflow: "legacyWorkflow"
 });
 
 export const FULL_ATTACK_MODES = Object.freeze({
@@ -29,7 +35,25 @@ export const FLAGS = Object.freeze({
   piecemeal: "piecemeal",
   aggregate: "aggregate",
   nativeBackup: "nativeBackup",
-  calledShotEffect: "calledShotEffect"
+  calledShotEffect: "calledShotEffect",
+  calledShotLedger: "calledShotLedger"
+});
+
+export const PIECE_CATEGORIES = Object.freeze({
+  arms: "arms",
+  legs: "legs",
+  torso: "torso"
+});
+
+export const MAGIC_MODES = Object.freeze({
+  none: "none",
+  separatePiece: "separatePiece",
+  suit: "suit"
+});
+
+export const DON_STATES = Object.freeze({
+  normal: "normal",
+  hasty: "hasty"
 });
 
 export const ARMOR_SUBTYPE_WEIGHT = Object.freeze({

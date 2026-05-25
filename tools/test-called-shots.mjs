@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import {
   buildAttackExtraPart,
+  calculateCalledShotSituationalPenalty,
   clearCalledShot,
   consumeCalledShot,
+  determineCalledShotSeverity,
+  getCalledShotFeatState,
   getPendingCalledShot,
   noteCalledShotAttackSequence,
   stageCalledShot,
@@ -23,6 +26,8 @@ const arm = getLocation(profile, "arm");
 assert.equal(arm.penalty, -2);
 assert.equal(arm.coverageSlot, "arms");
 assert.equal(arm.outcomes.critical.some((effect) => effect.type === "abilityDamage"), true);
+assert.equal(getLocation(profile, "heart").penalty, -10);
+assert.equal(getLocation(profile, "heart").difficulty, "challenging");
 
 validateEffectSpec({ type: "condition", status: "stunned" });
 validateEffectSpec({ type: "abilityDamage", ability: "str", formula: "1d4" });
@@ -63,5 +68,56 @@ assert.equal(every.locationId, "ear");
 assert.equal(consumeCalledShot(actor, item, "user-1").locationId, "ear");
 assert.equal(consumeCalledShot(actor, item, "user-1").locationId, "ear");
 assert.equal(clearCalledShot(actor, item, "user-1"), true);
+
+const improvedActor = {
+  id: "actor-improved",
+  items: [{ type: "feat", name: "Improved Called Shot" }]
+};
+const greaterActor = {
+  id: "actor-greater",
+  items: [{ type: "feat", name: "Greater Called Shot" }]
+};
+assert.deepEqual(getCalledShotFeatState(improvedActor), { improved: true, greater: false });
+assert.deepEqual(getCalledShotFeatState(greaterActor), { improved: true, greater: true });
+const improvedPayload = stageCalledShot(improvedActor, { id: "item-improved", actor: improvedActor }, "ear", { profiles, userId: "user-2" });
+assert.equal(improvedPayload.basePenalty, -10);
+assert.equal(improvedPayload.featBonus, 2);
+assert.equal(improvedPayload.penalty, -8);
+const greaterQueue = stageCalledShotQueue(greaterActor, { id: "item-greater", actor: greaterActor }, ["ear", "eye"], { profiles, userId: "user-3" });
+assert.equal(greaterQueue[0].penalty, -8);
+assert.equal(greaterQueue[1].repeatPenalty, -5);
+assert.equal(greaterQueue[1].penalty, -13);
+assert.equal(greaterQueue[1].debilitatingMinimum, 40);
+
+const targetToken = {
+  document: { uuid: "Scene.test.Token.target" },
+  x: 900,
+  y: 0,
+  w: 1,
+  h: 1
+};
+globalThis.canvas = {
+  grid: { size: 100 },
+  scene: { grid: { distance: 5 } }
+};
+globalThis.game = {
+  user: {
+    targets: new Set([targetToken])
+  }
+};
+const rangedActor = {
+  id: "ranged",
+  getActiveTokens() {
+    return [{ x: 0, y: 0, w: 1, h: 1 }];
+  }
+};
+const bow = { system: { range: { value: 30 } } };
+const rangePenalty = calculateCalledShotSituationalPenalty(rangedActor, bow, "Scene.test.Token.target");
+assert.equal(rangePenalty.distance, 45);
+assert.equal(rangePenalty.penalty, -4);
+
+assert.equal(determineCalledShotSeverity({ damage: 10, crit: false }), "normal");
+assert.equal(determineCalledShotSeverity({ damage: 10, crit: true }), "critical");
+assert.equal(determineCalledShotSeverity({ damage: 40, crit: false, debilitatingMinimum: 40, targetActor: { system: { attributes: { hp: { max: 70 } } } } }), "debilitating");
 
 console.log("test-called-shots: ok");

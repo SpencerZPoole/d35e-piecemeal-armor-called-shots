@@ -35,7 +35,7 @@ const {
 const profiles = getDefaultCalledShotProfiles();
 let activeProfiles = profiles;
 const context = buildProfileManagerContext(profiles);
-assert.equal(context.activeProfileId, "pf1e-uc-adapted");
+assert.equal(context.activeProfileId, "pf1e-uc-raw-adapted");
 assert.ok(context.locations.length >= 10);
 assert.ok(context.locations[0].normalJson.includes("["));
 

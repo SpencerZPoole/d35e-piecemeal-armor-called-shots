@@ -26,11 +26,13 @@ This repository publishes Foundry VTT module releases through GitHub release ass
    ```
 
 6. Smoke test in a scratch D35E world:
+   - module settings show `Rules mode` and default to RAW-adapted automation;
    - native attack dialog has `Called Shot`;
    - single attack shows a native modifier such as `Called Shot: Ear -10`;
-   - full-attack modes work;
+   - RAW-adapted Improved/Greater full-attack behavior works, and legacy mode preserves permissive policies;
    - actor-sheet called-shot panel is absent;
    - armor sync and restore still work;
+   - D35E Apply Damage triggers local armor AC, severity, automatic outcomes, and target ledger restore;
    - profile editor opens and saves.
 
 ## Foundry Package Release Token

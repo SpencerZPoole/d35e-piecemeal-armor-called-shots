@@ -12,13 +12,13 @@
 
 ## Short Description
 
-Optional piecemeal armor and called-shot support for D35E, integrated into native D35E armor and attack workflows.
+RAW-adapted piecemeal armor and called-shot automation for D35E, integrated into native D35E armor, attack, and Apply Damage workflows.
 
 ## Long Description
 
-D35E Piecemeal Armor And Called Shots adds configurable optional-rule helpers for D35E worlds. Equipment can be configured as piecemeal armor components, previewed, synced into one D35E-native aggregate armor item, and restored later. Synced components remain visible as reversible visual records while the generated aggregate is the only intended D35E armor contributor. Called shots live inside the native D35E attack/use dialog, apply their attack penalty through D35E's normal modifier breakdown, can adjust D35E's native Apply Damage AC check for local piecemeal armor, and post GM-confirmed outcome chat cards.
+D35E Piecemeal Armor And Called Shots adds configurable optional-rule helpers for D35E worlds. Equipment can be configured as piecemeal armor components, previewed, synced into one D35E-native aggregate armor item, and restored later. Synced components remain visible as reversible visual records while the generated aggregate is the only intended D35E armor contributor. Called shots live inside the native D35E attack/use dialog, apply their attack penalty through D35E's normal modifier breakdown, can adjust D35E's native Apply Damage AC check for local piecemeal armor, and in RAW-adapted mode automatically apply severity outcomes after D35E resolves hit/crit and post-DR damage.
 
-The module is intentionally explicit that the bundled defaults are PF1e-derived optional-rule scaffolding, not official D&D 3.5 RAW. GMs can edit locations, penalties, armor coverage slot(s), and outcome effects from module settings. Coverage fields accept multiple locations such as `head; eyes; ears` or `torso, arms, legs`.
+The module is intentionally explicit that the bundled defaults are PF1e Ultimate Combat adaptation, not official D&D 3.5 RAW. A `Rules mode` setting defaults to RAW-adapted automation and offers a legacy v1.0 workflow for tables that want the older manual behavior. GMs can edit locations, penalties, armor coverage slot(s), and outcome effects from module settings. Coverage fields accept multiple locations such as `head; eyes; ears` or `torso, arms, legs`, and a starter catalog fills common padded, leather, chain, and plate armor pieces.
 
 ## Compatibility
 
@@ -31,10 +31,10 @@ The module is intentionally explicit that the bundled defaults are PF1e-derived 
 
 ## Version Entry
 
-- Version: `1.0.6`
-- Package Manifest URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.6/module.json`
-- Download URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.6/d35e-piecemeal-armor-called-shots-v1.0.6.zip`
-- Release Notes URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/tag/v1.0.6`
+- Version: `1.1.0`
+- Package Manifest URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.1.0/module.json`
+- Download URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.1.0/d35e-piecemeal-armor-called-shots-v1.1.0.zip`
+- Release Notes URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/tag/v1.1.0`
 
 ## User Install URL
 

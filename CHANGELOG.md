@@ -4,6 +4,19 @@
 
 - No unreleased changes yet.
 
+## 1.1.0
+
+- Changed the default rules mode to RAW-adapted Ultimate Combat automation while keeping the v1.0 workflow as an opt-in legacy mode.
+- Fixed piecemeal armor formulas: complete suits gain `+1`, ACP/ASF/max Dex use worst-piece behavior, mixed complete suits add `+5%` ASF, hasty donning adjusts armor/ACP, mithral adjustments apply when all active pieces are mithral, and separate-piece magic/masterwork follows torso > legs > arms precedence.
+- Added separate armor `Piece category` and called-shot `Coverage slot(s)` fields so armor math and local armor mapping no longer fight over one field.
+- Added a verified starter catalog for common padded, leather, chain, and plate arm/leg/torso armor pieces.
+- Fixed the default called-shot profile to use Table 5-4 penalties, including Heart as challenging `-10`.
+- Added RAW-adapted called-shot full-attack handling for Improved Called Shot and Greater Called Shot, including the additional `-5` penalty and the Greater `40` damage debilitating minimum.
+- Added automatic called-shot severity and outcome application after D35E Apply Damage, with save DCs based on the attack total and no effect when the hit misses or post-DR damage is zero.
+- Added a target actor called-shot ledger and GM restore controls for automatic conditions, ability damage, death, notes, flags, and ActiveEffects.
+- Updated local armor AC so called-shot touch attacks use normal AC and torso coverage can protect head/neck-style RAW targets by default.
+- Expanded tests and public documentation for RAW-adapted behavior, legacy mode, severe outcomes, and restore workflow.
+
 ## 1.0.6
 
 - Fixed armor sync so synced components become reversible visual `misc`/`clothing` records in sensible D35E equipment slots instead of disappearing into `slotless`.

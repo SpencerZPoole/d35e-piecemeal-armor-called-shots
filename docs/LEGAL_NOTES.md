@@ -4,7 +4,7 @@ This module is unofficial fan tooling for Foundry VTT and the D35E system. It is
 
 The software code is distributed under the MIT License.
 
-The bundled called-shot defaults are compact, configurable mechanical scaffolding inspired by publicly available Pathfinder 1e variant-rule references. The module avoids copying full rules prose and does not present those optional rules as D&D 3.5 RAW.
+The bundled defaults are compact, configurable mechanical implementation data adapted from Pathfinder 1e variant-rule references. The module avoids copying full rules prose and does not present those optional rules as D&D 3.5 RAW.
 
 Reference links:
 

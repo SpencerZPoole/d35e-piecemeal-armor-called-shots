@@ -3,6 +3,7 @@ import { LOCAL_ARMOR_MODES } from "../scripts/constants.js";
 import { armorCoverageOverlaps, parseArmorCoverageSlots } from "../scripts/armor.js";
 import {
   applyLocalArmorAdjustment,
+  applyCalledShotConcealmentAdjustment,
   applyStagedCalledShotLocalArmor,
   attachCalledShotToDamageCard,
   calculateLocalArmorAdjustment,
@@ -27,7 +28,15 @@ globalThis.game = {
   }
 };
 
-function piece(id, slot, armorBonus, enhancementBonus = 0) {
+function piece(id, slot, armorBonus, enhancementBonus = 0, options = {}) {
+  const magic = options.suit
+    ? {
+        magicMode: "suit",
+        suitId: "playtest-suit"
+      }
+    : enhancementBonus > 0
+      ? { magicMode: "separatePiece" }
+      : {};
   return {
     id,
     name: `${slot} piece`,
@@ -43,7 +52,8 @@ function piece(id, slot, armorBonus, enhancementBonus = 0) {
           enabled: true,
           slot,
           armorBonus,
-          enhancementBonus
+          enhancementBonus,
+          ...magic
         }
       }
     }
@@ -83,9 +93,9 @@ const actor = {
   },
   items: [
     aggregate(4, 1),
-    piece("legs", "legs", 3, 1),
-    piece("head", "head", 6, 1),
-    piece("arms", "arms", 1, 0)
+    piece("legs", "legs", 3, 1, { suit: true }),
+    piece("head", "head", 6, 1, { suit: true }),
+    piece("arms", "arms", 1, 0, { suit: true })
   ],
   getActiveTokens() {
     return [{ document: { uuid: "Scene.scene.Token.target-token" } }];
@@ -164,17 +174,27 @@ assert.equal(displayed.adjusted, false);
 assert.equal(displayAc.ac, 21);
 assert.match(displayAc.acModifiers.at(-1).sourceName, /advisory/);
 
+const coverAc = { ac: 25, acModifiers: [{ sourceName: "Cover", value: "+4" }] };
+applyLocalArmorAdjustment(actor, coverAc, payload, { mode: LOCAL_ARMOR_MODES.display });
+assert.equal(coverAc.ac, 29);
+assert.equal(coverAc.acModifiers.some((entry) => entry.sourceName === "Called Shot Cover"), true);
+
 const touchAc = { ac: 12, acModifiers: [{ sourceName: "AC", value: 12 }] };
-assert.equal(applyLocalArmorAdjustment(actor, touchAc, payload), null);
-assert.equal(touchAc.ac, 12);
+const touchCalledShot = applyLocalArmorAdjustment(actor, touchAc, payload);
+assert.equal(touchCalledShot.touchAdjustment.adjustment, 9);
+assert.equal(touchCalledShot.adjustment, -1);
+assert.equal(touchAc.ac, 20);
 
 clearStagedCalledShotDamageApplication("gm-1");
 stageCalledShotDamageApplication(payload, { userId: "gm-1", messageId: "msg-1" });
 assert.equal(getStagedCalledShotDamageApplication("gm-1").messageId, "msg-1");
+const conceal = { concealTarget: 20 };
+assert.deepEqual(applyCalledShotConcealmentAdjustment(actor, conceal, "gm-1"), { original: 20, adjusted: 50 });
+assert.equal(conceal.concealTarget, 50);
 const stagedAc = { ac: 21, acModifiers: [] };
 const staged = applyStagedCalledShotLocalArmor(actor, stagedAc, "gm-1");
 assert.equal(staged.adjustment, -1);
 assert.equal(stagedAc.ac, 20);
-assert.equal(getStagedCalledShotDamageApplication("gm-1"), null);
+assert.equal(getStagedCalledShotDamageApplication("gm-1").localArmor.adjustment, -1);
 
 console.log("test-local-armor: ok");

@@ -1,6 +1,7 @@
-import { FLAGS, MODULE_ID, SETTINGS } from "./constants.js";
+import { FLAGS, MODULE_ID, RULES_MODES, SETTINGS } from "./constants.js";
 import { applyCalledShotOutcome } from "./called-shots.js";
-import { isAggregateArmorItem, isPiecemealArmorPiece, previewArmorSync, restoreArmorComponents, syncArmorAggregate } from "./armor.js";
+import { isAggregateArmorItem, isPiecemealArmorPiece, previewArmorSync, RAW_ARMOR_PIECE_CATALOG, restoreArmorComponents, syncArmorAggregate } from "./armor.js";
+import { getCalledShotLedger, restoreAllCalledShotLedgerEntries, restoreCalledShotLedgerEntry } from "./effects.js";
 import { extractCalledShotDamagePayloads, stageCalledShotDamageApplication } from "./local-armor.js";
 
 function isEnabled(settingKey, fallback = true) {
@@ -86,6 +87,32 @@ function persistPiecemealPanelControl(item, root, form, control) {
   });
 }
 
+function applyCatalogPiece(item, root, form, catalogId) {
+  const catalog = RAW_ARMOR_PIECE_CATALOG.find((entry) => entry.id === catalogId);
+  if (!catalog) return;
+  const base = `flags.${MODULE_ID}.${FLAGS.piecemeal}`;
+  const update = {
+    [`${base}.catalogId`]: catalog.id,
+    [`${base}.pieceCategory`]: catalog.pieceCategory,
+    [`${base}.coverageSlots`]: catalog.coverageSlots,
+    [`${base}.armorFamily`]: catalog.armorFamily,
+    [`${base}.equipmentSubtype`]: catalog.equipmentSubtype,
+    [`${base}.armorBonus`]: catalog.armorBonus,
+    [`${base}.maxDex`]: catalog.maxDex,
+    [`${base}.acp`]: catalog.acp,
+    [`${base}.spellFailure`]: catalog.spellFailure,
+    [`${base}.weight`]: catalog.weight,
+    [`${base}.cost`]: catalog.cost
+  };
+  void item.update(update).then(() => {
+    ui.notifications?.info(`Applied ${catalog.label} piecemeal armor values.`);
+    schedulePiecemealItemPanelRefresh(item, root, form);
+  }).catch((error) => {
+    console.error(`${MODULE_ID} | Failed to apply piecemeal armor catalog values`, error);
+    ui.notifications?.error("Could not apply the piecemeal armor catalog values. Check the console for details.");
+  });
+}
+
 async function maybeConfirmSevereOutcome(severity) {
   if (severity !== "debilitating") return true;
   if (!globalThis.Dialog?.confirm) return window.confirm("Apply the debilitating called-shot outcome?");
@@ -107,16 +134,20 @@ export async function createCalledShotChatCard({ payload, actor, item, attackTot
     ? `<p><strong>Coverage slot(s):</strong> ${escapeHtml(payload.coverageSlot)}</p>`
     : "";
   const gmDetails = gmOnlyDetails
-    ? `<p><strong>Profile:</strong> ${escapeHtml(payload.profileLabel)}. Outcomes are GM-confirmed and editable in module settings.</p>`
+    ? `<p><strong>Profile:</strong> ${escapeHtml(payload.profileLabel)}. Outcomes are editable in module settings.</p>`
     : "";
   const severityLabels = {
     normal: "Normal",
     critical: "Critical",
     debilitating: "Debilitating"
   };
-  const buttons = Object.entries(severityLabels).map(([severity, label]) => (
+  const autoMode = payload.rulesMode === RULES_MODES.rawAdapted;
+  const buttons = autoMode ? "" : Object.entries(severityLabels).map(([severity, label]) => (
     `<button type="button" data-d35e-pacs-apply="${severity}" aria-label="Apply ${label} called-shot outcome">${label}</button>`
   )).join("");
+  const outcomeText = autoMode
+    ? "<p><strong>Outcome:</strong> Use D35E's native Apply Damage button. If the attack hits and damage gets through, the module determines severity and records any automatic effects in the target's called-shot ledger.</p>"
+    : "<p><strong>Outcome:</strong> GM confirmation required. Choose the severity after adjudicating the hit.</p>";
   const content = `
     <div class="d35e-pacs-chat-card">
       <h3>Called Shot: ${escapeHtml(payload.locationLabel)}</h3>
@@ -125,6 +156,7 @@ export async function createCalledShotChatCard({ payload, actor, item, attackTot
       <p><strong>Attack total:</strong> ${attackTotal ?? "unknown"}${isCriticalThreat ? " (critical threat)" : ""}</p>
       ${coverageText}
       ${gmDetails}
+      ${outcomeText}
       <div class="d35e-pacs-chat-actions">${buttons}</div>
     </div>`;
   return ChatMessage.create({
@@ -158,8 +190,11 @@ export async function openArmorSyncDialog(actor) {
   const hasPieces = plan.summary.pieces.length > 0;
   const canRestore = hasRestorableArmorState(actor, plan);
   const rows = plan.summary.pieces.map((piece) => (
-    `<tr><td>${escapeHtml(piece.name)}</td><td>${escapeHtml(piece.slot)}</td><td>${piece.armorBonus}</td><td>${piece.acp}</td><td>${piece.spellFailure}%</td></tr>`
+    `<tr><td>${escapeHtml(piece.name)}</td><td>${escapeHtml(piece.pieceCategory)}</td><td>${escapeHtml(piece.coverageSlots)}</td><td>${piece.armorBonus}</td><td>${piece.acp}</td><td>${piece.spellFailure}%</td></tr>`
   )).join("");
+  const notes = plan.summary.notes?.length
+    ? `<ul>${plan.summary.notes.map((noteText) => `<li>${escapeHtml(noteText)}</li>`).join("")}</ul>`
+    : "";
   const emptyGuidance = hasPieces
     ? ""
     : "<p><strong>No syncable pieces found.</strong> Mark at least one carried, unbroken equipment item as a piecemeal armor component before syncing.</p>";
@@ -168,10 +203,11 @@ export async function openArmorSyncDialog(actor) {
       <p>This creates or updates one D35E aggregate armor item and neutralizes native armor math on the component pieces. Restore reverses backed-up fields.</p>
       ${emptyGuidance}
       <table>
-        <thead><tr><th>Piece</th><th>Slot</th><th>Armor</th><th>ACP</th><th>ASF</th></tr></thead>
-        <tbody>${rows || "<tr><td colspan='5'>No syncable piecemeal armor pieces found.</td></tr>"}</tbody>
+        <thead><tr><th>Piece</th><th>Category</th><th>Coverage</th><th>Armor</th><th>ACP</th><th>ASF</th></tr></thead>
+        <tbody>${rows || "<tr><td colspan='6'>No syncable piecemeal armor pieces found.</td></tr>"}</tbody>
       </table>
-      <p><strong>Total:</strong> armor ${plan.summary.armorBonus + plan.summary.enhancementBonus}, max Dex ${plan.summary.maxDex ?? "none"}, ACP ${plan.summary.acp}, ASF ${plan.summary.spellFailure}%.</p>
+      <p><strong>Total:</strong> armor ${plan.summary.armorBonus + plan.summary.enhancementBonus}, max Dex ${plan.summary.maxDex ?? "none"}, ACP ${plan.summary.acp}, ASF ${plan.summary.spellFailure}%, carried component weight ${plan.summary.weight}.</p>
+      ${notes}
     </div>`;
   return new Promise((resolve) => {
     const buttons = {};
@@ -248,7 +284,7 @@ function appendInventoryIndicators(app, root) {
       chipClass = "d35e-pacs-chip-aggregate";
     } else if (isPiecemealArmorPiece(item)) {
       const flag = item.getFlag?.(MODULE_ID, FLAGS.piecemeal) ?? {};
-      chipText = `piece: ${flag.slot ?? "armor"}`;
+      chipText = `piece: ${flag.pieceCategory ?? flag.coverageSlots ?? flag.coverageSlot ?? flag.slot ?? "armor"}`;
       chipClass = "d35e-pacs-chip-piece";
     } else if (item.getFlag?.(MODULE_ID, FLAGS.nativeBackup)) {
       chipText = "synced component";
@@ -260,6 +296,60 @@ function appendInventoryIndicators(app, root) {
       name.appendChild(chip);
     }
   }
+}
+
+export async function openCalledShotLedgerDialog(actor) {
+  const ledger = getCalledShotLedger(actor);
+  const activeEntries = ledger.filter((entry) => !entry.restoredAt);
+  const rows = activeEntries.map((entry) => `
+    <tr>
+      <td>${escapeHtml(entry.locationLabel ?? entry.locationId ?? "Location")}</td>
+      <td>${escapeHtml(entry.severity ?? "unknown")}</td>
+      <td>${escapeHtml(entry.appliedAt ?? "")}</td>
+      <td><button type="button" data-d35e-pacs-restore-ledger="${escapeHtml(entry.id)}">Restore</button></td>
+    </tr>
+  `).join("");
+  const content = `
+    <div class="d35e-pacs-ledger">
+      <p>Restore reverses actor updates and removes ActiveEffect notes created by automatic called-shot outcomes.</p>
+      <table>
+        <thead><tr><th>Location</th><th>Severity</th><th>Applied</th><th></th></tr></thead>
+        <tbody>${rows || "<tr><td colspan='4'>No active called-shot effects.</td></tr>"}</tbody>
+      </table>
+    </div>`;
+  return new Promise((resolve) => {
+    const dialog = new Dialog({
+      title: "Called Shot Effects",
+      content,
+      buttons: {
+        restoreAll: {
+          label: "Restore All",
+          callback: async () => {
+            const result = await restoreAllCalledShotLedgerEntries(actor);
+            ui.notifications.info(`Restored ${result.length} called-shot ledger entr${result.length === 1 ? "y" : "ies"}.`);
+            resolve(result);
+          }
+        },
+        close: {
+          label: "Close",
+          callback: () => resolve(null)
+        }
+      },
+      render: (html) => {
+        const root = htmlRoot(html);
+        for (const button of root.querySelectorAll?.("[data-d35e-pacs-restore-ledger]") ?? []) {
+          button.addEventListener("click", async (event) => {
+            event.preventDefault();
+            const result = await restoreCalledShotLedgerEntry(actor, button.dataset.d35ePacsRestoreLedger);
+            ui.notifications.info("Called-shot effect restored.");
+            dialog.close();
+            resolve(result);
+          });
+        }
+      }
+    });
+    dialog.render(true);
+  });
 }
 
 function injectPiecemealItemPanel(item, root, form) {
@@ -274,7 +364,7 @@ function injectPiecemealItemPanel(item, root, form) {
   legend.textContent = "Piecemeal Armor";
   const help = document.createElement("p");
   help.classList.add("d35e-pacs-help");
-  help.textContent = "Use this item as a module-managed armor component. Coverage can name one or more locations, such as head; eyes; ears or torso, arms, legs. After sync, the generated aggregate item is what contributes D35E armor AC.";
+  help.textContent = "Use this item as a module-managed armor component. RAW-adapted armor math uses the piece category, while coverage slot(s) map called-shot locations such as head; eyes; ears. After sync, the generated aggregate item is what contributes D35E armor AC.";
   const enabledLabel = document.createElement("label");
   enabledLabel.classList.add("d35e-pacs-checkbox");
   const enabled = document.createElement("input");
@@ -285,9 +375,26 @@ function injectPiecemealItemPanel(item, root, form) {
   const grid = document.createElement("div");
   grid.classList.add("d35e-pacs-grid");
   const category = flag.equipmentSubtype ?? item.system?.equipmentSubtype ?? "lightArmor";
+  const coverage = flag.coverageSlots ?? flag.coverageSlot ?? flag.slot ?? "torso";
   grid.append(
-    buildLabeledInput("Coverage slot(s) ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.slot`, flag.slot ?? "torso", {
+    buildLabeledSelect("Known piece ", `flags.${MODULE_ID}.${FLAGS.piecemeal}.catalogId`, flag.catalogId ?? "", [
+      ["", "Manual values"],
+      ...RAW_ARMOR_PIECE_CATALOG.map((entry) => [entry.id, entry.label])
+    ]),
+    buildLabeledSelect("Piece category ", `flags.${MODULE_ID}.${FLAGS.piecemeal}.pieceCategory`, flag.pieceCategory ?? "", [
+      ["", "Infer from coverage"],
+      ["torso", "Torso"],
+      ["legs", "Legs"],
+      ["arms", "Arms"]
+    ]),
+    buildLabeledInput("Coverage slot(s) ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.coverageSlots`, coverage, {
       placeholder: "head; eyes; ears"
+    }),
+    buildLabeledInput("Armor family ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.armorFamily`, flag.armorFamily ?? flag.family ?? "", {
+      placeholder: "plate"
+    }),
+    buildLabeledInput("Material ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.material`, flag.material ?? "", {
+      placeholder: "mithral"
     }),
     buildLabeledInput("Armor bonus ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.armorBonus`, flag.armorBonus ?? item.system?.armor?.value ?? 0),
     buildLabeledInput("Enhancement bonus ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.enhancementBonus`, flag.enhancementBonus ?? item.system?.armor?.enh ?? 0),
@@ -295,13 +402,35 @@ function injectPiecemealItemPanel(item, root, form) {
     buildLabeledInput("Armor check penalty ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.acp`, flag.acp ?? item.system?.armor?.acp ?? 0),
     buildLabeledInput("Arcane failure % ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.spellFailure`, flag.spellFailure ?? item.system?.spellFailure ?? 0),
     buildLabeledInput("Weight ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.weight`, flag.weight ?? item.system?.weight ?? 0),
+    buildLabeledInput("Cost ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.cost`, flag.cost ?? item.system?.price ?? 0),
     buildLabeledSelect("Armor category ", `flags.${MODULE_ID}.${FLAGS.piecemeal}.equipmentSubtype`, category, [
       ["clothing", "Clothing"],
       ["lightArmor", "Light armor"],
       ["mediumArmor", "Medium armor"],
       ["heavyArmor", "Heavy armor"]
+    ]),
+    buildLabeledSelect("Magic mode ", `flags.${MODULE_ID}.${FLAGS.piecemeal}.magicMode`, flag.magicMode ?? "", [
+      ["", "Infer"],
+      ["none", "Not magical"],
+      ["separatePiece", "Separate piece"],
+      ["suit", "Part of enchanted suit"]
+    ]),
+    buildLabeledInput("Suit ID ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.suitId`, flag.suitId ?? "", {
+      placeholder: "full-plate-a"
+    }),
+    buildLabeledSelect("Don state ", `flags.${MODULE_ID}.${FLAGS.piecemeal}.donState`, flag.donState ?? "normal", [
+      ["normal", "Normal"],
+      ["hasty", "Hasty"]
     ])
   );
+  const masterworkLabel = document.createElement("label");
+  masterworkLabel.classList.add("d35e-pacs-checkbox");
+  const masterwork = document.createElement("input");
+  masterwork.type = "checkbox";
+  masterwork.name = `flags.${MODULE_ID}.${FLAGS.piecemeal}.masterwork`;
+  masterwork.checked = flag.masterwork === true || item.system?.masterwork === true;
+  masterworkLabel.append(masterwork, document.createTextNode(" Masterwork piece"));
+  grid.append(masterworkLabel);
   fieldset.append(legend, help, enabledLabel, grid);
   fieldset.addEventListener("input", (event) => {
     const control = event.target;
@@ -316,6 +445,14 @@ function injectPiecemealItemPanel(item, root, form) {
     const control = event.target;
     if (!isPiecemealPanelControl(control)) return;
     event.stopPropagation();
+    if (control.name === `flags.${MODULE_ID}.${FLAGS.piecemeal}.catalogId`) {
+      if (!control.value) {
+        persistPiecemealPanelControl(item, root, form, control);
+        return;
+      }
+      applyCatalogPiece(item, root, form, control.value);
+      return;
+    }
     persistPiecemealPanelControl(item, root, form, control);
   });
   const detailsHeader = insertTarget.querySelector?.(".form-header");
@@ -364,6 +501,19 @@ function appendActorSheetControls(app, html) {
     button.addEventListener("click", (event) => {
       event.preventDefault();
       void openArmorSyncDialog(actor);
+    });
+    if (title) title.after(button);
+    else form.prepend(button);
+  }
+  const activeLedgerEntries = game.user?.isGM ? getCalledShotLedger(actor).filter((entry) => !entry.restoredAt) : [];
+  if ((title || form) && activeLedgerEntries.length && !root.querySelector("[data-d35e-pacs-called-shot-ledger]")) {
+    const button = document.createElement("a");
+    button.classList.add("d35e-pacs-header-button");
+    button.dataset.d35ePacsCalledShotLedger = "true";
+    appendIconText(button, "fas fa-history", `Called Shot Effects (${activeLedgerEntries.length})`);
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      void openCalledShotLedgerDialog(actor);
     });
     if (title) title.after(button);
     else form.prepend(button);

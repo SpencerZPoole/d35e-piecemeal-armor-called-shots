@@ -2,12 +2,16 @@ import { MODULE_ID } from "./constants.js";
 import { calculatePiecemealArmor, previewArmorSync, restoreArmorComponents, syncArmorAggregate } from "./armor.js";
 import {
   applyCalledShotOutcome,
+  calculateCalledShotSituationalPenalty,
   clearCalledShot,
+  determineCalledShotSeverity,
+  getCalledShotFeatState,
   getCalledShotOptions,
   getCalledShotProfiles,
   getPendingCalledShot,
   stageCalledShot
 } from "./called-shots.js";
+import { getCalledShotLedger, restoreAllCalledShotLedgerEntries, restoreCalledShotLedgerEntry } from "./effects.js";
 import { getDefaultCalledShotProfiles, normalizeCalledShotProfiles } from "./profiles.js";
 
 export function buildApi() {
@@ -24,7 +28,13 @@ export function buildApi() {
     stageCalledShot,
     clearCalledShot,
     getPendingCalledShot,
+    getCalledShotFeatState,
+    calculateCalledShotSituationalPenalty,
+    determineCalledShotSeverity,
     applyCalledShotOutcome,
+    getCalledShotLedger,
+    restoreCalledShotLedgerEntry,
+    restoreAllCalledShotLedgerEntries,
     getIntegrationStatus() {
       return {
         moduleId: MODULE_ID,

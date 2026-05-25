@@ -6,6 +6,7 @@ import {
   calculatePiecemealArmor,
   inferSyncedComponentVisualSlot,
   previewArmorSync,
+  RAW_ARMOR_PIECE_CATALOG,
   syncArmorAggregate
 } from "../scripts/armor.js";
 
@@ -56,15 +57,24 @@ const arms = item("b", "Arm guards", {
 });
 const ignored = item("c", "Backpack", { enabled: false });
 
+const plateTorsoCatalog = RAW_ARMOR_PIECE_CATALOG.find((entry) => entry.id === "plate-torso");
+assert.equal(plateTorsoCatalog.pieceCategory, "torso");
+assert.equal(plateTorsoCatalog.armorBonus, 6);
+assert.equal(plateTorsoCatalog.coverageSlots.includes("heart"), true);
+
 const summary = calculatePiecemealArmor([torso, arms, ignored]);
 assert.equal(summary.armorBonus, 4);
 assert.equal(summary.enhancementBonus, 1);
 assert.equal(summary.maxDex, 4);
-assert.equal(summary.acp, 3);
-assert.equal(summary.spellFailure, 20);
+assert.equal(summary.acp, 1);
+assert.equal(summary.spellFailure, 15);
 assert.equal(summary.equipmentSubtype, "mediumArmor");
 assert.equal(summary.weight, 15);
 assert.deepEqual(summary.componentIds, ["a", "b"]);
+
+const legacySummary = calculatePiecemealArmor([torso, arms, ignored], { rulesMode: "legacyWorkflow" });
+assert.equal(legacySummary.acp, 3);
+assert.equal(legacySummary.spellFailure, 20);
 
 const unequippedHelmet = item("d", "Helmet", {
   enabled: true,
@@ -103,9 +113,44 @@ assert.equal(aggregate.name, "Piecemeal Armor Aggregate");
 assert.equal(aggregate.system.armor.value, 4);
 assert.equal(aggregate.system.armor.enh, 1);
 assert.equal(aggregate.system.armor.dex, 4);
-assert.equal(aggregate.system.armor.acp, -3);
+assert.equal(aggregate.system.armor.acp, -1);
 assert.equal(aggregate.system.weight, 0);
 assert.equal(aggregate.flags[MODULE_ID].aggregate.summary.weight, 15);
+
+const fullSuit = calculatePiecemealArmor([
+  item("suit-torso", "Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorFamily: "plate", armorBonus: 6, acp: 4, spellFailure: 35, weight: 30 }),
+  item("suit-legs", "Legs", { enabled: true, pieceCategory: "legs", coverageSlots: "legs", armorFamily: "plate", armorBonus: 2, acp: 3, spellFailure: 20, weight: 15 }),
+  item("suit-arms", "Arms", { enabled: true, pieceCategory: "arms", coverageSlots: "arms", armorFamily: "plate", armorBonus: 1, acp: 2, spellFailure: 25, weight: 10 })
+]);
+assert.equal(fullSuit.completeSuit, true);
+assert.equal(fullSuit.armorBonus, 10);
+assert.equal(fullSuit.suitArmorBonus, 1);
+assert.equal(fullSuit.acp, 4);
+assert.equal(fullSuit.spellFailure, 35);
+
+const mixedSuit = calculatePiecemealArmor([
+  item("mixed-torso", "Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorFamily: "plate", armorBonus: 6, spellFailure: 35 }),
+  item("mixed-legs", "Legs", { enabled: true, pieceCategory: "legs", coverageSlots: "legs", armorFamily: "chain", armorBonus: 2, spellFailure: 20 }),
+  item("mixed-arms", "Arms", { enabled: true, pieceCategory: "arms", coverageSlots: "arms", armorFamily: "plate", armorBonus: 1, spellFailure: 25 })
+]);
+assert.equal(mixedSuit.mixedSuit, true);
+assert.equal(mixedSuit.spellFailure, 40);
+
+const mithralSuit = calculatePiecemealArmor([
+  item("mithral-torso", "Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorFamily: "chain", material: "mithral", armorBonus: 4, maxDex: 4, acp: 4, spellFailure: 25, equipmentSubtype: "mediumArmor", weight: 20 }),
+  item("mithral-legs", "Legs", { enabled: true, pieceCategory: "legs", coverageSlots: "legs", armorFamily: "chain", material: "mithral", armorBonus: 1, maxDex: 5, acp: 2, spellFailure: 15, equipmentSubtype: "mediumArmor", weight: 10 })
+]);
+assert.equal(mithralSuit.maxDex, 6);
+assert.equal(mithralSuit.acp, 1);
+assert.equal(mithralSuit.spellFailure, 15);
+assert.equal(mithralSuit.equipmentSubtype, "lightArmor");
+
+const duplicateCategory = calculatePiecemealArmor([
+  item("weak-torso", "Weak Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorBonus: 2 }),
+  item("strong-torso", "Strong Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorBonus: 5 })
+]);
+assert.deepEqual(duplicateCategory.componentIds, ["strong-torso"]);
+assert.equal(duplicateCategory.ignoredPieces.length, 1);
 
 const neutralized = buildNeutralizeUpdate(torso);
 assert.equal(neutralized["system.armor.value"], 0);
@@ -161,6 +206,12 @@ assert.equal(buildNeutralizeUpdate(item("ear", "Ear guard", {
   slot: "ears",
   armorBonus: 1
 }, { equipmentType: "armor", slot: "armor" }))["system.slot"], "head");
+assert.equal(buildNeutralizeUpdate(item("torso-with-head", "Plate torso", {
+  enabled: true,
+  coverageSlots: "torso; chest; vitals; heart; head",
+  pieceCategory: "torso",
+  armorBonus: 6
+}, { equipmentType: "armor", slot: "armor" }))["system.slot"], "body");
 assert.equal(buildNeutralizeUpdate(item("legs", "Greaves", {
   enabled: true,
   slot: "legs",
