@@ -4,6 +4,7 @@ import {
   buildNeutralizeUpdate,
   buildRestoreUpdate,
   calculatePiecemealArmor,
+  inferSyncedComponentVisualSlot,
   previewArmorSync,
   syncArmorAggregate
 } from "../scripts/armor.js";
@@ -40,7 +41,8 @@ const torso = item("a", "Torso plates", {
   maxDex: 4,
   acp: 2,
   spellFailure: 15,
-  equipmentSubtype: "mediumArmor"
+  equipmentSubtype: "mediumArmor",
+  weight: 12
 });
 const arms = item("b", "Arm guards", {
   enabled: true,
@@ -49,7 +51,8 @@ const arms = item("b", "Arm guards", {
   maxDex: 6,
   acp: 1,
   spellFailure: 5,
-  equipmentSubtype: "lightArmor"
+  equipmentSubtype: "lightArmor",
+  weight: 3
 });
 const ignored = item("c", "Backpack", { enabled: false });
 
@@ -60,6 +63,7 @@ assert.equal(summary.maxDex, 4);
 assert.equal(summary.acp, 3);
 assert.equal(summary.spellFailure, 20);
 assert.equal(summary.equipmentSubtype, "mediumArmor");
+assert.equal(summary.weight, 15);
 assert.deepEqual(summary.componentIds, ["a", "b"]);
 
 const unequippedHelmet = item("d", "Helmet", {
@@ -100,10 +104,15 @@ assert.equal(aggregate.system.armor.value, 4);
 assert.equal(aggregate.system.armor.enh, 1);
 assert.equal(aggregate.system.armor.dex, 4);
 assert.equal(aggregate.system.armor.acp, -3);
+assert.equal(aggregate.system.weight, 0);
+assert.equal(aggregate.flags[MODULE_ID].aggregate.summary.weight, 15);
 
 const neutralized = buildNeutralizeUpdate(torso);
 assert.equal(neutralized["system.armor.value"], 0);
-assert.equal(neutralized["system.slot"], "slotless");
+assert.equal(neutralized["system.equipped"], true);
+assert.equal(neutralized["system.equipmentType"], "misc");
+assert.equal(neutralized["system.equipmentSubtype"], "clothing");
+assert.equal(neutralized["system.slot"], "body");
 assert.ok(neutralized[`flags.${MODULE_ID}.nativeBackup`].native);
 
 const backedUp = {
@@ -118,6 +127,50 @@ const backedUp = {
 const restore = buildRestoreUpdate(backedUp);
 assert.equal(restore["system.armor.value"], 0);
 assert.equal(restore["system.slot"], "armor");
+assert.equal(restore["system.equipmentType"], "armor");
+assert.equal(restore["system.equipped"], true);
+
+const oldSyncedHelmet = item("old-head", "Old synced helmet", {
+  enabled: true,
+  slot: "head",
+  armorBonus: 1
+}, {
+  equipmentType: "armor",
+  equipmentSubtype: "lightArmor",
+  slot: "slotless"
+});
+oldSyncedHelmet.flags[MODULE_ID].nativeBackup = {
+  native: {
+    equipped: true,
+    equipmentType: "armor",
+    equipmentSubtype: "lightArmor",
+    armor: { value: 1, enh: 0, dex: null, acp: 0 },
+    spellFailure: 0,
+    slot: "head"
+  }
+};
+assert.equal(inferSyncedComponentVisualSlot(oldSyncedHelmet), "head");
+assert.equal(buildNeutralizeUpdate(oldSyncedHelmet)["system.slot"], "head");
+assert.equal(buildNeutralizeUpdate(item("eye", "Eye guard", {
+  enabled: true,
+  slot: "eyes; ears",
+  armorBonus: 1
+}, { equipmentType: "armor", slot: "armor" }))["system.slot"], "eyes");
+assert.equal(buildNeutralizeUpdate(item("ear", "Ear guard", {
+  enabled: true,
+  slot: "ears",
+  armorBonus: 1
+}, { equipmentType: "armor", slot: "armor" }))["system.slot"], "head");
+assert.equal(buildNeutralizeUpdate(item("legs", "Greaves", {
+  enabled: true,
+  slot: "legs",
+  armorBonus: 1
+}, { equipmentType: "armor", slot: "armor" }))["system.slot"], "feet");
+assert.equal(buildNeutralizeUpdate(item("current-hands", "Current gloves", {
+  enabled: true,
+  slot: "arms",
+  armorBonus: 1
+}, { equipmentType: "armor", slot: "hands" }))["system.slot"], "hands");
 
 const actor = {
   id: "actor-1",
@@ -143,10 +196,12 @@ let aggregateEquipUpdate = null;
 let aggregateEquipOptions = null;
 let aggregateCreateOptions = null;
 let componentUpdate = null;
+let componentUpdateOptions = null;
 const syncItem = {
   ...torso,
-  update: async (update) => {
+  update: async (update, options) => {
     componentUpdate = update;
+    componentUpdateOptions = options;
   }
 };
 const syncItems = [syncItem];
@@ -168,6 +223,8 @@ assert.deepEqual(aggregateCreateOptions, { _slotBypass: true });
 assert.deepEqual(aggregateEquipUpdate, { "system.equipped": true });
 assert.deepEqual(aggregateEquipOptions, { _slotBypass: true });
 assert.equal(componentUpdate["system.armor.value"], 0);
+assert.equal(componentUpdate["system.equipmentType"], "misc");
+assert.deepEqual(componentUpdateOptions, { _slotBypass: true });
 assert.ok(componentUpdate[`flags.${MODULE_ID}.nativeBackup`]);
 
 console.log("test-armor: ok");

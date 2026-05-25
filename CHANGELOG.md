@@ -4,6 +4,14 @@
 
 - No unreleased changes yet.
 
+## 1.0.6
+
+- Fixed armor sync so synced components become reversible visual `misc`/`clothing` records in sensible D35E equipment slots instead of disappearing into `slotless`.
+- Fixed aggregate armor weight so the generated aggregate contributes `0` carried weight while retaining the real component weight total in the module summary and preview.
+- Added multi-location coverage parsing for armor components and called-shot profiles using comma, semicolon, pipe, slash, or newline separators.
+- Improved local armor AC matching so a component such as `head; eyes; ears` can match called shots to Head, Eye, or Ear and is counted only once.
+- Updated item-sheet and profile-editor copy to label these fields as `Coverage slot(s)`.
+
 ## 1.0.5
 
 - Fixed called-shot location metadata on native D35E damage cards so live Apply Damage clicks can apply local armor AC.

@@ -16,9 +16,9 @@ Optional piecemeal armor and called-shot support for D35E, integrated into nativ
 
 ## Long Description
 
-D35E Piecemeal Armor And Called Shots adds configurable optional-rule helpers for D35E worlds. Equipment can be configured as piecemeal armor components, previewed, synced into one D35E-native aggregate armor item, and restored later. Called shots live inside the native D35E attack/use dialog, apply their attack penalty through D35E's normal modifier breakdown, can adjust D35E's native Apply Damage AC check for local piecemeal armor, and post GM-confirmed outcome chat cards.
+D35E Piecemeal Armor And Called Shots adds configurable optional-rule helpers for D35E worlds. Equipment can be configured as piecemeal armor components, previewed, synced into one D35E-native aggregate armor item, and restored later. Synced components remain visible as reversible visual records while the generated aggregate is the only intended D35E armor contributor. Called shots live inside the native D35E attack/use dialog, apply their attack penalty through D35E's normal modifier breakdown, can adjust D35E's native Apply Damage AC check for local piecemeal armor, and post GM-confirmed outcome chat cards.
 
-The module is intentionally explicit that the bundled defaults are PF1e-derived optional-rule scaffolding, not official D&D 3.5 RAW. GMs can edit locations, penalties, armor coverage slots, and outcome effects from module settings.
+The module is intentionally explicit that the bundled defaults are PF1e-derived optional-rule scaffolding, not official D&D 3.5 RAW. GMs can edit locations, penalties, armor coverage slot(s), and outcome effects from module settings. Coverage fields accept multiple locations such as `head; eyes; ears` or `torso, arms, legs`.
 
 ## Compatibility
 
@@ -31,10 +31,10 @@ The module is intentionally explicit that the bundled defaults are PF1e-derived 
 
 ## Version Entry
 
-- Version: `1.0.5`
-- Package Manifest URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.5/module.json`
-- Download URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.5/d35e-piecemeal-armor-called-shots-v1.0.5.zip`
-- Release Notes URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/tag/v1.0.5`
+- Version: `1.0.6`
+- Package Manifest URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.6/module.json`
+- Download URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.6/d35e-piecemeal-armor-called-shots-v1.0.6.zip`
+- Release Notes URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/tag/v1.0.6`
 
 ## User Install URL
 

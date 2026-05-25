@@ -34,13 +34,14 @@ function appendIconText(element, iconClass, text) {
   element.append(icon, document.createTextNode(` ${text}`));
 }
 
-function buildLabeledInput(labelText, type, name, value) {
+function buildLabeledInput(labelText, type, name, value, attributes = {}) {
   const label = document.createElement("label");
   label.append(document.createTextNode(labelText));
   const input = document.createElement("input");
   input.type = type;
   input.name = name;
   input.value = value == null ? "" : String(value);
+  for (const [key, attributeValue] of Object.entries(attributes)) input.setAttribute(key, attributeValue);
   label.append(input);
   return label;
 }
@@ -103,7 +104,7 @@ export async function createCalledShotChatCard({ payload, actor, item, attackTot
   const targetName = targetDocument?.actor?.name ?? targetDocument?.name ?? "No target captured";
   const gmOnlyDetails = game.user?.isGM && isEnabled(SETTINGS.showGmOnlyDetails, true);
   const coverageText = isEnabled(SETTINGS.locationArmorOverlay, false) && payload.coverageSlot
-    ? `<p><strong>Coverage slot:</strong> ${escapeHtml(payload.coverageSlot)}</p>`
+    ? `<p><strong>Coverage slot(s):</strong> ${escapeHtml(payload.coverageSlot)}</p>`
     : "";
   const gmDetails = gmOnlyDetails
     ? `<p><strong>Profile:</strong> ${escapeHtml(payload.profileLabel)}. Outcomes are GM-confirmed and editable in module settings.</p>`
@@ -273,7 +274,7 @@ function injectPiecemealItemPanel(item, root, form) {
   legend.textContent = "Piecemeal Armor";
   const help = document.createElement("p");
   help.classList.add("d35e-pacs-help");
-  help.textContent = "Use this item as a module-managed armor component. It can be armor, shield, or miscellaneous equipment; the generated aggregate item is what contributes D35E armor AC.";
+  help.textContent = "Use this item as a module-managed armor component. Coverage can name one or more locations, such as head; eyes; ears or torso, arms, legs. After sync, the generated aggregate item is what contributes D35E armor AC.";
   const enabledLabel = document.createElement("label");
   enabledLabel.classList.add("d35e-pacs-checkbox");
   const enabled = document.createElement("input");
@@ -285,7 +286,9 @@ function injectPiecemealItemPanel(item, root, form) {
   grid.classList.add("d35e-pacs-grid");
   const category = flag.equipmentSubtype ?? item.system?.equipmentSubtype ?? "lightArmor";
   grid.append(
-    buildLabeledInput("Coverage slot ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.slot`, flag.slot ?? "torso"),
+    buildLabeledInput("Coverage slot(s) ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.slot`, flag.slot ?? "torso", {
+      placeholder: "head; eyes; ears"
+    }),
     buildLabeledInput("Armor bonus ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.armorBonus`, flag.armorBonus ?? item.system?.armor?.value ?? 0),
     buildLabeledInput("Enhancement bonus ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.enhancementBonus`, flag.enhancementBonus ?? item.system?.armor?.enh ?? 0),
     buildLabeledInput("Max Dex ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.maxDex`, flag.maxDex ?? item.system?.armor?.dex ?? ""),

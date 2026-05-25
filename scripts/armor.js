@@ -1,5 +1,22 @@
 import { AGGREGATE_ARMOR_NAME, ARMOR_SUBTYPE_WEIGHT, FLAGS, MODULE_ID } from "./constants.js";
 
+const COVERAGE_DELIMITER = /[,;|/\r\n]+/;
+const MISC_VISUAL_SLOTS = new Set([
+  "slotless",
+  "head",
+  "headband",
+  "eyes",
+  "shoulders",
+  "neck",
+  "chest",
+  "body",
+  "belt",
+  "wrists",
+  "hands",
+  "ring",
+  "feet"
+]);
+
 function getProperty(source, path) {
   if (!source || !path) return undefined;
   if (globalThis.foundry?.utils?.getProperty) return foundry.utils.getProperty(source, path);
@@ -26,6 +43,71 @@ function getItems(source) {
   if (source?.items?.contents) return source.items.contents;
   if (Array.isArray(source?.items)) return source.items;
   return [];
+}
+
+function keyForSlot(value) {
+  return String(value ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+export function parseArmorCoverageTokens(value) {
+  return [...new Set(String(value ?? "").split(COVERAGE_DELIMITER).map(keyForSlot).filter(Boolean))];
+}
+
+export function normalizeArmorSlot(value) {
+  const key = keyForSlot(value);
+  const aliases = {
+    arm: "arms",
+    arms: "arms",
+    wing: "arms",
+    wings: "arms",
+    hand: "hands",
+    hands: "hands",
+    leg: "legs",
+    legs: "legs",
+    foot: "legs",
+    feet: "legs",
+    head: "head",
+    face: "head",
+    eye: "head",
+    eyes: "head",
+    ear: "head",
+    ears: "head",
+    torso: "torso",
+    chest: "torso",
+    body: "torso",
+    vital: "torso",
+    vitals: "torso",
+    neck: "neck",
+    throat: "neck"
+  };
+  return aliases[key] ?? key;
+}
+
+export function parseArmorCoverageSlots(value) {
+  return [...new Set(parseArmorCoverageTokens(value).map(normalizeArmorSlot).filter(Boolean))];
+}
+
+export function armorCoverageOverlaps(first, second) {
+  const firstSlots = new Set(parseArmorCoverageSlots(first));
+  if (!firstSlots.size) return false;
+  return parseArmorCoverageSlots(second).some((slot) => firstSlots.has(slot));
+}
+
+function visualSlotFromNativeSlot(slot) {
+  const key = keyForSlot(slot);
+  return MISC_VISUAL_SLOTS.has(key) ? key : null;
+}
+
+function visualSlotFromCoverage(coverage) {
+  const tokens = parseArmorCoverageTokens(coverage);
+  if (tokens.some((slot) => slot === "eye" || slot === "eyes")) return "eyes";
+  if (tokens.some((slot) => slot === "neck" || slot === "throat")) return "neck";
+  if (tokens.some((slot) => slot === "head" || slot === "face" || slot === "ear" || slot === "ears")) return "head";
+  if (tokens.some((slot) => slot === "torso" || slot === "chest" || slot === "body" || slot === "vital" || slot === "vitals")) return "body";
+  if (tokens.some((slot) => slot === "arm" || slot === "arms" || slot === "wing" || slot === "wings")) return "wrists";
+  if (tokens.some((slot) => slot === "hand" || slot === "hands")) return "hands";
+  if (tokens.some((slot) => slot === "leg" || slot === "legs" || slot === "foot" || slot === "feet")) return "feet";
+  return null;
 }
 
 export function isPiecemealArmorPiece(item) {
@@ -105,7 +187,7 @@ export function buildAggregateItemData(summary) {
       },
       spellFailure: summary.spellFailure,
       slot: "armor",
-      weight: summary.weight,
+      weight: 0,
       description: {
         value: "Module-generated aggregate item for equipped piecemeal armor pieces."
       }
@@ -122,7 +204,8 @@ export function buildAggregateItemData(summary) {
             maxDex: summary.maxDex,
             acp: summary.acp,
             spellFailure: summary.spellFailure,
-            equipmentSubtype: summary.equipmentSubtype
+            equipmentSubtype: summary.equipmentSubtype,
+            weight: summary.weight
           }
         }
       }
@@ -130,8 +213,7 @@ export function buildAggregateItemData(summary) {
   };
 }
 
-export function buildNeutralizeUpdate(item) {
-  const backup = getFlagData(item, FLAGS.nativeBackup);
+function buildNativeSnapshot(item) {
   const native = {
     equipmentType: item.system?.equipmentType ?? "armor",
     equipmentSubtype: item.system?.equipmentSubtype ?? "lightArmor",
@@ -144,14 +226,34 @@ export function buildNeutralizeUpdate(item) {
     spellFailure: item.system?.spellFailure ?? 0,
     slot: item.system?.slot ?? "slotless"
   };
+  if (typeof item.system?.equipped === "boolean") native.equipped = item.system.equipped;
+  return native;
+}
+
+export function inferSyncedComponentVisualSlot(item) {
+  const backup = getFlagData(item, FLAGS.nativeBackup);
+  const native = backup?.native ?? buildNativeSnapshot(item);
+  const flag = getFlagData(item, FLAGS.piecemeal) ?? {};
+  return visualSlotFromNativeSlot(native.slot) ??
+    visualSlotFromNativeSlot(item.system?.slot) ??
+    visualSlotFromCoverage(flag.slot || flag.coverageSlot) ??
+    "slotless";
+}
+
+export function buildNeutralizeUpdate(item) {
+  const backup = getFlagData(item, FLAGS.nativeBackup);
+  const native = backup?.native ?? buildNativeSnapshot(item);
 
   return {
+    "system.equipped": true,
+    "system.equipmentType": "misc",
+    "system.equipmentSubtype": "clothing",
     "system.armor.value": 0,
     "system.armor.enh": 0,
     "system.armor.dex": null,
     "system.armor.acp": 0,
     "system.spellFailure": 0,
-    "system.slot": "slotless",
+    "system.slot": inferSyncedComponentVisualSlot(item),
     [`flags.${MODULE_ID}.${FLAGS.nativeBackup}`]: backup ?? {
       backedUpAt: new Date().toISOString(),
       native
@@ -163,7 +265,7 @@ export function buildRestoreUpdate(item) {
   const backup = getFlagData(item, FLAGS.nativeBackup);
   const native = backup?.native;
   if (!native) return null;
-  return {
+  const update = {
     "system.equipmentType": native.equipmentType,
     "system.equipmentSubtype": native.equipmentSubtype,
     "system.armor.value": native.armor?.value ?? 0,
@@ -173,6 +275,8 @@ export function buildRestoreUpdate(item) {
     "system.spellFailure": native.spellFailure ?? 0,
     "system.slot": native.slot ?? "slotless"
   };
+  if (typeof native.equipped === "boolean") update["system.equipped"] = native.equipped;
+  return update;
 }
 
 export function previewArmorSync(actor, options = {}) {
@@ -211,7 +315,7 @@ export async function syncArmorAggregate(actor, { dryRun = false, equippedOnly =
 
   for (const update of plan.componentUpdates) {
     const item = actor.items?.get?.(update.itemId);
-    if (item) await item.update(update.update);
+    if (item) await item.update(update.update, { _slotBypass: true });
   }
 
   const aggregate = actor.items?.find?.(isAggregateArmorItem);
@@ -232,7 +336,7 @@ export async function restoreArmorComponents(actor) {
     const update = buildRestoreUpdate(item);
     if (!update) continue;
     updates.push({ itemId: item.id, itemName: item.name, update });
-    await item.update(update);
+    await item.update(update, { _slotBypass: true });
     if (item.unsetFlag) await item.unsetFlag(MODULE_ID, FLAGS.nativeBackup);
   }
 

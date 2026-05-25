@@ -18,10 +18,10 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/late
 
 After installation, open a D35E world, go to **Game Settings > Manage Modules**, enable **D35E Piecemeal Armor And Called Shots**, and reload if Foundry asks.
 
-Versioned release assets are published on GitHub. For v1.0.5, the release manifest is:
+Versioned release assets are published on GitHub. For v1.0.6, the release manifest is:
 
 ```text
-https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.5/module.json
+https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.0.6/module.json
 ```
 
 ## Features
@@ -31,9 +31,11 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 - Adds a `Called Shot` dropdown inside D35E's native attack/use dialog.
 - Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as `Called Shot: Ear -10`.
 - Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.
+- Lets armor components and called-shot profile locations name multiple coverage slots, such as `head; eyes; ears`.
 - Supports full-attack policies: ask per attack, first attack only, every attack, or disabled.
 - Posts GM-confirmed called-shot outcome chat cards.
-- Includes an in-Foundry profile editor for locations, penalties, coverage slots, and outcome effects.
+- Keeps synced armor components visible as reversible visual records while one zero-weight aggregate item contributes the D35E armor math.
+- Includes an in-Foundry profile editor for locations, penalties, coverage slot(s), and outcome effects.
 
 ## Screenshots
 
@@ -70,7 +72,7 @@ The module is additive. It does not edit D35E system files, mutate actors on wor
 
 Module settings live in Foundry's right sidebar gear tab under `Game Settings > D35E Piecemeal Armor And Called Shots`. The called-shot profile editor is available there. Profiles are world settings, so a GM can clone or replace the bundled defaults with table-specific locations, penalties, and effects.
 
-`Called-shot local armor AC` controls whether the native Apply Damage check replaces the aggregate armor contribution with the called location's piecemeal armor value, shows that adjustment only, or disables local armor AC entirely.
+`Called-shot local armor AC` controls whether the native Apply Damage check replaces the aggregate armor contribution with the called location's piecemeal armor value, shows that adjustment only, or disables local armor AC entirely. Coverage slot fields accept one value or a delimiter-separated list, so a helmet component can cover `head; eyes; ears` while a broader armor piece can cover `torso, arms, legs`.
 
 Supported v1 effect specs:
 

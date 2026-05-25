@@ -1,5 +1,14 @@
 import { FLAGS, LOCAL_ARMOR_MODES, MODULE_ID, SETTINGS } from "./constants.js";
-import { getPiecemealArmorPieces, isAggregateArmorItem, readArmorPiece } from "./armor.js";
+import {
+  armorCoverageOverlaps,
+  getPiecemealArmorPieces,
+  isAggregateArmorItem,
+  normalizeArmorSlot,
+  parseArmorCoverageSlots,
+  readArmorPiece
+} from "./armor.js";
+
+export { normalizeArmorSlot };
 
 const DAMAGE_CONTEXT_TTL_MS = 30000;
 const damageContexts = new Map();
@@ -102,34 +111,6 @@ function finalAcLooksLikeTouchAc(actor, finalAc) {
     (!Number.isFinite(normalAc) || normalAc !== touchAc);
 }
 
-export function normalizeArmorSlot(value) {
-  const key = String(value ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  const aliases = {
-    arm: "arms",
-    arms: "arms",
-    hand: "hands",
-    hands: "hands",
-    leg: "legs",
-    legs: "legs",
-    foot: "legs",
-    feet: "legs",
-    head: "head",
-    face: "head",
-    eye: "head",
-    eyes: "head",
-    ear: "head",
-    ears: "head",
-    torso: "torso",
-    chest: "torso",
-    body: "torso",
-    vital: "torso",
-    vitals: "torso",
-    neck: "neck",
-    throat: "neck"
-  };
-  return aliases[key] ?? key;
-}
-
 export function sanitizeCalledShotDamagePayload(payload) {
   if (!payload?.locationId) return null;
   return {
@@ -190,21 +171,22 @@ export function clearStagedCalledShotDamageApplication(userId = getUserId()) {
 }
 
 export function calculateLocalArmorAdjustment(actor, coverageSlot) {
-  const normalizedSlot = normalizeArmorSlot(coverageSlot);
-  if (!actor || !normalizedSlot) return null;
+  const normalizedSlots = parseArmorCoverageSlots(coverageSlot);
+  if (!actor || !normalizedSlots.length) return null;
 
   const aggregate = findAggregateArmorItem(actor);
   if (!aggregate) return null;
   const aggregateTotal = readAggregateArmorTotal(aggregate);
 
   const pieces = getPiecemealArmorPieces(actor).map(readArmorPiece);
-  const matchingPieces = pieces.filter((piece) => normalizeArmorSlot(piece.slot) === normalizedSlot);
+  const matchingPieces = pieces.filter((piece) => armorCoverageOverlaps(piece.slot, coverageSlot));
   if (!matchingPieces.length) return null;
 
   const localTotal = matchingPieces.reduce((total, piece) => total + armorPieceTotal(piece), 0);
   return {
     coverageSlot,
-    normalizedSlot,
+    normalizedSlot: normalizedSlots[0],
+    normalizedSlots,
     aggregateTotal,
     localTotal,
     adjustment: localTotal - aggregateTotal,

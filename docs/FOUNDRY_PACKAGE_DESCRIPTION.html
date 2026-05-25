@@ -35,19 +35,20 @@
 <ul>
   <li>Marks D35E equipment as piecemeal armor components.</li>
   <li>Previews, syncs, and restores one D35E-native aggregate armor item so D35E keeps doing the actual AC math.</li>
+  <li>Keeps synced components visible as reversible visual records while preventing duplicate armor weight.</li>
   <li>Adds a <code>Called Shot</code> dropdown inside D35E's native attack/use dialog.</li>
   <li>Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as <code>Called Shot: Ear -10</code>.</li>
   <li>Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.</li>
   <li>Supports full-attack policies: ask per attack, first attack only, every attack, or disabled.</li>
   <li>Posts GM-confirmed called-shot outcome chat cards.</li>
-  <li>Includes an in-Foundry profile editor for locations, penalties, coverage slots, and outcome effects.</li>
+  <li>Includes an in-Foundry profile editor for locations, penalties, coverage slot(s), and outcome effects.</li>
 </ul>
 
 <h3>Piecemeal Armor Workflow</h3>
 
-<p>Equipment items can be configured as armor components with module-owned flags. When the actor is ready, the GM can preview the combined profile, sync one aggregate D35E armor item, and restore component armor fields later if needed.</p>
+<p>Equipment items can be configured as armor components with module-owned flags. Coverage fields can name one or more locations, such as <code>head; eyes; ears</code> or <code>torso, arms, legs</code>. When the actor is ready, the GM can preview the combined profile, sync one aggregate D35E armor item, and restore component armor fields later if needed.</p>
 
-<p>The module uses D35E-native item data for the final armor contribution. Components remain visible as component records, while the aggregate item is the one intended to contribute armor math.</p>
+<p>The module uses D35E-native item data for the final armor contribution. Components remain visible as component records, while the aggregate item is the one intended to contribute armor math. The aggregate records the total component weight for transparency but contributes zero item weight so encumbrance is not counted twice.</p>
 
 <h3>Called-Shot Workflow</h3>
 
@@ -63,14 +64,14 @@
 
 <p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable each workflow, choose full-attack handling, enable local armor AC for Apply Damage, show location armor overlays, and edit called-shot profiles.</p>
 
-<p>Profiles control location labels, attack penalties, enabled state, matching armor coverage slots, and outcome effects. Effect snippets are JSON because they map directly to the module's declarative effect engine.</p>
+<p>Profiles control location labels, attack penalties, enabled state, matching armor coverage slot(s), and outcome effects. Effect snippets are JSON because they map directly to the module's declarative effect engine.</p>
 
 <h3>Compatibility</h3>
 
 <ul>
   <li>Foundry VTT: minimum 14, verified 14.362.</li>
   <li>D35E system: minimum 3.0.2, verified 3.0.2.</li>
-  <li>Module version: 1.0.5.</li>
+  <li>Module version: 1.0.6.</li>
 </ul>
 
 <h3>Documentation And Support</h3>

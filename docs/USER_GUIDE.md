@@ -24,7 +24,7 @@ The module has two main workflows:
 | --- | --- | --- |
 | `Piecemeal Armor` | Actor sheet header | Preview, sync, or restore aggregate armor math. |
 | Shield icon | Actor inventory rows | Opens an equipment item so it can be configured as a piecemeal armor component. |
-| `Piecemeal Armor` fieldset | Equipment item sheet `Details` tab | Stores armor-piece values and coverage slot. |
+| `Piecemeal Armor` fieldset | Equipment item sheet `Details` tab | Stores armor-piece values and coverage slot(s). |
 | `Called Shot` dropdown | D35E attack/use dialog | Applies a configured called-shot penalty through the native attack workflow. |
 | Full-attack picker | Opens after `Full Attack` when configured | Lets the user choose `None` or a location for each D35E attack label. |
 | Outcome buttons | Called-shot chat card | Lets the GM confirm normal, critical, or debilitating effects. |
@@ -68,7 +68,7 @@ Modes:
 - `Show adjustment only`: adds the AC Details row as advisory context but does not change the hit or crit check.
 - `Disabled`: leaves Apply Damage AC unchanged.
 
-Local armor AC needs a synced `Piecemeal Armor Aggregate`, a called-shot profile location with a matching coverage slot, and at least one piecemeal armor component for that slot. Touch AC, no-check damage, missing targets, and targets without matching piecemeal armor keep D35E's normal behavior.
+Local armor AC needs a synced `Piecemeal Armor Aggregate`, a called-shot profile location with matching coverage slot(s), and at least one piecemeal armor component for that coverage. Touch AC, no-check damage, missing targets, and targets without matching piecemeal armor keep D35E's normal behavior.
 
 ## Full Attacks
 
@@ -99,9 +99,9 @@ Open an equipment item, switch to the `Details` tab, and use the `Piecemeal Armo
 
 ![Piecemeal armor item fields](assets/item-armor-fields.png)
 
-Component items can be D35E armor, shield, or miscellaneous equipment. Use the module fields for armor math and coverage. After sync, only the generated `Piecemeal Armor Aggregate` item should be equipped for D35E armor AC; component records do not need to occupy D35E body slots.
+Component items can begin as D35E armor, shield, or miscellaneous equipment. Use the module fields for armor math and coverage. After sync, only the generated `Piecemeal Armor Aggregate` item contributes D35E armor AC. Component records are converted to miscellaneous clothing-style records in sensible visual body slots while their native armor math is backed up and neutralized.
 
-Coverage slot names also drive local armor AC for called shots. A called-shot profile location with coverage slot `legs` looks for piecemeal armor components whose coverage slot normalizes to `legs`.
+Coverage slot names also drive local armor AC for called shots. A called-shot profile location with coverage slot `legs` looks for piecemeal armor components whose coverage slot normalizes to `legs`. Coverage fields can contain one value or several values separated by commas, semicolons, pipes, slashes, or line breaks. For example, `head; eyes; ears` lets one helmet component protect head, eye, and ear called shots, while `torso, arms, legs` lets a broad armor component cover several larger regions.
 
 When the actor is ready, click `Piecemeal Armor` on the actor sheet to preview the aggregate.
 
@@ -111,7 +111,8 @@ Syncing changes actor item data:
 
 - The module creates or updates one item named `Piecemeal Armor Aggregate`.
 - The aggregate item carries the D35E armor values that should contribute to actor math.
-- Component items keep module flags but have their native D35E armor fields backed up and neutralized.
+- The aggregate item has zero weight so component item weight is not counted twice for encumbrance.
+- Component items keep module flags, have their native D35E armor fields backed up and neutralized, and become visual `misc`/`clothing` equipment records while synced.
 - Restore reverses the backed-up fields and removes the aggregate item.
 
 Inventory chips:
@@ -131,7 +132,7 @@ Profiles control:
 - location labels and IDs;
 - attack penalties;
 - whether locations are enabled;
-- matching armor coverage slots;
+- matching armor coverage slot(s);
 - normal, critical, and debilitating outcome effects.
 
 Effect snippets use JSON because they map directly to the module's declarative effect engine. Use the Advanced JSON section for full-profile import/export backups.
@@ -150,9 +151,9 @@ Confirm the attack was rolled from the same native dialog where the location was
 
 Check the `Called shots on full attacks` setting. The picker opens only in `Ask for each attack` mode and only when a called-shot location was selected in the native dialog.
 
-### Armor totals look doubled
+### Armor totals or weight look doubled
 
-Use the actor `Piecemeal Armor` dialog and choose Restore, then Sync again. The aggregate item should be the only D35E-native armor item contributing armor math; components should be component records.
+Use the actor `Piecemeal Armor` dialog and choose Restore, then Sync again. The aggregate item should be the only D35E-native armor item contributing armor math. Version 1.0.6 and later sets aggregate weight to zero so component item weight remains the encumbrance source.
 
 ### The armor dialog says no syncable pieces were found
 
@@ -160,7 +161,7 @@ Open the equipment item, switch to the `Details` tab, check `Include in piecemea
 
 ### Should pieces be armor or miscellaneous equipment?
 
-Either works. If a component needs D35E-native armor fields for ordinary item bookkeeping, make it armor or shield. If it is easier to track by body slot, make it miscellaneous equipment and enter the armor values in the module fieldset. The generated aggregate item is the piece that contributes D35E armor AC after sync.
+Either works. If a component needs D35E-native armor fields for ordinary item bookkeeping, make it armor or shield. If it is easier to track by body slot, make it miscellaneous equipment and enter the armor values in the module fieldset. The generated aggregate item is the piece that contributes D35E armor AC after sync. Synced components become reversible visual records so the sheet can still show where the pieces sit.
 
 ### Where should I report issues?
 
@@ -172,7 +173,7 @@ After syncing, confirm the item named `Piecemeal Armor Aggregate` is equipped. V
 
 ### Local armor did not change the Apply Damage AC
 
-Confirm `Called-shot local armor AC` is set to `Adjust AC in Apply Damage`, the target has a synced aggregate armor item, and the called-shot location's coverage slot matches at least one piecemeal armor component. Touch AC and no-check damage intentionally skip local armor AC.
+Confirm `Called-shot local armor AC` is set to `Adjust AC in Apply Damage`, the target has a synced aggregate armor item, and the called-shot location's coverage slot matches at least one piecemeal armor component. If one piece covers several locations, enter them together, such as `head; eyes; ears`. Touch AC and no-check damage intentionally skip local armor AC.
 
 ### I want D&D 3.5 RAW only
 

@@ -235,7 +235,7 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.locationArmorOverlay, {
     name: "Show location armor overlay",
-    hint: "Disabled by default. When enabled, called-shot cards show the matching piecemeal armor coverage slot as advisory information only.",
+    hint: "Disabled by default. When enabled, called-shot cards show the matching piecemeal armor coverage slot(s) as advisory information only.",
     scope: "world",
     config: true,
     type: Boolean,

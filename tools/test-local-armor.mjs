@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { LOCAL_ARMOR_MODES } from "../scripts/constants.js";
+import { armorCoverageOverlaps, parseArmorCoverageSlots } from "../scripts/armor.js";
 import {
   applyLocalArmorAdjustment,
   applyStagedCalledShotLocalArmor,
@@ -95,6 +96,9 @@ assert.equal(normalizeArmorSlot("Leg"), "legs");
 assert.equal(normalizeArmorSlot("Feet"), "legs");
 assert.equal(normalizeArmorSlot("Eye"), "head");
 assert.equal(normalizeArmorSlot("Vitals"), "torso");
+assert.deepEqual(parseArmorCoverageSlots("head; eyes, ears|face/neck"), ["head", "neck"]);
+assert.equal(armorCoverageOverlaps("head; eyes; ears", "ear"), true);
+assert.equal(armorCoverageOverlaps("legs", "head"), false);
 
 const legs = calculateLocalArmorAdjustment(actor, "legs");
 assert.equal(legs.aggregateTotal, 5);
@@ -103,6 +107,25 @@ assert.equal(legs.adjustment, -1);
 
 const head = calculateLocalArmorAdjustment(actor, "head");
 assert.equal(head.adjustment, 2);
+const multiCoverage = calculateLocalArmorAdjustment({
+  ...actor,
+  items: [
+    aggregate(5, 0),
+    piece("great-helm", "head; eyes; ears", 6, 1)
+  ]
+}, "ear");
+assert.equal(multiCoverage.localTotal, 7);
+assert.equal(multiCoverage.pieceCount, 1);
+assert.equal(multiCoverage.adjustment, 2);
+const dedupedCoverage = calculateLocalArmorAdjustment({
+  ...actor,
+  items: [
+    aggregate(5, 0),
+    piece("overlapping-helm", "head; eye", 6, 1)
+  ]
+}, "head; eye");
+assert.equal(dedupedCoverage.localTotal, 7);
+assert.equal(dedupedCoverage.pieceCount, 1);
 assert.equal(calculateLocalArmorAdjustment({ ...actor, items: actor.items.slice(1) }, "legs"), null);
 assert.equal(calculateLocalArmorAdjustment(actor, "hands"), null);
 assert.equal(calculateLocalArmorAdjustment({ ...actor, items: [aggregate(5, 0, false), piece("legs", "legs", 4, 0)] }, "legs"), null);
