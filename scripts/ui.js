@@ -4,6 +4,8 @@ import { getFlagData, getItems, isAggregateArmorItem, isInternalArmorProfileItem
 import {
   categoryForPacsEquipmentSlot,
   getArmorWorkflowMode,
+  readArmorProfile,
+  setArmorProfileBaseline,
   setArmorProfileSlot
 } from "./armor-profile.js";
 import { getCalledShotLedger, restoreAllCalledShotLedgerEntries, restoreCalledShotLedgerEntry } from "./effects.js";
@@ -270,12 +272,58 @@ async function itemIdFromDrop(actor, event) {
   return null;
 }
 
+function actorItemIdFromDrop(actor, event) {
+  const raw = event.dataTransfer?.getData("text/plain") || event.dataTransfer?.getData("application/json") || "";
+  if (!raw) return null;
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (_error) {
+    return null;
+  }
+  if (data.itemId && actor.items?.get?.(data.itemId)) return data.itemId;
+  const uuid = data.uuid ?? "";
+  const expectedPrefix = `${actor.uuid}.Item.`;
+  if (uuid.startsWith(expectedPrefix)) return uuid.slice(expectedPrefix.length);
+  return null;
+}
+
 function pacsSlotTargetFromEvent(event) {
   const target = event.target?.closest?.(".slot-placeholder-row[data-slot], [data-d35e-pacs-profile-slot]");
   if (!target) return null;
   const slot = target.dataset.slot ?? target.dataset.d35ePacsProfileSlot ?? "";
   const category = categoryForPacsEquipmentSlot(slot);
   return category ? { target, slot, category } : null;
+}
+
+function armorSlotTargetFromEvent(event) {
+  const target = event.target?.closest?.(".slot-placeholder-row[data-slot]");
+  return target?.dataset?.slot === "armor" ? target : null;
+}
+
+function isPacsProfileOverrideItem(actor, itemId) {
+  if (!itemId) return false;
+  const item = actor.items?.get?.(itemId);
+  if (!item || isAggregateArmorItem(item) || isInternalArmorProfileItem(item)) return false;
+  const profile = readArmorProfile(actor);
+  return Object.values(profile.slots ?? {}).includes(itemId) || Boolean(categoryForPacsEquipmentSlot(item.system?.slot));
+}
+
+function hasOtherNativeArmorSlotItem(actor, itemId) {
+  return getItems(actor).some((item) =>
+    item.id !== itemId &&
+    item.type === "equipment" &&
+    item.system?.equipped === true &&
+    item.system?.equipmentType === "armor" &&
+    !item.system?.melded &&
+    !item.broken &&
+    !isAggregateArmorItem(item) &&
+    !isInternalArmorProfileItem(item)
+  );
+}
+
+function shouldHandleArmorSlotDrop(actor, itemId) {
+  return isPacsProfileOverrideItem(actor, itemId) && !hasOtherNativeArmorSlotItem(actor, itemId);
 }
 
 function wireNativeArmorProfileSlots(actor, root) {
@@ -285,6 +333,13 @@ function wireNativeArmorProfileSlots(actor, root) {
   if (root.dataset) root.dataset.d35ePacsNativeSlots = "true";
 
   root.addEventListener("dragover", (event) => {
+    const armorTarget = armorSlotTargetFromEvent(event);
+    const itemId = armorTarget ? actorItemIdFromDrop(actor, event) : null;
+    if (armorTarget && shouldHandleArmorSlotDrop(actor, itemId)) {
+      event.preventDefault();
+      armorTarget.classList.add("d35e-pacs-drop-hover");
+      return;
+    }
     const slotTarget = pacsSlotTargetFromEvent(event);
     if (!slotTarget) return;
     event.preventDefault();
@@ -292,11 +347,28 @@ function wireNativeArmorProfileSlots(actor, root) {
   }, { capture: true });
 
   root.addEventListener("dragleave", (event) => {
+    const armorTarget = armorSlotTargetFromEvent(event);
+    if (armorTarget) armorTarget.classList.remove("d35e-pacs-drop-hover");
     const slotTarget = pacsSlotTargetFromEvent(event);
     if (slotTarget) slotTarget.target.classList.remove("d35e-pacs-drop-hover");
   }, { capture: true });
 
   root.addEventListener("drop", (event) => {
+    const armorTarget = armorSlotTargetFromEvent(event);
+    const armorDropItemId = armorTarget ? actorItemIdFromDrop(actor, event) : null;
+    if (armorTarget && shouldHandleArmorSlotDrop(actor, armorDropItemId)) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+      armorTarget.classList.remove("d35e-pacs-drop-hover");
+      void setArmorProfileBaseline(actor, armorDropItemId).then(() => {
+        ui.notifications?.info("Assigned armor to the native Armor slot.");
+      }).catch((error) => {
+        console.error(`${MODULE_ID} | Failed to assign armor profile baseline.`, error);
+        ui.notifications?.error(error.message ?? "Could not assign the armor profile baseline.");
+      });
+      return;
+    }
     const slotTarget = pacsSlotTargetFromEvent(event);
     if (!slotTarget) return;
     event.preventDefault();

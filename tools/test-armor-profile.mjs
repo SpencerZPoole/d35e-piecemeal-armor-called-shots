@@ -225,6 +225,61 @@ assert.equal(switchChain.system.equipmentType, "armor");
 assert.equal(switchActor.items.some((item) => item.id === "switch-chain"), true);
 assert.equal(switchActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
 
+const dragBackChain = equipment("drag-back-chain", "Chainmail", {
+  equipped: false,
+  equipmentSubtype: "mediumArmor",
+  armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+  spellFailure: 30,
+  weight: 40
+});
+const dragBackActor = actor([dragBackChain]);
+await setArmorProfileSlot(dragBackActor, "arms", "drag-back-chain");
+carrier = dragBackActor.items.find((item) => item.name === "PAcS Armor Profile");
+assert.equal(carrier.system.armor.dex, 2);
+assert.equal(dragBackChain.system.armor.dex, null);
+await setArmorProfileBaseline(dragBackActor, "drag-back-chain");
+resolved = resolveArmorProfile(dragBackActor);
+assert.equal(resolved.status, ARMOR_PROFILE_STATUS.nativeArmor);
+assert.equal(resolved.profile.baselineItemId, "drag-back-chain");
+assert.equal(resolved.profile.slots.arms, null);
+assert.equal(dragBackActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
+assert.equal(dragBackChain.system.equipmentType, "armor");
+assert.equal(dragBackChain.system.equipped, true);
+assert.equal(dragBackChain.system.armor.value, 5);
+assert.equal(dragBackChain.system.armor.dex, 2);
+
+const dragBackCompositeChain = equipment("drag-back-composite-chain", "Chainmail", {
+  equipped: false,
+  equipmentSubtype: "mediumArmor",
+  armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+  spellFailure: 30,
+  weight: 40
+});
+const dragBackCompositeLegs = equipment("drag-back-composite-legs", "Studded Leather", {
+  equipped: false,
+  armor: { value: 3, enh: 0, dex: 5, acp: 0 },
+  spellFailure: 15,
+  weight: 20
+});
+const dragBackCompositeActor = actor([dragBackCompositeChain, dragBackCompositeLegs]);
+await setArmorProfileSlot(dragBackCompositeActor, "arms", "drag-back-composite-chain");
+await setArmorProfileSlot(dragBackCompositeActor, "legs", "drag-back-composite-legs");
+await setArmorProfileBaseline(dragBackCompositeActor, "drag-back-composite-chain");
+resolved = resolveArmorProfile(dragBackCompositeActor);
+assert.equal(resolved.status, ARMOR_PROFILE_STATUS.compositeProfile);
+assert.equal(resolved.profile.baselineItemId, "drag-back-composite-chain");
+assert.equal(resolved.profile.slots.arms, null);
+assert.equal(resolved.profile.slots.legs, "drag-back-composite-legs");
+assert.equal(resolved.sourceRoles.get("drag-back-composite-chain").role, "baseline");
+assert.equal(dragBackCompositeChain.system.equipmentType, "armor");
+assert.equal(dragBackCompositeChain.system.armor.value, 0);
+assert.equal(dragBackCompositeChain.system.armor.dex, null);
+assert.equal(dragBackCompositeLegs.system.equipmentType, "misc");
+assert.equal(dragBackCompositeLegs.system.armor.dex, null);
+carrier = dragBackCompositeActor.items.find((item) => item.name === "PAcS Armor Profile");
+assert.equal(carrier.system.armor.value, 7);
+assert.equal(carrier.system.armor.dex, 2);
+
 const chainmail = equipment("chainmail", "Chainmail", {
   equipped: false,
   equipmentSubtype: "mediumArmor",
@@ -247,8 +302,11 @@ assert.equal(carrier.system.slot, "slotless");
 assert.equal(carrier.system.armor.value, 2);
 assert.equal(studded.system.equipmentType, "armor");
 assert.equal(studded.system.armor.value, 0);
+assert.equal(studded.system.armor.dex, null);
 assert.equal(chainmail.system.equipmentType, "misc");
 assert.equal(chainmail.system.slot, PACS_EQUIPMENT_SLOTS.legs);
+assert.equal(chainmail.system.armor.dex, null);
+assert.equal(carrier.system.armor.dex, 2);
 
 await clearArmorProfile(profileActor);
 assert.equal(studded.system.equipmentType, "armor");

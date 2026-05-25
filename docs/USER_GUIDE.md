@@ -126,6 +126,7 @@ Inventory slots:
 - `PAcS: Legs`: replaces only leg armor.
 - Clear icon on a PAcS slot item: restores that item and empties the PAcS slot.
 - Native trash/delete on a PAcS slot item: deletes that inventory item and clears only the PAcS slot that referenced it. Use the clear icon when you want to keep the item.
+- Dragging a PAcS-worn item back to the native `Armor` slot makes it the baseline suit again. Occupied PAcS slots stay as overrides.
 
 Empty PAcS slots inherit from the native Armor baseline when the baseline maps to that category. For example, studded leather in the Armor slot can fill torso, arms, and legs. A breastplate maps to torso only, so empty arms and legs remain unarmored unless a table assigns overrides.
 
@@ -138,7 +139,7 @@ RAW-adapted math:
 
 Known armor items use the module catalog for padded, leather, studded leather, hide, chain, breastplate/plate torso, half-plate, and full plate mappings. Unknown custom armor is marked `Needs piece values` instead of being guessed. Use the shield icon on an inventory row to open explicit piece fields for unusual published pieces or custom 3.5e adaptations before assigning them.
 
-When a composite profile is active, the module creates a hidden zero-weight, slotless D35E carrier so D35E still owns the final AC, max Dex, ACP, ASF, and speed math without occupying the visible Armor slot. Source items remain visible in inventory with a `worn in profile` chip, and their native armor math is backed up and neutralized to prevent double-counting. The old visible `Piecemeal Armor Aggregate` item is only used in `Legacy aggregate sync` mode.
+When a composite profile is active, the module creates a hidden zero-weight, slotless D35E carrier so D35E still owns the final AC, max Dex, ACP, ASF, and speed math without occupying the visible Armor slot. Source items remain visible in inventory with a `worn in profile` chip, and their native armor math is backed up and neutralized to prevent double-counting. If Dex to AC looks lower than expected, also check D35E encumbrance because it can apply its own max Dex cap after armor. The old visible `Piecemeal Armor Aggregate` item is only used in `Legacy aggregate sync` mode.
 
 ## Profile Editor
 

@@ -564,6 +564,11 @@ export async function migrateLegacyArmorProfile(actor, { dryRun = false } = {}) 
 export async function setArmorProfileBaseline(actor, itemId) {
   const profile = readArmorProfile(actor);
   profile.baselineItemId = itemId || null;
+  if (itemId) {
+    for (const category of CATEGORY_ORDER) {
+      if (profile.slots[category] === itemId) profile.slots[category] = null;
+    }
+  }
   await setActorArmorProfile(actor, profile);
   return applyArmorProfile(actor, { migrateLegacy: false });
 }
