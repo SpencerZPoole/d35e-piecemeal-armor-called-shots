@@ -4,6 +4,17 @@
 
 - No unreleased changes yet.
 
+## 1.2.0
+
+- Replaced the default visible aggregate armor workflow with a native actor-sheet Piecemeal Armor Profile.
+- Added Baseline, Torso, Arms, and Legs profile controls; empty piece slots inherit the baseline when the catalog maps that category.
+- Kept baseline-only armor native to D35E and moved composite armor math to a hidden zero-weight internal carrier.
+- Added catalog mappings for studded leather, hide, chain, chain shirt, breastplate/plate torso, half-plate, and full plate profile resolution.
+- Added migration from legacy visible aggregate/component state into profile slots.
+- Updated local armor AC to read resolved profile pieces before falling back to legacy aggregate data.
+- Added profile API helpers and armor-profile tests for baseline, override, one-piece, unresolved custom armor, hidden carrier, restore, and migration behavior.
+- Updated public docs for the v1.2 armor profile workflow and retained legacy aggregate sync as an opt-in compatibility mode.
+
 ## 1.1.0
 
 - Changed the default rules mode to RAW-adapted Ultimate Combat automation while keeping the v1.0 workflow as an opt-in legacy mode.

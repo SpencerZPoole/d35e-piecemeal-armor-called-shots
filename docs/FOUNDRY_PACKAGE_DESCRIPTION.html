@@ -1,6 +1,6 @@
 <h2>D35E Piecemeal Armor And Called Shots</h2>
 
-<p><strong>D35E Piecemeal Armor And Called Shots</strong> adds RAW-adapted optional-rule helpers for D35E worlds. It supports two table-facing workflows: configurable piecemeal armor components and called-shot handling inside D35E's native attack and Apply Damage flow.</p>
+<p><strong>D35E Piecemeal Armor And Called Shots</strong> adds RAW-adapted optional-rule helpers for D35E worlds. It supports two table-facing workflows: a native-feeling piecemeal armor profile and called-shot handling inside D35E's native attack and Apply Damage flow.</p>
 
 <p>This module is an adaptation aid for D&amp;D 3.5e tables. It does not claim that piecemeal armor or called shots are official D&amp;D 3.5 RAW. The bundled defaults are adapted from Pathfinder 1e Ultimate Combat optional rules where D35E can support them. A legacy v1.0 workflow is available for tables that prefer manual outcomes.</p>
 
@@ -24,17 +24,17 @@
 
 <p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/module-settings.png" alt="Module settings for D35E Piecemeal Armor And Called Shots" /></p>
 
-<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/piecemeal-armor-sync.png" alt="Piecemeal armor sync dialog" /></p>
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/piecemeal-armor-profile.png" alt="Piecemeal armor profile controls" /></p>
 
 <p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/profile-editor.png" alt="Called-shot profile editor" /></p>
 
 <h3>What It Adds</h3>
 
 <ul>
-  <li>Marks D35E equipment as piecemeal armor components.</li>
-  <li>Provides a starter catalog for common RAW armor pieces such as padded, leather, chain, and plate arms/legs/torso.</li>
-  <li>Previews, syncs, and restores one D35E-native aggregate armor item using RAW-adapted piecemeal armor formulas.</li>
-  <li>Keeps synced components visible as reversible visual records while preventing duplicate armor weight.</li>
+  <li>Adds an actor-sheet Piecemeal Armor Profile with Baseline, Torso, Arms, and Legs controls.</li>
+  <li>Provides a starter catalog for common RAW armor pieces such as padded, leather, studded leather, hide, chain, and plate arms/legs/torso.</li>
+  <li>Keeps baseline-only armor native to D35E and uses a hidden zero-weight D35E carrier only when composite profile math is active.</li>
+  <li>Marks profile source items as worn in profile while preventing duplicate armor AC and weight.</li>
   <li>Adds a <code>Called Shot</code> dropdown inside D35E's native attack/use dialog.</li>
   <li>Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as <code>Called Shot: Ear -10</code>.</li>
   <li>Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.</li>
@@ -45,9 +45,9 @@
 
 <h3>Piecemeal Armor Workflow</h3>
 
-<p>Equipment items can be configured as armor components with module-owned flags. Piece category drives the arms/legs/torso formula, while coverage fields can name one or more called-shot locations, such as <code>head; eyes; ears</code> or <code>torso, arms, legs</code>. When the actor is ready, the GM can preview the combined profile, sync one aggregate D35E armor item, and restore component armor fields later if needed.</p>
+<p>Equip ordinary armor normally. If no piece overrides are active, D35E remains the source of truth. When the actor mixes pieces, the actor sheet profile resolves a baseline and optional Torso, Arms, or Legs overrides into RAW-adapted piece math.</p>
 
-<p>The module uses D35E-native item data for the final armor contribution. Components remain visible as component records, while the aggregate item is the one intended to contribute armor math. The aggregate records the total component weight for transparency but contributes zero item weight so encumbrance is not counted twice.</p>
+<p>The module uses D35E-native item data for the final armor contribution. Composite profiles use a hidden internal carrier and reversible source-item backups, so users no longer manage a visible aggregate item. Legacy aggregate sync remains available from module settings for older worlds.</p>
 
 <h3>Called-Shot Workflow</h3>
 
@@ -61,7 +61,7 @@
 
 <h3>Configuration</h3>
 
-<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can choose RAW-adapted or legacy rules mode, enable or disable each workflow, choose full-attack handling, enable local armor AC for Apply Damage, show location armor overlays, and edit called-shot profiles.</p>
+<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can choose RAW-adapted or legacy rules mode, choose native profile or legacy aggregate armor workflow, enable or disable each workflow, choose full-attack handling, enable local armor AC for Apply Damage, show location armor overlays, and edit called-shot profiles.</p>
 
 <p>Profiles control location labels, attack penalties, enabled state, matching armor coverage slot(s), and outcome effects. Effect snippets are JSON because they map directly to the module's declarative effect engine.</p>
 
@@ -70,7 +70,7 @@
 <ul>
   <li>Foundry VTT: minimum 14, verified 14.362.</li>
   <li>D35E system: minimum 3.0.2, verified 3.0.2.</li>
-  <li>Module version: 1.1.0.</li>
+  <li>Module version: 1.2.0.</li>
 </ul>
 
 <h3>Documentation And Support</h3>

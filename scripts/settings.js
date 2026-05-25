@@ -1,4 +1,4 @@
-import { FULL_ATTACK_MODES, LOCAL_ARMOR_MODES, MODULE_ID, MODULE_TITLE, RULES_MODES, SETTINGS } from "./constants.js";
+import { ARMOR_WORKFLOW_MODES, FULL_ATTACK_MODES, LOCAL_ARMOR_MODES, MODULE_ID, MODULE_TITLE, RULES_MODES, SETTINGS } from "./constants.js";
 import { getDefaultCalledShotProfiles, normalizeCalledShotProfiles } from "./profiles.js";
 
 const HandlebarsApplication = globalThis.foundry?.applications?.api?.HandlebarsApplicationMixin?.(
@@ -199,9 +199,22 @@ export function registerSettings() {
     default: RULES_MODES.rawAdapted
   });
 
+  game.settings.register(MODULE_ID, SETTINGS.armorWorkflowMode, {
+    name: "Piecemeal armor workflow",
+    hint: "Native profile is the v1.2 workflow: D35E's normal armor slot seeds a baseline, Torso/Arms/Legs slots override it, and any internal math carrier is hidden. Legacy aggregate preserves the older manual sync workflow.",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      [ARMOR_WORKFLOW_MODES.nativeProfile]: "Native armor profile",
+      [ARMOR_WORKFLOW_MODES.legacyAggregate]: "Legacy aggregate sync"
+    },
+    default: ARMOR_WORKFLOW_MODES.nativeProfile
+  });
+
   game.settings.register(MODULE_ID, SETTINGS.enableArmor, {
     name: "Enable piecemeal armor automation",
-    hint: "Adds item-sheet piecemeal armor fields and GM sync/restore controls.",
+    hint: "Adds the actor-sheet armor profile, Torso/Arms/Legs piece slots, local armor AC data, and optional legacy sync tools.",
     scope: "world",
     config: true,
     type: Boolean,
@@ -234,7 +247,7 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.calledShotLocalArmorMode, {
     name: "Called-shot local armor AC",
-    hint: "Controls whether called shots replace the aggregate armor contribution with the target location's piecemeal armor during D35E's Apply Damage AC check.",
+    hint: "Controls whether called shots replace the active armor profile's total armor contribution with the target location's piecemeal armor during D35E's Apply Damage AC check.",
     scope: "world",
     config: true,
     type: String,

@@ -1,9 +1,11 @@
 export const MODULE_ID = "d35e-piecemeal-armor-called-shots";
 export const MODULE_TITLE = "D35E Piecemeal Armor And Called Shots";
 export const AGGREGATE_ARMOR_NAME = "Piecemeal Armor Aggregate";
+export const INTERNAL_ARMOR_PROFILE_NAME = "PAcS Armor Profile";
 
 export const SETTINGS = Object.freeze({
   rulesMode: "rulesMode",
+  armorWorkflowMode: "armorWorkflowMode",
   enableArmor: "enableArmorAutomation",
   enableCalledShots: "enableCalledShots",
   calledShotFullAttackMode: "calledShotFullAttackMode",
@@ -16,6 +18,11 @@ export const SETTINGS = Object.freeze({
 export const RULES_MODES = Object.freeze({
   rawAdapted: "rawAdapted",
   legacyWorkflow: "legacyWorkflow"
+});
+
+export const ARMOR_WORKFLOW_MODES = Object.freeze({
+  nativeProfile: "nativeProfile",
+  legacyAggregate: "legacyAggregate"
 });
 
 export const FULL_ATTACK_MODES = Object.freeze({
@@ -34,6 +41,8 @@ export const LOCAL_ARMOR_MODES = Object.freeze({
 export const FLAGS = Object.freeze({
   piecemeal: "piecemeal",
   aggregate: "aggregate",
+  armorProfile: "armorProfile",
+  internalArmor: "internalArmor",
   nativeBackup: "nativeBackup",
   calledShotEffect: "calledShotEffect",
   calledShotLedger: "calledShotLedger"

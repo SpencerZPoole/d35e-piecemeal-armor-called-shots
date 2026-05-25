@@ -18,24 +18,25 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/late
 
 After installation, open a D35E world, go to **Game Settings > Manage Modules**, enable **D35E Piecemeal Armor And Called Shots**, and reload if Foundry asks.
 
-Versioned release assets are published on GitHub. For v1.1.0, the release manifest is:
+Versioned release assets are published on GitHub. For v1.2.0, the release manifest is:
 
 ```text
-https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.1.0/module.json
+https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.2.0/module.json
 ```
 
 ## Features
 
-- Marks D35E equipment as piecemeal armor components.
-- Provides a starter catalog for common RAW armor pieces such as padded, leather, chain, and plate arms/legs/torso.
-- Previews, syncs, and restores one D35E-native aggregate armor item using RAW-adapted piecemeal armor formulas.
+- Adds a native-feeling actor-sheet Piecemeal Armor Profile with Baseline, Torso, Arms, and Legs controls.
+- Lets the normal D35E armor slot seed a baseline suit or torso piece, then overrides only the categories a table mixes.
+- Provides a starter catalog for common RAW armor pieces such as padded, leather, studded leather, hide, chain, and plate arms/legs/torso.
+- Keeps simple baseline-only armor native to D35E while using a hidden internal D35E armor carrier only for composite piecemeal math.
 - Adds a `Called Shot` dropdown inside D35E's native attack/use dialog.
 - Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as `Called Shot: Ear -10`.
 - Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.
 - Lets armor components and called-shot profile locations name multiple coverage slots, such as `head; eyes; ears`.
 - Enforces RAW-adapted Improved/Greater Called Shot full-attack limits while keeping a legacy permissive mode.
 - Automates called-shot severity and outcomes after D35E Apply Damage, with a GM restore ledger for misclick recovery.
-- Keeps synced armor components visible as reversible visual records while one zero-weight aggregate item contributes the D35E armor math.
+- Prevents double-counting by marking profile source items as worn in the profile while the hidden zero-weight carrier contributes composite D35E armor math.
 - Includes an in-Foundry profile editor for locations, penalties, coverage slot(s), and outcome effects.
 
 ## Screenshots
@@ -46,18 +47,19 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 
 ![Module settings for D35E Piecemeal Armor And Called Shots](docs/assets/module-settings.png)
 
-![Piecemeal armor sync dialog](docs/assets/piecemeal-armor-sync.png)
+![Piecemeal armor profile controls](docs/assets/piecemeal-armor-profile.png)
 
 ## Quick Start
 
 1. Open a D35E world, go to `Game Settings > Manage Modules`, enable the module, and reload if Foundry asks.
-2. Open an actor sheet and use the `Piecemeal Armor` header button for armor preview, sync, or restore.
-3. Open equipment items, go to the `Details` tab, and configure the `Piecemeal Armor` fieldset when an item should count as a component.
-4. Click a normal D35E weapon or attack use control and choose a target from the native dialog's `Called Shot` dropdown.
-5. Roll normally. The called-shot penalty appears in the D35E attack breakdown.
-6. Use D35E's native Apply Damage button. If local armor AC is enabled, AC Details shows the location adjustment.
-7. Use D35E's native Apply Damage button. In RAW-adapted mode, the module determines severity, applies effects, and records them in the target's restore ledger.
-8. For table-specific behavior, open Foundry's right sidebar gear icon, choose `Game Settings`, then select `D35E Piecemeal Armor And Called Shots`.
+2. Equip ordinary armor normally. With no piecemeal overrides, D35E keeps handling armor AC exactly as before.
+3. Open the actor sheet inventory and use the `Piecemeal Armor Profile` panel to choose a baseline and optional Torso, Arms, or Legs overrides.
+4. Drag an armor item from inventory or a compendium onto a profile slot, or choose it from the slot dropdown. The module applies composite armor math automatically when the profile has overrides.
+5. Click a normal D35E weapon or attack use control and choose a target from the native dialog's `Called Shot` dropdown.
+6. Roll normally. The called-shot penalty appears in the D35E attack breakdown.
+7. Use D35E's native Apply Damage button. If local armor AC is enabled, AC Details shows the location adjustment.
+8. In RAW-adapted mode, the module determines severity, applies effects, and records them in the target's restore ledger.
+9. For table-specific behavior, open Foundry's right sidebar gear icon, choose `Game Settings`, then select `D35E Piecemeal Armor And Called Shots`.
 
 See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for the full end-user guide.
 
@@ -71,11 +73,11 @@ The module is additive. It does not edit D35E system files, mutate actors on wor
 
 ## Configuration
 
-Module settings live in Foundry's right sidebar gear tab under `Game Settings > D35E Piecemeal Armor And Called Shots`. The `Rules mode` setting defaults to `RAW-adapted automation`; choose `Legacy v1.0 workflow` if a table wants the older permissive full-attack behavior and manual outcome buttons. The called-shot profile editor is available in the same settings category. Profiles are world settings, so a GM can clone or replace the bundled defaults with table-specific locations, penalties, coverage, and effects.
+Module settings live in Foundry's right sidebar gear tab under `Game Settings > D35E Piecemeal Armor And Called Shots`. The `Rules mode` setting defaults to `RAW-adapted automation`; choose `Legacy v1.0 workflow` if a table wants the older permissive full-attack behavior and manual outcome buttons. The `Piecemeal armor workflow` setting defaults to `Native armor profile`; choose `Legacy aggregate sync` only for older worlds that still need the v1.1 manual aggregate workflow. The called-shot profile editor is available in the same settings category. Profiles are world settings, so a GM can clone or replace the bundled defaults with table-specific locations, penalties, coverage, and effects.
 
-`Called-shot local armor AC` controls whether the native Apply Damage check replaces the aggregate armor contribution with the called location's piecemeal armor value, shows that adjustment only, or disables local armor AC entirely. Coverage slot fields accept one value or a delimiter-separated list, so a helmet component can cover `head; eyes; ears` while a broader armor piece can cover `torso, arms, legs`.
+`Called-shot local armor AC` controls whether the native Apply Damage check replaces the active armor profile's total armor contribution with the called location's piecemeal armor value, shows that adjustment only, or disables local armor AC entirely. Coverage slot fields accept one value or a delimiter-separated list, so a helmet component can cover `head; eyes; ears` while a broader armor piece can cover `torso, arms, legs`.
 
-Supported v1.1 effect specs:
+Supported effect specs:
 
 - `note`: creates an ActiveEffect note with module flags.
 - `condition`: toggles a D35E actor condition such as `fatigued`, `stunned`, or `blind`.
@@ -97,6 +99,11 @@ Supported v1.1 effect specs:
 After Foundry is ready, the module exposes `game.d35ePiecemealCalledShots`:
 
 - `calculatePiecemealArmor(actorOrItems, options)`
+- `resolveArmorProfile(actor)`
+- `applyArmorProfile(actor, options)`
+- `clearArmorProfile(actor)`
+- `setArmorProfileBaseline(actor, itemId)`
+- `setArmorProfileSlot(actor, category, itemId)`
 - `previewArmorSync(actor)`
 - `syncArmorAggregate(actor, options)`
 - `restoreArmorComponents(actor)`

@@ -1,5 +1,6 @@
 import { MODULE_ID } from "./constants.js";
 import { calculatePiecemealArmor, previewArmorSync, restoreArmorComponents, syncArmorAggregate } from "./armor.js";
+import { applyArmorProfile, clearArmorProfile, migrateLegacyArmorProfile, resolveArmorProfile, setArmorProfileBaseline, setArmorProfileSlot } from "./armor-profile.js";
 import {
   applyCalledShotOutcome,
   calculateCalledShotSituationalPenalty,
@@ -21,6 +22,12 @@ export function buildApi() {
     previewArmorSync,
     syncArmorAggregate,
     restoreArmorComponents,
+    resolveArmorProfile,
+    applyArmorProfile,
+    clearArmorProfile,
+    migrateLegacyArmorProfile,
+    setArmorProfileBaseline,
+    setArmorProfileSlot,
     getCalledShotProfiles,
     getCalledShotOptions,
     getDefaultCalledShotProfiles,

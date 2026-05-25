@@ -1,5 +1,6 @@
 import { MODULE_ID, MODULE_TITLE } from "./constants.js";
 import { exposeApi } from "./api.js";
+import { registerArmorProfileHooks } from "./armor-profile.js";
 import { patchD35EAttackRolls } from "./d35e-integration.js";
 import { registerSettings } from "./settings.js";
 import { registerUiHooks } from "./ui.js";
@@ -17,6 +18,7 @@ Hooks.once("ready", async () => {
     return;
   }
   await patchD35EAttackRolls();
+  registerArmorProfileHooks();
   registerUiHooks();
   console.info(`${MODULE_TITLE} | Ready.`);
 });

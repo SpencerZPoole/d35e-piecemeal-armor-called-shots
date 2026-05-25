@@ -70,8 +70,89 @@
   background: rgba(150, 105, 30, 0.12);
 }
 
+.d35e-pacs-status-nativeArmor {
+  background: rgba(40, 130, 75, 0.12);
+}
+
+.d35e-pacs-status-compositeProfile {
+  background: rgba(40, 105, 150, 0.12);
+}
+
+.d35e-pacs-status-needsPieceValues {
+  background: rgba(150, 75, 30, 0.14);
+}
+
 .d35e-pacs-chip-muted {
   opacity: 0.72;
+}
+
+.d35e-pacs-armor-profile {
+  border: 1px solid rgba(120, 120, 120, 0.28);
+  height: auto;
+  margin: 8px 0 10px;
+  overflow: visible;
+  padding: 8px;
+}
+
+.d35e-pacs-armor-profile header {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.d35e-pacs-armor-profile h3 {
+  margin: 0;
+}
+
+.d35e-pacs-profile-controls,
+.d35e-pacs-profile-totals {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+}
+
+.d35e-pacs-profile-slot {
+  border: 1px solid rgba(120, 120, 120, 0.18);
+  display: grid;
+  gap: 3px;
+  padding: 5px;
+}
+
+.d35e-pacs-profile-slot select {
+  min-width: 0;
+  width: 100%;
+}
+
+.d35e-pacs-drop-hover {
+  outline: 2px solid rgba(40, 105, 150, 0.7);
+}
+
+.d35e-pacs-profile-resolved {
+  margin: 8px 0;
+}
+
+.d35e-pacs-profile-resolved ul {
+  margin: 4px 0 0 18px;
+}
+
+.d35e-pacs-profile-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.d35e-pacs-profile-actions button {
+  flex: 0 1 auto;
+  min-width: 120px;
+  width: auto;
+}
+
+.d35e-pacs-warning {
+  color: #8a3b00;
+  font-weight: 700;
 }
 
 .d35e-pacs-called-shot-control {

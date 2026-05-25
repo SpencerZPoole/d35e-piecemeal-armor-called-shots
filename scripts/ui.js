@@ -1,6 +1,17 @@
-import { FLAGS, MODULE_ID, RULES_MODES, SETTINGS } from "./constants.js";
+import { ARMOR_WORKFLOW_MODES, FLAGS, MODULE_ID, PIECE_CATEGORIES, RULES_MODES, SETTINGS } from "./constants.js";
 import { applyCalledShotOutcome } from "./called-shots.js";
-import { isAggregateArmorItem, isPiecemealArmorPiece, previewArmorSync, RAW_ARMOR_PIECE_CATALOG, restoreArmorComponents, syncArmorAggregate } from "./armor.js";
+import { getFlagData, getItems, isAggregateArmorItem, isInternalArmorProfileItem, isPiecemealArmorPiece, previewArmorSync, RAW_ARMOR_PIECE_CATALOG, restoreArmorComponents, syncArmorAggregate } from "./armor.js";
+import {
+  applyArmorProfile,
+  armorProfileStatusLabel,
+  clearArmorProfile,
+  getArmorWorkflowMode,
+  migrateLegacyArmorProfile,
+  readArmorProfile,
+  resolveArmorProfile,
+  setArmorProfileBaseline,
+  setArmorProfileSlot
+} from "./armor-profile.js";
 import { getCalledShotLedger, restoreAllCalledShotLedgerEntries, restoreCalledShotLedgerEntry } from "./effects.js";
 import { extractCalledShotDamagePayloads, stageCalledShotDamageApplication } from "./local-armor.js";
 
@@ -244,6 +255,243 @@ export async function openArmorSyncDialog(actor) {
   });
 }
 
+function actorEquipmentOptions(actor, { includeArmorOnly = false } = {}) {
+  const items = actor?.items?.contents ?? (Array.isArray(actor?.items) ? actor.items : []);
+  return [
+    ["", "None"],
+    ...items
+      .filter((item) => item.type === "equipment")
+      .filter((item) => !isAggregateArmorItem(item) && !isInternalArmorProfileItem(item))
+      .filter((item) => includeArmorOnly ? item.system?.equipmentType === "armor" || getFlagData(item, FLAGS.nativeBackup)?.native?.equipmentType === "armor" : true)
+      .map((item) => [item.id, item.name])
+  ];
+}
+
+function appendSelectOption(select, value, label, selectedValue) {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = label;
+  option.selected = value === selectedValue;
+  select.appendChild(option);
+}
+
+function buildProfileSelect({ label, value, options, action, category }) {
+  const wrapper = document.createElement("label");
+  wrapper.classList.add("d35e-pacs-profile-slot");
+  wrapper.dataset.d35ePacsDropSlot = category ?? action;
+  wrapper.append(document.createElement("span"));
+  wrapper.firstElementChild.textContent = label;
+  const select = document.createElement("select");
+  select.dataset.d35ePacsProfileAction = action;
+  if (category) select.dataset.category = category;
+  for (const [optionValue, optionLabel] of options) appendSelectOption(select, optionValue, optionLabel, value ?? "");
+  wrapper.append(select);
+  return wrapper;
+}
+
+function summaryValue(value, fallback = "none") {
+  return value === null || value === undefined || value === "" ? fallback : String(value);
+}
+
+function hasLegacyArmorProfileData(actor, resolution) {
+  const profile = readArmorProfile(actor);
+  const hasProfileSlots = Object.values(profile.slots).some(Boolean);
+  if (hasProfileSlots) return false;
+  if (resolution.visibleLegacyAggregate) return true;
+  return getItems(actor).some((item) => getFlagData(item, FLAGS.nativeBackup) || isPiecemealArmorPiece(item));
+}
+
+function renderArmorProfilePanel(actor) {
+  const resolution = resolveArmorProfile(actor);
+  const profile = readArmorProfile(actor);
+  const root = document.createElement("section");
+  root.classList.add("d35e-pacs-armor-profile");
+  root.dataset.d35ePacsArmorProfile = "true";
+
+  const header = document.createElement("header");
+  const title = document.createElement("h3");
+  title.textContent = "Piecemeal Armor Profile";
+  const status = document.createElement("span");
+  status.classList.add("d35e-pacs-chip", `d35e-pacs-status-${resolution.status}`);
+  status.textContent = armorProfileStatusLabel(resolution.status);
+  header.append(title, status);
+
+  const help = document.createElement("p");
+  help.classList.add("d35e-pacs-help");
+  help.textContent = "Use the normal D35E armor slot as a baseline, then override Torso, Arms, or Legs only when this actor is mixing armor pieces.";
+
+  const options = actorEquipmentOptions(actor);
+  const baselineOptions = actorEquipmentOptions(actor, { includeArmorOnly: true });
+  const controls = document.createElement("div");
+  controls.classList.add("d35e-pacs-profile-controls");
+  controls.append(
+    buildProfileSelect({
+      label: "Baseline armor",
+      value: profile.baselineItemId ?? resolution.baselineItem?.id ?? "",
+      options: baselineOptions,
+      action: "baseline"
+    }),
+    ...[PIECE_CATEGORIES.torso, PIECE_CATEGORIES.arms, PIECE_CATEGORIES.legs].map((category) => buildProfileSelect({
+      label: `${category.charAt(0).toUpperCase()}${category.slice(1)} override`,
+      value: profile.slots[category] ?? "",
+      options,
+      action: "slot",
+      category
+    }))
+  );
+
+  const resolved = document.createElement("div");
+  resolved.classList.add("d35e-pacs-profile-resolved");
+  const resolvedTitle = document.createElement("strong");
+  resolvedTitle.textContent = "Resolved pieces";
+  const list = document.createElement("ul");
+  for (const piece of resolution.pieces) {
+    const item = document.createElement("li");
+    item.textContent = `${piece.pieceCategory}: ${piece.sourceItemName ?? piece.name} (${piece.armorBonus} armor, ASF ${piece.spellFailure}%)`;
+    list.appendChild(item);
+  }
+  if (!resolution.pieces.length) {
+    const item = document.createElement("li");
+    item.textContent = "No piecemeal profile pieces are active.";
+    list.appendChild(item);
+  }
+  resolved.append(resolvedTitle, list);
+
+  const totals = document.createElement("div");
+  totals.classList.add("d35e-pacs-profile-totals");
+  const totalRows = [
+    ["Armor", resolution.summary.armorBonus + resolution.summary.enhancementBonus],
+    ["Max Dex", summaryValue(resolution.summary.maxDex)],
+    ["ACP", resolution.summary.acp],
+    ["ASF", `${resolution.summary.spellFailure}%`],
+    ["Weight", resolution.summary.weight],
+    ["Suit", resolution.summary.completeSuit ? "+1 full suit" : "no"],
+    ["Mixed ASF", resolution.summary.mixedSuit ? `+${resolution.summary.mixedSuitSpellFailurePenalty}%` : "no"]
+  ];
+  for (const [label, value] of totalRows) {
+    const entry = document.createElement("span");
+    const name = document.createElement("strong");
+    name.textContent = `${label}:`;
+    entry.append(name, document.createTextNode(` ${summaryValue(value)}`));
+    totals.appendChild(entry);
+  }
+
+  if (resolution.unresolved.length) {
+    const warning = document.createElement("p");
+    warning.classList.add("d35e-pacs-warning");
+    warning.textContent = "One or more selected armor items need piece values before the profile can update D35E armor math.";
+    root.appendChild(warning);
+  }
+
+  const actions = document.createElement("div");
+  actions.classList.add("d35e-pacs-profile-actions");
+  const profileActions = [
+    ["apply", "Apply Profile"],
+    ["clear", "Clear Profile"]
+  ];
+  if (hasLegacyArmorProfileData(actor, resolution)) profileActions.push(["migrate", "Migrate Legacy"]);
+  for (const [action, label] of profileActions) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.d35ePacsProfileAction = action;
+    button.textContent = label;
+    actions.appendChild(button);
+  }
+
+  root.append(header, help, controls, resolved, totals, actions);
+  return root;
+}
+
+async function itemIdFromDrop(actor, event) {
+  const raw = event.dataTransfer?.getData("text/plain") || event.dataTransfer?.getData("application/json") || "";
+  if (!raw) return null;
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (_error) {
+    return null;
+  }
+  if (data.itemId && actor.items?.get?.(data.itemId)) return data.itemId;
+  if (data.uuid && globalThis.fromUuid) {
+    const document = await fromUuid(data.uuid);
+    if (!document || document.documentName !== "Item") return null;
+    if (document.parent?.id === actor.id) return document.id;
+    if (!actor.createEmbeddedDocuments) return null;
+    const created = await actor.createEmbeddedDocuments("Item", [document.toObject()], { d35ePacsProfile: true });
+    return created?.[0]?.id ?? null;
+  }
+  return null;
+}
+
+function injectArmorProfilePanel(app, root) {
+  if (!isEnabled(SETTINGS.enableArmor, true)) return;
+  if (getArmorWorkflowMode() !== ARMOR_WORKFLOW_MODES.nativeProfile) return;
+  if (root.querySelector("[data-d35e-pacs-armor-profile]")) return;
+  const actor = sheetDocument(app);
+  if (!actor?.isOwner) return;
+  const target = root.querySelector('.tab[data-tab="inventory"]') ??
+    root.querySelector(".inventory-list")?.parentElement ??
+    root.querySelector("form");
+  if (!target) return;
+
+  const panel = renderArmorProfilePanel(actor);
+  target.prepend(panel);
+
+  panel.addEventListener("change", async (event) => {
+    const control = event.target.closest("[data-d35e-pacs-profile-action]");
+    if (!control) return;
+    event.preventDefault();
+    try {
+      if (control.dataset.d35ePacsProfileAction === "baseline") await setArmorProfileBaseline(actor, control.value);
+      if (control.dataset.d35ePacsProfileAction === "slot") await setArmorProfileSlot(actor, control.dataset.category, control.value);
+    } catch (error) {
+      console.error(`${MODULE_ID} | Failed to update armor profile.`, error);
+      ui.notifications?.error(error.message ?? "Could not update the armor profile.");
+    }
+  });
+
+  panel.addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-d35e-pacs-profile-action]");
+    if (!button) return;
+    event.preventDefault();
+    try {
+      if (button.dataset.d35ePacsProfileAction === "apply") {
+        const result = await applyArmorProfile(actor);
+        ui.notifications?.info(result.reason === "needsPieceValues" ? "Armor profile needs piece values before it can apply." : "Piecemeal armor profile applied.");
+      }
+      if (button.dataset.d35ePacsProfileAction === "clear") {
+        await clearArmorProfile(actor);
+        ui.notifications?.info("Piecemeal armor profile cleared.");
+      }
+      if (button.dataset.d35ePacsProfileAction === "migrate") {
+        const result = await migrateLegacyArmorProfile(actor);
+        ui.notifications?.info(result.migrated ? "Legacy piecemeal armor state migrated." : "No legacy piecemeal armor state found.");
+      }
+    } catch (error) {
+      console.error(`${MODULE_ID} | Failed to apply armor profile action.`, error);
+      ui.notifications?.error(error.message ?? "Could not update the armor profile.");
+    }
+  });
+
+  for (const dropSlot of panel.querySelectorAll("[data-d35e-pacs-drop-slot]")) {
+    dropSlot.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      dropSlot.classList.add("d35e-pacs-drop-hover");
+    });
+    dropSlot.addEventListener("dragleave", () => dropSlot.classList.remove("d35e-pacs-drop-hover"));
+    dropSlot.addEventListener("drop", async (event) => {
+      event.preventDefault();
+      dropSlot.classList.remove("d35e-pacs-drop-hover");
+      const itemId = await itemIdFromDrop(actor, event);
+      if (!itemId) return;
+      const select = dropSlot.querySelector("select");
+      if (dropSlot.dataset.d35ePacsDropSlot === "baseline") await setArmorProfileBaseline(actor, itemId);
+      else await setArmorProfileSlot(actor, dropSlot.dataset.d35ePacsDropSlot, itemId);
+      if (select) select.value = itemId;
+    });
+  }
+}
+
 function createIconAction({ title, iconClass, dataset, className = "item-control" }) {
   const action = document.createElement("a");
   action.href = "#";
@@ -263,10 +511,15 @@ function appendInventoryIndicators(app, root) {
   for (const row of root.querySelectorAll("[data-item-id]")) {
     const item = actor.items.get(row.dataset.itemId);
     if (item?.type !== "equipment") continue;
+    if (isInternalArmorProfileItem(item)) {
+      row.hidden = true;
+      row.style.display = "none";
+      continue;
+    }
     const controls = row.querySelector(".item-controls") ?? row.querySelector(".item-control")?.parentElement ?? row;
     if (!isAggregateArmorItem(item) && !row.querySelector("[data-d35e-pacs-configure-piece]")) {
       const configure = createIconAction({
-        title: "Configure piecemeal armor",
+        title: "Configure piecemeal armor values",
         iconClass: "fas fa-shield-alt",
         dataset: { d35ePacsConfigurePiece: "true", itemId: item.id }
       });
@@ -286,6 +539,9 @@ function appendInventoryIndicators(app, root) {
       const flag = item.getFlag?.(MODULE_ID, FLAGS.piecemeal) ?? {};
       chipText = `piece: ${flag.pieceCategory ?? flag.coverageSlots ?? flag.coverageSlot ?? flag.slot ?? "armor"}`;
       chipClass = "d35e-pacs-chip-piece";
+    } else if (item.getFlag?.(MODULE_ID, FLAGS.armorProfile)?.role === "source") {
+      chipText = "worn in profile";
+      chipClass = "d35e-pacs-chip-synced";
     } else if (item.getFlag?.(MODULE_ID, FLAGS.nativeBackup)) {
       chipText = "synced component";
       chipClass = "d35e-pacs-chip-synced";
@@ -364,14 +620,16 @@ function injectPiecemealItemPanel(item, root, form) {
   legend.textContent = "Piecemeal Armor";
   const help = document.createElement("p");
   help.classList.add("d35e-pacs-help");
-  help.textContent = "Use this item as a module-managed armor component. RAW-adapted armor math uses the piece category, while coverage slot(s) map called-shot locations such as head; eyes; ears. After sync, the generated aggregate item is what contributes D35E armor AC.";
+  help.textContent = getArmorWorkflowMode() === ARMOR_WORKFLOW_MODES.legacyAggregate
+    ? "Use this item as a module-managed armor component. RAW-adapted armor math uses the piece category, while coverage slot(s) map called-shot locations such as head; eyes; ears. After sync, the generated aggregate item is what contributes D35E armor AC."
+    : "Use these fields for custom or unusual armor pieces that are not in the profile catalog. Piece category drives Torso/Arms/Legs math, while coverage slot(s) map called-shot locations such as head; eyes; ears.";
   const enabledLabel = document.createElement("label");
   enabledLabel.classList.add("d35e-pacs-checkbox");
   const enabled = document.createElement("input");
   enabled.type = "checkbox";
   enabled.name = `flags.${MODULE_ID}.${FLAGS.piecemeal}.enabled`;
   enabled.checked = flag.enabled === true;
-  enabledLabel.append(enabled, document.createTextNode(" Include in piecemeal armor sync"));
+  enabledLabel.append(enabled, document.createTextNode(getArmorWorkflowMode() === ARMOR_WORKFLOW_MODES.legacyAggregate ? " Include in piecemeal armor sync" : " Use explicit piecemeal armor values"));
   const grid = document.createElement("div");
   grid.classList.add("d35e-pacs-grid");
   const category = flag.equipmentSubtype ?? item.system?.equipmentSubtype ?? "lightArmor";
@@ -473,7 +731,7 @@ function appendItemSheetControls(app, html) {
   const form = root?.querySelector?.("form");
   if (!form) return;
 
-  if (item.type === "equipment" && !isAggregateArmorItem(item) && isEnabled(SETTINGS.enableArmor, true)) {
+  if (item.type === "equipment" && !isAggregateArmorItem(item) && isEnabled(SETTINGS.enableArmor, true) && (getArmorWorkflowMode() === ARMOR_WORKFLOW_MODES.legacyAggregate || isPiecemealArmorPiece(item))) {
     injectPiecemealItemPanel(item, root, form);
     schedulePiecemealItemPanelRefresh(item, root, form);
     if (root.dataset?.d35ePacsPieceRefresh !== "true") {
@@ -493,7 +751,8 @@ function appendActorSheetControls(app, html) {
   const root = htmlRoot(html);
   const title = root?.querySelector?.(".window-header .window-title");
   const form = root?.querySelector?.("form");
-  if ((title || form) && !root.querySelector("[data-d35e-pacs-armor-sync]") && isEnabled(SETTINGS.enableArmor, true)) {
+  injectArmorProfilePanel(app, root);
+  if ((title || form) && !root.querySelector("[data-d35e-pacs-armor-sync]") && isEnabled(SETTINGS.enableArmor, true) && getArmorWorkflowMode() === ARMOR_WORKFLOW_MODES.legacyAggregate) {
     const button = document.createElement("a");
     button.classList.add("d35e-pacs-header-button");
     button.dataset.d35ePacsArmorSync = "true";
@@ -524,7 +783,12 @@ function appendActorSheetControls(app, html) {
     if (armorButton) {
       event.preventDefault();
       event.stopPropagation();
-      actor.items.get(armorButton.dataset.itemId)?.sheet?.render(true);
+      const item = actor.items.get(armorButton.dataset.itemId);
+      if (item && getArmorWorkflowMode() === ARMOR_WORKFLOW_MODES.nativeProfile && !isPiecemealArmorPiece(item)) {
+        void item.update({ [`flags.${MODULE_ID}.${FLAGS.piecemeal}.enabled`]: true }, { d35ePacsProfile: true }).then(() => item.sheet?.render(true));
+      } else {
+        item?.sheet?.render(true);
+      }
     }
   });
 }

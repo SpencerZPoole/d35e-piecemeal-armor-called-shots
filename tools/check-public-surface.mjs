@@ -53,11 +53,11 @@ if (findings.length) {
 const requiredPublicText = [
   {
     file: "README.md",
-    text: "go to the `Details` tab"
+    text: "Piecemeal Armor Profile"
   },
   {
     file: "docs/USER_GUIDE.md",
-    text: "module-managed component record"
+    text: "Piecemeal Armor Profile"
   },
   {
     file: "docs/USER_GUIDE.md",
@@ -65,7 +65,7 @@ const requiredPublicText = [
   },
   {
     file: "docs/USER_GUIDE.md",
-    text: "The generated aggregate item is the piece that contributes D35E armor AC after sync."
+    text: "worn in profile"
   },
   {
     file: "scripts/ui.js",
@@ -73,7 +73,7 @@ const requiredPublicText = [
   },
   {
     file: "scripts/ui.js",
-    text: "Mark at least one carried, unbroken equipment item"
+    text: "Use the normal D35E armor slot as a baseline"
   },
   {
     file: "README.md",

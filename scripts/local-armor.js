@@ -9,6 +9,7 @@ import {
   parseArmorCoverageSlots,
   readArmorPiece
 } from "./armor.js";
+import { ARMOR_PROFILE_STATUS, resolveArmorProfile } from "./armor-profile.js";
 
 export { normalizeArmorSlot };
 
@@ -84,7 +85,8 @@ function readAggregateArmorTotal(item) {
 }
 
 function pieceCoversCalledShot(piece, coverageSlot) {
-  if (armorCoverageOverlaps(piece.slot, coverageSlot)) return true;
+  const pieceCoverage = piece.coverageSlots ?? piece.slot;
+  if (armorCoverageOverlaps(pieceCoverage, coverageSlot)) return true;
   const targetSlots = parseArmorCoverageSlots(coverageSlot);
   if (piece.pieceCategory === "torso" && targetSlots.some((slot) => ["torso", "head", "neck"].includes(slot))) return true;
   return false;
@@ -236,10 +238,24 @@ export function calculateLocalArmorAdjustment(actor, coverageSlot) {
   const normalizedSlots = parseArmorCoverageSlots(coverageSlot);
   if (!actor || !normalizedSlots.length) return null;
 
-  const aggregate = findAggregateArmorItem(actor);
-  if (!aggregate) return null;
-  const aggregateTotal = readAggregateArmorTotal(aggregate);
-  const summary = calculatePiecemealArmor(actor);
+  let aggregateTotal = null;
+  let summary = null;
+  try {
+    const profile = resolveArmorProfile(actor);
+    if (profile.status !== ARMOR_PROFILE_STATUS.needsPieceValues && profile.pieces.length) {
+      summary = profile.summary;
+      aggregateTotal = summary.armorBonus + summary.enhancementBonus;
+    }
+  } catch (_error) {
+    summary = null;
+  }
+
+  if (!summary) {
+    const aggregate = findAggregateArmorItem(actor);
+    if (!aggregate) return null;
+    aggregateTotal = readAggregateArmorTotal(aggregate);
+    summary = calculatePiecemealArmor(actor);
+  }
 
   const pieces = (summary.activePieces?.length ? summary.activePieces : getPiecemealArmorPieces(actor).map(readArmorPiece));
   const matchingPieces = pieces.filter((piece) => pieceCoversCalledShot(piece, coverageSlot));

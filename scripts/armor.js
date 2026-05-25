@@ -3,6 +3,7 @@ import {
   ARMOR_SUBTYPE_WEIGHT,
   DON_STATES,
   FLAGS,
+  INTERNAL_ARMOR_PROFILE_NAME,
   MAGIC_MODES,
   MODULE_ID,
   PIECE_CATEGORIES,
@@ -31,16 +32,34 @@ const MISC_VISUAL_SLOTS = new Set([
 export const RAW_ARMOR_PIECE_CATALOG = Object.freeze([
   { id: "padded-arms", label: "Padded arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "padded", equipmentSubtype: "lightArmor", armorBonus: 0, maxDex: 8, acp: 0, spellFailure: 5, weight: 2, cost: 1 },
   { id: "leather-arms", label: "Leather arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "leather", equipmentSubtype: "lightArmor", armorBonus: 0, maxDex: 6, acp: 0, spellFailure: 10, weight: 2, cost: 2 },
+  { id: "studded-leather-arms", label: "Studded leather arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "studded-leather", equipmentSubtype: "lightArmor", armorBonus: 0, maxDex: 5, acp: 0, spellFailure: 15, weight: 2, cost: 5 },
+  { id: "hide-arms", label: "Hide arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "hide", equipmentSubtype: "mediumArmor", armorBonus: 0, maxDex: 4, acp: 2, spellFailure: 20, weight: 3, cost: 2 },
   { id: "chain-arms", label: "Chain arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "chain", equipmentSubtype: "mediumArmor", armorBonus: 1, maxDex: 2, acp: 3, spellFailure: 30, weight: 5, cost: 25 },
   { id: "plate-arms", label: "Plate arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "plate", equipmentSubtype: "heavyArmor", armorBonus: 1, maxDex: 1, acp: 7, spellFailure: 35, weight: 10, cost: 375 },
   { id: "padded-legs", label: "Padded leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "padded", equipmentSubtype: "lightArmor", armorBonus: 0, maxDex: 8, acp: 0, spellFailure: 0, weight: 3, cost: 1 },
   { id: "leather-legs", label: "Leather leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "leather", equipmentSubtype: "lightArmor", armorBonus: 0, maxDex: 6, acp: 0, spellFailure: 0, weight: 3, cost: 3 },
+  { id: "studded-leather-legs", label: "Studded leather leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "studded-leather", equipmentSubtype: "lightArmor", armorBonus: 1, maxDex: 5, acp: 0, spellFailure: 10, weight: 3, cost: 5 },
+  { id: "hide-legs", label: "Hide leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "hide", equipmentSubtype: "mediumArmor", armorBonus: 1, maxDex: 4, acp: 2, spellFailure: 10, weight: 7, cost: 3 },
   { id: "chain-legs", label: "Chain leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "chain", equipmentSubtype: "mediumArmor", armorBonus: 0, maxDex: 2, acp: 2, spellFailure: 15, weight: 10, cost: 25 },
   { id: "plate-legs", label: "Plate leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "plate", equipmentSubtype: "heavyArmor", armorBonus: 1, maxDex: 1, acp: 3, spellFailure: 20, weight: 10, cost: 925 },
   { id: "padded-torso", label: "Padded torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "padded", equipmentSubtype: "lightArmor", armorBonus: 0, maxDex: 8, acp: 0, spellFailure: 5, weight: 5, cost: 3 },
   { id: "leather-torso", label: "Leather torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "leather", equipmentSubtype: "lightArmor", armorBonus: 1, maxDex: 6, acp: 0, spellFailure: 10, weight: 10, cost: 5 },
+  { id: "studded-leather-torso", label: "Studded leather torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "studded-leather", equipmentSubtype: "lightArmor", armorBonus: 1, maxDex: 5, acp: 0, spellFailure: 15, weight: 15, cost: 15 },
+  { id: "hide-torso", label: "Hide torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "hide", equipmentSubtype: "mediumArmor", armorBonus: 2, maxDex: 4, acp: 2, spellFailure: 20, weight: 15, cost: 10 },
   { id: "chain-torso", label: "Chain torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "chain", equipmentSubtype: "mediumArmor", armorBonus: 4, maxDex: 4, acp: 2, spellFailure: 30, weight: 25, cost: 100 },
   { id: "plate-torso", label: "Plate torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "plate", equipmentSubtype: "heavyArmor", armorBonus: 6, maxDex: 3, acp: 4, spellFailure: 35, weight: 30, cost: 200 }
+]);
+
+export const RAW_ARMOR_SUIT_CATALOG = Object.freeze([
+  { id: "padded", labels: ["padded", "padded armor"], pieceIds: { torso: "padded-torso", legs: "padded-legs", arms: "padded-arms" } },
+  { id: "leather", labels: ["leather", "leather armor"], pieceIds: { torso: "leather-torso", legs: "leather-legs", arms: "leather-arms" } },
+  { id: "studded-leather", labels: ["studded leather", "studded leather armor"], pieceIds: { torso: "studded-leather-torso", legs: "studded-leather-legs", arms: "studded-leather-arms" } },
+  { id: "hide", labels: ["hide", "hide armor"], pieceIds: { torso: "hide-torso", legs: "hide-legs", arms: "hide-arms" } },
+  { id: "chain", labels: ["chainmail", "chain mail", "chain armor"], pieceIds: { torso: "chain-torso", legs: "chain-legs", arms: "chain-arms" } },
+  { id: "chain-shirt", labels: ["chain shirt"], pieceIds: { torso: "chain-torso" } },
+  { id: "breastplate", labels: ["breastplate", "agile breastplate"], pieceIds: { torso: "plate-torso" } },
+  { id: "half-plate", labels: ["half-plate", "half plate"], pieceIds: { torso: "plate-torso", legs: "chain-legs", arms: "plate-arms" } },
+  { id: "full-plate", labels: ["full plate", "full-plate"], pieceIds: { torso: "plate-torso", legs: "plate-legs", arms: "plate-arms" } }
 ]);
 
 function getProperty(source, path) {
@@ -49,7 +68,7 @@ function getProperty(source, path) {
   return path.split(".").reduce((current, key) => current?.[key], source);
 }
 
-function getFlagData(document, key) {
+export function getFlagData(document, key) {
   return document?.getFlag?.(MODULE_ID, key) ?? document?.flags?.[MODULE_ID]?.[key] ?? null;
 }
 
@@ -70,7 +89,7 @@ function boolOr(value, fallback = false) {
   return fallback;
 }
 
-function getItems(source) {
+export function getItems(source) {
   if (Array.isArray(source)) return source;
   if (source?.items?.contents) return source.items.contents;
   if (Array.isArray(source?.items)) return source.items;
@@ -187,6 +206,11 @@ export function isPiecemealArmorPiece(item) {
 export function isAggregateArmorItem(item) {
   const flag = getFlagData(item, FLAGS.aggregate);
   return item?.type === "equipment" && flag?.isAggregate === true;
+}
+
+export function isInternalArmorProfileItem(item) {
+  const flag = getFlagData(item, FLAGS.internalArmor);
+  return item?.type === "equipment" && flag?.isInternal === true;
 }
 
 export function getPiecemealArmorPieces(source, { equippedOnly = false } = {}) {
@@ -428,11 +452,15 @@ function calculateRawSummary(allPieces) {
   };
 }
 
-export function calculatePiecemealArmor(source, options = {}) {
-  const pieces = getPiecemealArmorPieces(source, options).map(readArmorPiece);
+export function calculatePiecemealArmorFromPieces(pieces, options = {}) {
   return getCurrentRulesMode(options) === RULES_MODES.legacyWorkflow
     ? calculateLegacySummary(pieces)
     : calculateRawSummary(pieces);
+}
+
+export function calculatePiecemealArmor(source, options = {}) {
+  const pieces = getPiecemealArmorPieces(source, options).map(readArmorPiece);
+  return calculatePiecemealArmorFromPieces(pieces, options);
 }
 
 export function calculateArmorPieceLocalTotal(summary, piece) {
@@ -445,9 +473,9 @@ export function calculateArmorPieceLocalTotal(summary, piece) {
   return pieceArmorBonus(piece) + enhancement;
 }
 
-export function buildAggregateItemData(summary) {
+export function buildAggregateItemData(summary, { internal = false } = {}) {
   return {
-    name: AGGREGATE_ARMOR_NAME,
+    name: internal ? INTERNAL_ARMOR_PROFILE_NAME : AGGREGATE_ARMOR_NAME,
     type: "equipment",
     system: {
       equipped: true,
@@ -470,8 +498,15 @@ export function buildAggregateItemData(summary) {
     },
     flags: {
       [MODULE_ID]: {
+        ...(internal ? {
+          [FLAGS.internalArmor]: {
+            isInternal: true,
+            generatedAt: new Date().toISOString()
+          }
+        } : {}),
         [FLAGS.aggregate]: {
           isAggregate: true,
+          internal,
           componentIds: summary.componentIds,
           generatedAt: new Date().toISOString(),
           summary: {

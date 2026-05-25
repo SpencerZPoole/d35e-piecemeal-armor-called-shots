@@ -31,7 +31,7 @@ This repository publishes Foundry VTT module releases through GitHub release ass
    - single attack shows a native modifier such as `Called Shot: Ear -10`;
    - RAW-adapted Improved/Greater full-attack behavior works, and legacy mode preserves permissive policies;
    - actor-sheet called-shot panel is absent;
-   - armor sync and restore still work;
+   - native armor profile works for baseline-only armor, one override, clear profile, and legacy migration;
    - D35E Apply Damage triggers local armor AC, severity, automatic outcomes, and target ledger restore;
    - profile editor opens and saves.
 

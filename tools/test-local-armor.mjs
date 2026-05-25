@@ -23,10 +23,16 @@ globalThis.game = {
     get(moduleId, key) {
       assert.equal(moduleId, MODULE_ID);
       if (key === "calledShotLocalArmorMode") return LOCAL_ARMOR_MODES.adjust;
+      if (key === "rulesMode") return "rawAdapted";
+      if (key === "armorWorkflowMode") return "nativeProfile";
       return true;
     }
   }
 };
+
+function itemGetFlag(moduleId, key) {
+  return this.flags?.[moduleId]?.[key];
+}
 
 function piece(id, slot, armorBonus, enhancementBonus = 0, options = {}) {
   const magic = options.suit
@@ -56,7 +62,8 @@ function piece(id, slot, armorBonus, enhancementBonus = 0, options = {}) {
           ...magic
         }
       }
-    }
+    },
+    getFlag: itemGetFlag
   };
 }
 
@@ -76,7 +83,25 @@ function aggregate(armorBonus, enhancementBonus = 0, equipped = true) {
           summary: { armorBonus, enhancementBonus }
         }
       }
-    }
+    },
+    getFlag: itemGetFlag
+  };
+}
+
+function nativeArmor(id, name, equipped = false) {
+  return {
+    id,
+    name,
+    type: "equipment",
+    system: {
+      carried: true,
+      equipped,
+      equipmentType: "armor",
+      armor: { value: 0, enh: 0 },
+      melded: false
+    },
+    flags: {},
+    getFlag: itemGetFlag
   };
 }
 
@@ -117,6 +142,31 @@ assert.equal(legs.adjustment, -1);
 
 const head = calculateLocalArmorAdjustment(actor, "head");
 assert.equal(head.adjustment, 2);
+const profileActor = {
+  id: "profile-target",
+  uuid: "Actor.profile-target",
+  flags: {
+    [MODULE_ID]: {
+      armorProfile: {
+        baselineItemId: "studded",
+        slots: { legs: "chainmail" }
+      }
+    }
+  },
+  items: [
+    nativeArmor("studded", "Studded Leather Armor", true),
+    nativeArmor("chainmail", "Chainmail", false)
+  ],
+  getFlag: itemGetFlag
+};
+const profileLegs = calculateLocalArmorAdjustment(profileActor, "legs");
+assert.equal(profileLegs.aggregateTotal, 2);
+assert.equal(profileLegs.localTotal, 0);
+assert.equal(profileLegs.adjustment, -2);
+const profileHead = calculateLocalArmorAdjustment(profileActor, "head");
+assert.equal(profileHead.aggregateTotal, 2);
+assert.equal(profileHead.localTotal, 1);
+assert.equal(profileHead.adjustment, -1);
 const multiCoverage = calculateLocalArmorAdjustment({
   ...actor,
   items: [
