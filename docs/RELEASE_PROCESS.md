@@ -26,13 +26,13 @@ This repository publishes Foundry VTT module releases through GitHub release ass
    ```
 
 6. Smoke test in a scratch D35E world:
-   - module settings show `Rules mode` and default to RAW-adapted automation;
+   - module settings show `Enable piecemeal armor`, `Enable called shots`, and `Called-shot effect automation`;
    - native attack dialog has `Called Shot`;
    - single attack shows a native modifier such as `Called Shot: Ear -10`;
-   - RAW-adapted Improved/Greater full-attack behavior works, and legacy mode preserves permissive policies;
+   - Improved/Greater full-attack behavior works for each full-attack policy;
    - actor-sheet called-shot panel is absent;
-   - native inventory armor workflow shows `Armor`, `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs`, works for baseline-only armor, one override, cleared PAcS slots, and legacy migration;
-   - D35E Apply Damage triggers local armor AC, severity, automatic outcomes, and target ledger restore;
+   - native inventory armor workflow shows `Armor`, `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs`, works for baseline-only armor, one override, cleared PAcS slots, disabled piecemeal armor, and legacy migration;
+   - D35E Apply Damage triggers location armor AC, severity, outcome automation/confirmation/advisory behavior, and target ledger restore;
    - profile editor opens and saves.
 
 ## Foundry Package Release Token

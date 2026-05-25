@@ -8,9 +8,11 @@ import {
   migrateLegacyArmorProfile,
   reconcileArmorProfile,
   registerPacsEquipmentSlots,
+  resumeArmorProfileAutomation,
   resolveArmorProfile,
   setArmorProfileBaseline,
-  setArmorProfileSlot
+  setArmorProfileSlot,
+  suspendArmorProfileAutomation
 } from "../scripts/armor-profile.js";
 import { FLAGS, MODULE_ID, PACS_EQUIPMENT_SLOTS } from "../scripts/constants.js";
 
@@ -18,10 +20,12 @@ const NORMAL_AC_PATH = "system.attributes.ac.normal.total";
 const TOUCH_AC_PATH = "system.attributes.ac.touch.total";
 const FLAT_FOOTED_AC_PATH = "system.attributes.ac.flatFooted.total";
 
+let armorAutomationEnabled = true;
 globalThis.game = {
   settings: {
     get(moduleId, key) {
       assert.equal(moduleId, MODULE_ID);
+      if (key === "enableArmorAutomation") return armorAutomationEnabled;
       if (key === "armorWorkflowMode") return "nativeProfile";
       if (key === "rulesMode") return "rawAdapted";
       return true;
@@ -299,6 +303,47 @@ assert.equal(dragBackCompositeLegs.system.armor.dex, null);
 carrier = dragBackCompositeActor.items.find((item) => item.name === "PAcS Armor Profile");
 assert.equal(carrier.system.armor.value, 7);
 assert.equal(carrier.system.armor.dex, 2);
+
+const suspendBaseline = equipment("suspend-studded", "Studded Leather", {
+  equipped: true,
+  armor: { value: 3, enh: 0, dex: 5, acp: 0 },
+  spellFailure: 15,
+  weight: 20
+});
+const suspendOverride = equipment("suspend-chain", "Chainmail", {
+  equipped: true,
+  equipmentSubtype: "mediumArmor",
+  armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+  spellFailure: 30,
+  weight: 40
+});
+const suspendActor = actor([suspendBaseline, suspendOverride]);
+await setArmorProfileSlot(suspendActor, "legs", "suspend-chain");
+assert.equal(suspendActor.items.some((item) => item.name === "PAcS Armor Profile"), true);
+const suspended = await suspendArmorProfileAutomation(suspendActor);
+assert.equal(suspended.suspended, true);
+assert.equal(suspendActor.getFlag(MODULE_ID, FLAGS.armorProfile).slots.legs, "suspend-chain");
+assert.equal(suspendActor.getFlag(MODULE_ID, FLAGS.armorProfile).suspended, true);
+let suspendCarrier = suspendActor.items.find((item) => item.name === "PAcS Armor Profile");
+assert.equal(Boolean(suspendCarrier), true);
+assert.equal(suspendCarrier.system.equipped, false);
+assert.equal(suspendCarrier.system.armor.value, 0);
+assert.equal(suspendOverride.system.equipmentType, "armor");
+assert.equal(suspendOverride.system.equipped, false);
+assert.equal(suspendOverride.system.armor.value, 5);
+armorAutomationEnabled = false;
+const applyWhileDisabled = await applyArmorProfile(suspendActor, { migrateLegacy: false });
+assert.equal(applyWhileDisabled.suspended, true);
+suspendCarrier = suspendActor.items.find((item) => item.name === "PAcS Armor Profile");
+assert.equal(suspendCarrier.system.equipped, false);
+assert.equal(suspendCarrier.system.armor.value, 0);
+armorAutomationEnabled = true;
+const resumed = await resumeArmorProfileAutomation(suspendActor);
+assert.equal(resumed.status, ARMOR_PROFILE_STATUS.compositeProfile);
+assert.equal(suspendActor.getFlag(MODULE_ID, FLAGS.armorProfile).suspended, false);
+assert.equal(suspendActor.items.some((item) => item.name === "PAcS Armor Profile"), true);
+assert.equal(suspendOverride.system.equipmentType, "misc");
+assert.equal(suspendOverride.system.slot, PACS_EQUIPMENT_SLOTS.legs);
 
 const chainmail = equipment("chainmail", "Chainmail", {
   equipped: false,

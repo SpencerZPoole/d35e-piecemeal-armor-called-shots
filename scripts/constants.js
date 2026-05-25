@@ -8,6 +8,7 @@ export const SETTINGS = Object.freeze({
   armorWorkflowMode: "armorWorkflowMode",
   enableArmor: "enableArmorAutomation",
   enableCalledShots: "enableCalledShots",
+  calledShotOutcomeMode: "calledShotOutcomeMode",
   calledShotFullAttackMode: "calledShotFullAttackMode",
   calledShotLocalArmorMode: "calledShotLocalArmorMode",
   calledShotProfiles: "calledShotProfiles",
@@ -30,6 +31,12 @@ export const FULL_ATTACK_MODES = Object.freeze({
   first: "first",
   all: "all",
   disabled: "disabled"
+});
+
+export const OUTCOME_MODES = Object.freeze({
+  confirmSevere: "confirmSevere",
+  automatic: "automatic",
+  advisory: "advisory"
 });
 
 export const LOCAL_ARMOR_MODES = Object.freeze({

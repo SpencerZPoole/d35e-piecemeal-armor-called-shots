@@ -215,7 +215,7 @@ const finalAc = { ac: 21, acModifiers: [{ sourceName: "AC", value: 21 }] };
 const applied = applyLocalArmorAdjustment(actor, finalAc, payload);
 assert.equal(applied.adjusted, true);
 assert.equal(finalAc.ac, 20);
-assert.equal(finalAc.acModifiers.at(-1).sourceName, "Called Shot Local Armor: Leg");
+assert.equal(finalAc.acModifiers.at(-1).sourceName, "Called Shot Location Armor: Leg");
 assert.equal(finalAc.acModifiers.at(-1).value, "-1");
 
 const displayAc = { ac: 21, acModifiers: [] };

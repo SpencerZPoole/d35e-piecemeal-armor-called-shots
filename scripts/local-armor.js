@@ -1,4 +1,4 @@
-import { FLAGS, LOCAL_ARMOR_MODES, MODULE_ID, SETTINGS } from "./constants.js";
+import { FLAGS, LOCAL_ARMOR_MODES, MODULE_ID } from "./constants.js";
 import {
   armorCoverageOverlaps,
   calculateArmorPieceLocalTotal,
@@ -99,11 +99,7 @@ function formatSigned(value) {
 }
 
 function localArmorMode() {
-  try {
-    return game.settings.get(MODULE_ID, SETTINGS.calledShotLocalArmorMode);
-  } catch (_error) {
-    return LOCAL_ARMOR_MODES.adjust;
-  }
+  return LOCAL_ARMOR_MODES.adjust;
 }
 
 function pruneDamageContexts(now = Date.now()) {
@@ -234,6 +230,12 @@ export function clearStagedCalledShotDamageApplication(userId = getUserId()) {
   return damageContexts.delete(userId);
 }
 
+export function clearAllStagedCalledShotDamageApplications() {
+  const count = damageContexts.size;
+  damageContexts.clear();
+  return count;
+}
+
 export function calculateLocalArmorAdjustment(actor, coverageSlot) {
   const normalizedSlots = parseArmorCoverageSlots(coverageSlot);
   if (!actor || !normalizedSlots.length) return null;
@@ -286,8 +288,8 @@ export function applyLocalArmorAdjustment(actor, finalAc, payload, { mode = LOCA
   finalAc.acModifiers = Array.isArray(finalAc.acModifiers) ? finalAc.acModifiers : [];
   const label = payload?.locationLabel ?? payload?.coverageSlot ?? localArmor.coverageSlot;
   const sourceName = mode === LOCAL_ARMOR_MODES.display
-    ? `Called Shot Local Armor: ${label} (advisory)`
-    : `Called Shot Local Armor: ${label}`;
+    ? `Called Shot Location Armor: ${label} (advisory)`
+    : `Called Shot Location Armor: ${label}`;
   finalAc.acModifiers.push({
     sourceName,
     value: formatSigned(localArmor.adjustment)

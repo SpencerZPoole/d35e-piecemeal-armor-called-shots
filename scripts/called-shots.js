@@ -1,4 +1,4 @@
-import { MODULE_ID, RULES_MODES, SETTINGS } from "./constants.js";
+import { MODULE_ID, OUTCOME_MODES, RULES_MODES, SETTINGS } from "./constants.js";
 import { getCurrentRulesMode } from "./armor.js";
 import { applyOutcome } from "./effects.js";
 import { getActiveProfile, getDefaultCalledShotProfiles, getEnabledLocations, getLocation, normalizeCalledShotProfiles } from "./profiles.js";
@@ -23,6 +23,16 @@ function getProperty(source, path) {
 
 function normalizeName(value) {
   return String(value ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  })[character]);
 }
 
 function actorItems(actor) {
@@ -248,8 +258,30 @@ export function clearCalledShot(actor, item, userId = getUserId()) {
   return pendingCalledShots.delete(pendingKey(actor, item, userId));
 }
 
+export function clearAllCalledShots() {
+  const count = pendingCalledShots.size;
+  pendingCalledShots.clear();
+  return count;
+}
+
 export function getPendingCalledShot(actor, item, userId = getUserId()) {
   return pendingPayload(pendingCalledShots.get(pendingKey(actor, item, userId))) ?? null;
+}
+
+export function normalizeCalledShotOutcomeMode(value) {
+  return Object.values(OUTCOME_MODES).includes(value) ? value : OUTCOME_MODES.confirmSevere;
+}
+
+export function getCalledShotOutcomeMode() {
+  try {
+    return normalizeCalledShotOutcomeMode(game.settings.get(MODULE_ID, SETTINGS.calledShotOutcomeMode));
+  } catch (_error) {
+    return OUTCOME_MODES.confirmSevere;
+  }
+}
+
+export function calledShotOutcomeNeedsConfirmation(severity, mode = getCalledShotOutcomeMode()) {
+  return mode === OUTCOME_MODES.confirmSevere && ["critical", "debilitating"].includes(severity);
 }
 
 export function noteCalledShotAttackSequence(actor, item, attacks, userId = getUserId()) {
@@ -318,9 +350,24 @@ export async function applyCalledShotOutcome({
   });
 }
 
-export async function applyAutomaticCalledShotOutcome({ targetActor, context }) {
+async function confirmCalledShotOutcome({ severity, context }) {
+  if (!calledShotOutcomeNeedsConfirmation(severity)) return true;
+  if (globalThis.game?.user?.isGM !== true) return false;
+  const location = context?.payload?.locationLabel ?? "called shot";
+  if (globalThis.Dialog?.confirm) {
+    return Dialog.confirm({
+      title: "Apply Severe Called Shot?",
+      content: `<p>Apply the ${escapeHtml(severity)} outcome for ${escapeHtml(location)}? This can create long-lived or lethal target effects.</p>`,
+      yes: () => true,
+      no: () => false,
+      defaultYes: false
+    });
+  }
+  return globalThis.window?.confirm?.(`Apply the ${severity} called-shot outcome for ${location}?`) === true;
+}
+
+export async function applyAutomaticCalledShotOutcome({ targetActor, context, confirmOutcome = confirmCalledShotOutcome } = {}) {
   if (!targetActor || !context?.payload?.locationId) return null;
-  if (context.payload.rulesMode === RULES_MODES.legacyWorkflow) return null;
   if (context.hit !== true) return null;
   if (context.automaticHit === true) return null;
   const damage = Number(context.finalDamage?.damage ?? context.finalDamage?.displayDamage ?? 0);
@@ -331,6 +378,34 @@ export async function applyAutomaticCalledShotOutcome({ targetActor, context }) 
     targetActor,
     debilitatingMinimum: context.payload.debilitatingMinimum
   });
+  const outcomeMode = getCalledShotOutcomeMode();
+  if (outcomeMode === OUTCOME_MODES.advisory) {
+    return {
+      applied: false,
+      skipped: true,
+      reason: "advisory",
+      severity
+    };
+  }
+  if (calledShotOutcomeNeedsConfirmation(severity, outcomeMode)) {
+    if (globalThis.game?.user?.isGM !== true) {
+      return {
+        applied: false,
+        skipped: true,
+        reason: "requiresGmConfirmation",
+        severity
+      };
+    }
+    const confirmed = await confirmOutcome({ severity, context, targetActor, outcomeMode });
+    if (!confirmed) {
+      return {
+        applied: false,
+        skipped: true,
+        reason: "declined",
+        severity
+      };
+    }
+  }
   return applyCalledShotOutcome({
     targetActor,
     locationId: context.payload.locationId,
@@ -338,6 +413,7 @@ export async function applyAutomaticCalledShotOutcome({ targetActor, context }) 
     severity,
     context: {
       automatic: true,
+      outcomeMode,
       payload: context.payload,
       attackTotal: context.roll,
       saveDc: Number.isFinite(Number(context.roll)) ? Number(context.roll) : Number(context.finalAc?.ac),

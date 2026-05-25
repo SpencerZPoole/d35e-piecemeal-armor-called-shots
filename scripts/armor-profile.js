@@ -133,7 +133,7 @@ function toSourceDetailRow(row) {
 export function decorateArmorProfileSourceDetails(actor, resolution = null) {
   if (!actor?.sourceDetails) return { decorated: false, reason: "noSourceDetails" };
   const resolved = resolution ?? resolveArmorProfile(actor);
-  if (resolved.status !== ARMOR_PROFILE_STATUS.compositeProfile || !resolved.carrier) {
+  if (resolved.profile?.suspended || resolved.status !== ARMOR_PROFILE_STATUS.compositeProfile || !resolved.carrier) {
     const removed = removeArmorProfileSourceDetails(actor);
     return { decorated: false, reason: "noCompositeProfile", removed };
   }
@@ -194,11 +194,14 @@ export function registerPacsEquipmentSlots() {
 }
 
 export function getArmorWorkflowMode() {
+  return ARMOR_WORKFLOW_MODES.nativeProfile;
+}
+
+export function isArmorAutomationEnabled() {
   try {
-    const value = game.settings.get(MODULE_ID, SETTINGS.armorWorkflowMode);
-    return Object.values(ARMOR_WORKFLOW_MODES).includes(value) ? value : ARMOR_WORKFLOW_MODES.nativeProfile;
+    return game.settings.get(MODULE_ID, SETTINGS.enableArmor) !== false;
   } catch (_error) {
-    return ARMOR_WORKFLOW_MODES.nativeProfile;
+    return true;
   }
 }
 
@@ -221,7 +224,8 @@ export function readArmorProfile(actor) {
     version: 2,
     baselineItemId: flag.baselineItemId || null,
     slots,
-    updatedAt: flag.updatedAt ?? null
+    updatedAt: flag.updatedAt ?? null,
+    suspended: flag.suspended === true
   };
 }
 
@@ -522,11 +526,61 @@ async function restoreBackedUpItems(actor) {
   return restored;
 }
 
+async function deleteArmorProfileCarriers(actor) {
+  const deleted = [];
+  for (const item of [...getItems(actor)]) {
+    if (!isInternalArmorProfileItem(item) && !isAggregateArmorItem(item)) continue;
+    deleted.push({ itemId: item.id, itemName: item.name });
+    await deleteItemIfPresent(actor, item);
+  }
+  return deleted;
+}
+
+async function zeroArmorProfileCarriers(actor) {
+  const zeroed = [];
+  for (const item of getItems(actor)) {
+    if (!isInternalArmorProfileItem(item) && !isAggregateArmorItem(item)) continue;
+    const update = {
+      "system.equipped": false,
+      "system.armor.value": 0,
+      "system.armor.enh": 0,
+      "system.armor.dex": null,
+      "system.armor.acp": 0,
+      "system.armor.spellFailure": 0,
+      "system.spellFailure": 0,
+      "system.weight": 0,
+      [`flags.${MODULE_ID}.${FLAGS.internalArmor}.suspended`]: true
+    };
+    zeroed.push({ itemId: item.id, itemName: item.name, update });
+    await item.update?.(update, { _slotBypass: true, d35ePacsProfile: true });
+  }
+  return zeroed;
+}
+
+async function unequipSuspendedOverrideItems(actor, profile) {
+  const unequipped = [];
+  const baselineId = profile?.baselineItemId || null;
+  for (const itemId of Object.values(profile?.slots ?? {}).filter(Boolean)) {
+    if (itemId === baselineId) continue;
+    const item = itemCollectionGet(actor?.items ?? [], itemId);
+    if (!item?.update || item.system?.equipped !== true) continue;
+    await item.update({ "system.equipped": false }, { _slotBypass: true, d35ePacsProfile: true });
+    unequipped.push({ itemId, itemName: item.name });
+  }
+  return unequipped;
+}
+
 async function deleteItemIfPresent(actor, item) {
   if (!actor || !item?.id) return false;
   if (actor.deleteEmbeddedDocuments) {
-    await actor.deleteEmbeddedDocuments("Item", [item.id], { d35ePacsProfile: true });
-    return true;
+    try {
+      await actor.deleteEmbeddedDocuments("Item", [item.id], { d35ePacsProfile: true });
+      return true;
+    } catch (error) {
+      const message = String(error?.message ?? error);
+      if (/does not exist|EmbeddedCollection/i.test(message)) return false;
+      throw error;
+    }
   }
   const items = getItems(actor);
   const index = items.findIndex((entry) => entry.id === item.id);
@@ -678,18 +732,43 @@ export async function setArmorProfileSlot(actor, category, itemId) {
 
 export async function clearArmorProfile(actor) {
   const restored = await restoreBackedUpItems(actor);
-  const carrier = findProfileCarrier(actor);
-  if (carrier) await deleteItemIfPresent(actor, carrier);
-  const legacy = findVisibleLegacyAggregate(actor);
-  if (legacy) await deleteItemIfPresent(actor, legacy);
+  const deletedCarriers = await deleteArmorProfileCarriers(actor);
   await unsetActorArmorProfile(actor);
-  return { restored, cleared: true };
+  return { restored, deletedCarriers, cleared: true };
+}
+
+export async function suspendArmorProfileAutomation(actor) {
+  if (!actor) throw new Error("suspendArmorProfileAutomation requires an actor.");
+  const profile = readArmorProfile(actor);
+  const restored = await restoreBackedUpItems(actor);
+  const unequippedOverrides = await unequipSuspendedOverrideItems(actor, profile);
+  const zeroedCarriers = await zeroArmorProfileCarriers(actor);
+  if (hasExplicitProfile(profile)) {
+    await setActorArmorProfile(actor, { ...profile, suspended: true });
+  }
+  await refreshActorArmorMath(actor);
+  return {
+    suspended: true,
+    restored,
+    unequippedOverrides,
+    zeroedCarriers,
+    deletedCarriers: [],
+    profile
+  };
+}
+
+export async function resumeArmorProfileAutomation(actor) {
+  if (!actor) throw new Error("resumeArmorProfileAutomation requires an actor.");
+  const profile = readArmorProfile(actor);
+  if (!hasExplicitProfile(profile)) return { resumed: false, reason: "noProfile" };
+  await setActorArmorProfile(actor, { ...profile, suspended: false });
+  return applyArmorProfile(actor, { migrateLegacy: false });
 }
 
 export async function applyArmorProfile(actor, { migrateLegacy = true } = {}) {
   if (!actor) throw new Error("applyArmorProfile requires an actor.");
-  if (getArmorWorkflowMode() === ARMOR_WORKFLOW_MODES.legacyAggregate) {
-    return { skipped: true, reason: "legacyWorkflowMode" };
+  if (!isArmorAutomationEnabled()) {
+    return suspendArmorProfileAutomation(actor);
   }
   if (migrateLegacy && !hasExplicitProfile(readArmorProfile(actor))) {
     await migrateLegacyArmorProfile(actor);
@@ -775,7 +854,7 @@ function shouldRefreshProfileForItem(item) {
 }
 
 function scheduleProfileApply(actor) {
-  if (!actor || getArmorWorkflowMode() !== ARMOR_WORKFLOW_MODES.nativeProfile) return;
+  if (!actor || !isArmorAutomationEnabled() || getArmorWorkflowMode() !== ARMOR_WORKFLOW_MODES.nativeProfile) return;
   globalThis.window?.setTimeout?.(() => {
     applyArmorProfile(actor, { migrateLegacy: false }).catch((error) => {
       console.error(`${MODULE_ID} | Failed to refresh piecemeal armor profile.`, error);

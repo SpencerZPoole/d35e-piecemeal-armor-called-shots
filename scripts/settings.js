@@ -1,4 +1,13 @@
-import { ARMOR_WORKFLOW_MODES, FULL_ATTACK_MODES, LOCAL_ARMOR_MODES, MODULE_ID, MODULE_TITLE, RULES_MODES, SETTINGS } from "./constants.js";
+import {
+  ARMOR_WORKFLOW_MODES,
+  FULL_ATTACK_MODES,
+  LOCAL_ARMOR_MODES,
+  MODULE_ID,
+  MODULE_TITLE,
+  OUTCOME_MODES,
+  RULES_MODES,
+  SETTINGS
+} from "./constants.js";
 import { getDefaultCalledShotProfiles, normalizeCalledShotProfiles } from "./profiles.js";
 
 const HandlebarsApplication = globalThis.foundry?.applications?.api?.HandlebarsApplicationMixin?.(
@@ -26,6 +35,69 @@ function safeJson(value, fallback = []) {
   } catch (_error) {
     return fallback;
   }
+}
+
+function worldActors() {
+  const actors = globalThis.game?.actors;
+  if (!actors) return [];
+  if (Array.isArray(actors)) return actors;
+  if (actors.contents) return actors.contents;
+  if (typeof actors[Symbol.iterator] === "function") return [...actors];
+  return [];
+}
+
+async function updateArmorAutomationState(enabled) {
+  if (globalThis.game?.ready !== true) return;
+  const { readArmorProfile, resumeArmorProfileAutomation, suspendArmorProfileAutomation } = await import("./armor-profile.js");
+  const actorIds = worldActors().map((actor) => actor?.id).filter(Boolean);
+  for (const actorId of actorIds) {
+    const actor = globalThis.game?.actors?.get?.(actorId);
+    if (!actor) continue;
+    const profile = readArmorProfile(actor);
+    const hasProfile = Boolean(profile.baselineItemId || Object.values(profile.slots ?? {}).some(Boolean));
+    if (!hasProfile) continue;
+    if (enabled) await resumeArmorProfileAutomation(actor);
+    else await suspendArmorProfileAutomation(actor);
+  }
+}
+
+let armorAutomationPendingState = null;
+let armorAutomationTransition = null;
+
+function queueArmorAutomationStateUpdate(enabled) {
+  armorAutomationPendingState = enabled;
+  if (armorAutomationTransition) return armorAutomationTransition;
+
+  armorAutomationTransition = (async () => {
+    while (armorAutomationPendingState !== null) {
+      const nextState = armorAutomationPendingState;
+      armorAutomationPendingState = null;
+      await updateArmorAutomationState(nextState);
+    }
+  })().finally(() => {
+    armorAutomationTransition = null;
+    if (armorAutomationPendingState !== null) {
+      void queueArmorAutomationStateUpdate(armorAutomationPendingState)
+        .catch((error) => logSettingUpdateFailure("piecemeal armor automation", error));
+    }
+  });
+
+  return armorAutomationTransition;
+}
+
+async function updateCalledShotAutomationState(enabled) {
+  if (enabled) return;
+  const [{ clearAllCalledShots }, { clearAllStagedCalledShotDamageApplications }] = await Promise.all([
+    import("./called-shots.js"),
+    import("./local-armor.js")
+  ]);
+  clearAllCalledShots();
+  clearAllStagedCalledShotDamageApplications();
+}
+
+function logSettingUpdateFailure(label, error) {
+  console.error(`${MODULE_ID} | Failed to update ${label}.`, error);
+  globalThis.ui?.notifications?.error?.(`Could not update ${label}. Check the console for details.`);
 }
 
 export function buildProfileManagerContext(profiles, activeProfileId = null) {
@@ -188,9 +260,9 @@ export class CalledShotProfileEditor extends HandlebarsApplication {
 export function registerSettings() {
   game.settings.register(MODULE_ID, SETTINGS.rulesMode, {
     name: "Rules mode",
-    hint: "RAW-adapted mode follows the Ultimate Combat variant rules where D35E can support them, including automatic outcome effects and a restore ledger. Legacy mode preserves the v1.0 permissive workflow and advisory outcome style.",
+    hint: "Compatibility setting retained for older worlds. Normal runtime uses RAW-adapted behavior.",
     scope: "world",
-    config: true,
+    config: false,
     type: String,
     choices: {
       [RULES_MODES.rawAdapted]: "RAW-adapted automation",
@@ -201,9 +273,9 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.armorWorkflowMode, {
     name: "Piecemeal armor workflow",
-    hint: "Native profile is the v1.2 workflow: D35E's normal armor slot seeds a baseline, Torso/Arms/Legs slots override it, and any internal math carrier is hidden. Legacy aggregate preserves the older manual sync workflow.",
+    hint: "Compatibility setting retained for older worlds. Normal runtime uses the native PAcS armor-slot profile.",
     scope: "world",
-    config: true,
+    config: false,
     type: String,
     choices: {
       [ARMOR_WORKFLOW_MODES.nativeProfile]: "Native armor profile",
@@ -213,21 +285,41 @@ export function registerSettings() {
   });
 
   game.settings.register(MODULE_ID, SETTINGS.enableArmor, {
-    name: "Enable piecemeal armor automation",
-    hint: "Adds the actor-sheet armor profile, Torso/Arms/Legs piece slots, local armor AC data, and optional legacy sync tools.",
+    name: "Enable piecemeal armor",
+    hint: "Adds the PAcS Torso, Arms, and Legs inventory slots, piecemeal armor math, hidden D35E carrier, and local armor data. Disabling this suspends armor automation but does not disable called shots.",
     scope: "world",
     config: true,
     type: Boolean,
-    default: true
+    default: true,
+    onChange: (enabled) => {
+      void queueArmorAutomationStateUpdate(enabled).catch((error) => logSettingUpdateFailure("piecemeal armor automation", error));
+    }
   });
 
   game.settings.register(MODULE_ID, SETTINGS.enableCalledShots, {
-    name: "Enable called shot helper",
-    hint: "Adds a Called Shot selector to D35E's native attack dialog and applies configured attack-roll penalties.",
+    name: "Enable called shots",
+    hint: "Adds the Called Shot selector to D35E's native attack dialog, applies configured attack penalties, carries called-shot context into Apply Damage, and posts outcome cards. Disabling this does not disable piecemeal armor.",
     scope: "world",
     config: true,
     type: Boolean,
-    default: true
+    default: true,
+    onChange: (enabled) => {
+      void updateCalledShotAutomationState(enabled).catch((error) => logSettingUpdateFailure("called-shot automation", error));
+    }
+  });
+
+  game.settings.register(MODULE_ID, SETTINGS.calledShotOutcomeMode, {
+    name: "Called-shot effect automation",
+    hint: "Controls what happens after D35E Apply Damage resolves a called shot. The default applies normal results automatically and asks the GM before critical or debilitating effects change an actor.",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      [OUTCOME_MODES.confirmSevere]: "GM confirms severe effects",
+      [OUTCOME_MODES.automatic]: "Apply effects automatically",
+      [OUTCOME_MODES.advisory]: "Advisory only"
+    },
+    default: OUTCOME_MODES.confirmSevere
   });
 
   game.settings.register(MODULE_ID, SETTINGS.calledShotFullAttackMode, {
@@ -247,9 +339,9 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.calledShotLocalArmorMode, {
     name: "Called-shot local armor AC",
-    hint: "Controls whether called shots replace the active armor profile's total armor contribution with the target location's piecemeal armor during D35E's Apply Damage AC check.",
+    hint: "Compatibility setting retained for older worlds. Normal runtime uses location armor automatically when piecemeal armor and called shots are both enabled.",
     scope: "world",
-    config: true,
+    config: false,
     type: String,
     choices: {
       [LOCAL_ARMOR_MODES.adjust]: "Adjust AC in Apply Damage",
@@ -270,9 +362,9 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.showGmOnlyDetails, {
     name: "Show GM-only called shot details",
-    hint: "Shows source and outcome metadata only to GMs.",
+    hint: "Compatibility setting retained for older clients. GM-only source and outcome metadata is now shown to GM users automatically.",
     scope: "client",
-    config: true,
+    config: false,
     type: Boolean,
     default: true
   });

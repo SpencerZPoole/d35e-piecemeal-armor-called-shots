@@ -1,9 +1,8 @@
-import { ARMOR_WORKFLOW_MODES, FLAGS, MODULE_ID, PIECE_CATEGORIES, RULES_MODES, SETTINGS } from "./constants.js";
-import { applyCalledShotOutcome } from "./called-shots.js";
+import { FLAGS, MODULE_ID, OUTCOME_MODES, PIECE_CATEGORIES, SETTINGS } from "./constants.js";
+import { applyCalledShotOutcome, getCalledShotOutcomeMode } from "./called-shots.js";
 import { getFlagData, getItems, isAggregateArmorItem, isInternalArmorProfileItem, isPiecemealArmorPiece, previewArmorSync, RAW_ARMOR_PIECE_CATALOG, restoreArmorComponents, syncArmorAggregate } from "./armor.js";
 import {
   categoryForPacsEquipmentSlot,
-  getArmorWorkflowMode,
   readArmorProfile,
   setArmorProfileBaseline,
   setArmorProfileSlot
@@ -121,11 +120,11 @@ function applyCatalogPiece(item, root, form, catalogId) {
 }
 
 async function maybeConfirmSevereOutcome(severity) {
-  if (severity !== "debilitating") return true;
-  if (!globalThis.Dialog?.confirm) return window.confirm("Apply the debilitating called-shot outcome?");
+  if (!["critical", "debilitating"].includes(severity)) return true;
+  if (!globalThis.Dialog?.confirm) return window.confirm(`Apply the ${severity} called-shot outcome?`);
   return Dialog.confirm({
-    title: "Apply Debilitating Called Shot?",
-    content: "<p>This may create severe or long-lived target effects. Confirm that the table has adjudicated the result.</p>",
+    title: "Apply Severe Called Shot?",
+    content: `<p>Apply the ${escapeHtml(severity)} called-shot outcome? This may create severe or long-lived target effects.</p>`,
     yes: () => true,
     no: () => false,
     defaultYes: false
@@ -136,25 +135,28 @@ export async function createCalledShotChatCard({ payload, actor, item, attackTot
   if (!globalThis.ChatMessage) return null;
   const targetDocument = payload.targetUuid && globalThis.fromUuid ? await fromUuid(payload.targetUuid).catch(() => null) : null;
   const targetName = targetDocument?.actor?.name ?? targetDocument?.name ?? "No target captured";
-  const gmOnlyDetails = game.user?.isGM && isEnabled(SETTINGS.showGmOnlyDetails, true);
+  const gmOnlyDetails = game.user?.isGM === true;
+  const outcomeMode = getCalledShotOutcomeMode();
   const coverageText = isEnabled(SETTINGS.locationArmorOverlay, false) && payload.coverageSlot
     ? `<p><strong>Coverage slot(s):</strong> ${escapeHtml(payload.coverageSlot)}</p>`
     : "";
   const gmDetails = gmOnlyDetails
-    ? `<p><strong>Profile:</strong> ${escapeHtml(payload.profileLabel)}. Outcomes are editable in module settings.</p>`
+    ? `<p><strong>GM details:</strong> Profile ${escapeHtml(payload.profileLabel)}; outcome mode ${escapeHtml(outcomeMode)}. Locations and effects are editable in module settings.</p>`
     : "";
   const severityLabels = {
     normal: "Normal",
     critical: "Critical",
     debilitating: "Debilitating"
   };
-  const autoMode = payload.rulesMode === RULES_MODES.rawAdapted;
-  const buttons = autoMode ? "" : Object.entries(severityLabels).map(([severity, label]) => (
+  const advisoryMode = outcomeMode === OUTCOME_MODES.advisory;
+  const buttons = advisoryMode ? Object.entries(severityLabels).map(([severity, label]) => (
     `<button type="button" data-d35e-pacs-apply="${severity}" aria-label="Apply ${label} called-shot outcome">${label}</button>`
-  )).join("");
-  const outcomeText = autoMode
-    ? "<p><strong>Outcome:</strong> Use D35E's native Apply Damage button. If the attack hits and damage gets through, the module determines severity and records any automatic effects in the target's called-shot ledger.</p>"
-    : "<p><strong>Outcome:</strong> GM confirmation required. Choose the severity after adjudicating the hit.</p>";
+  )).join("") : "";
+  const outcomeText = outcomeMode === OUTCOME_MODES.automatic
+    ? "<p><strong>Outcome:</strong> Use D35E's native Apply Damage button. If the attack hits and damage gets through, the module determines severity and records effects in the target's called-shot ledger.</p>"
+    : outcomeMode === OUTCOME_MODES.confirmSevere
+      ? "<p><strong>Outcome:</strong> Use D35E's native Apply Damage button. Normal effects apply automatically; critical and debilitating effects ask the GM before changing the target.</p>"
+      : "<p><strong>Outcome:</strong> Advisory only. Use D35E's Apply Damage result, then the GM can choose a severity to apply from this card.</p>";
   const content = `
     <div class="d35e-pacs-chat-card">
       <h3>Called Shot: ${escapeHtml(payload.locationLabel)}</h3>
@@ -328,7 +330,6 @@ function shouldHandleArmorSlotDrop(actor, itemId) {
 
 function wireNativeArmorProfileSlots(actor, root) {
   if (!isEnabled(SETTINGS.enableArmor, true)) return;
-  if (getArmorWorkflowMode() !== ARMOR_WORKFLOW_MODES.nativeProfile) return;
   if (!actor?.isOwner || root.dataset?.d35ePacsNativeSlots === "true") return;
   if (root.dataset) root.dataset.d35ePacsNativeSlots = "true";
 
@@ -533,16 +534,14 @@ function injectPiecemealItemPanel(item, root, form) {
   legend.textContent = "Piecemeal Armor";
   const help = document.createElement("p");
   help.classList.add("d35e-pacs-help");
-  help.textContent = getArmorWorkflowMode() === ARMOR_WORKFLOW_MODES.legacyAggregate
-    ? "Use this item as a module-managed armor component. RAW-adapted armor math uses the piece category, while coverage slot(s) map called-shot locations such as head; eyes; ears. After sync, the generated aggregate item is what contributes D35E armor AC."
-    : "Use these fields for custom or unusual armor pieces that are not in the profile catalog. Piece category drives Torso/Arms/Legs math, while coverage slot(s) map called-shot locations such as head; eyes; ears.";
+  help.textContent = "Use these fields for custom or unusual armor pieces that are not in the profile catalog. Piece category drives Torso/Arms/Legs math, while coverage slot(s) map called-shot locations such as head; eyes; ears.";
   const enabledLabel = document.createElement("label");
   enabledLabel.classList.add("d35e-pacs-checkbox");
   const enabled = document.createElement("input");
   enabled.type = "checkbox";
   enabled.name = `flags.${MODULE_ID}.${FLAGS.piecemeal}.enabled`;
   enabled.checked = flag.enabled === true;
-  enabledLabel.append(enabled, document.createTextNode(getArmorWorkflowMode() === ARMOR_WORKFLOW_MODES.legacyAggregate ? " Include in piecemeal armor sync" : " Use explicit piecemeal armor values"));
+  enabledLabel.append(enabled, document.createTextNode(" Use explicit piecemeal armor values"));
   const grid = document.createElement("div");
   grid.classList.add("d35e-pacs-grid");
   const category = flag.equipmentSubtype ?? item.system?.equipmentSubtype ?? "lightArmor";
@@ -644,7 +643,7 @@ function appendItemSheetControls(app, html) {
   const form = root?.querySelector?.("form");
   if (!form) return;
 
-  if (item.type === "equipment" && !isAggregateArmorItem(item) && isEnabled(SETTINGS.enableArmor, true) && (getArmorWorkflowMode() === ARMOR_WORKFLOW_MODES.legacyAggregate || isPiecemealArmorPiece(item))) {
+  if (item.type === "equipment" && !isAggregateArmorItem(item) && isEnabled(SETTINGS.enableArmor, true) && isPiecemealArmorPiece(item)) {
     injectPiecemealItemPanel(item, root, form);
     schedulePiecemealItemPanelRefresh(item, root, form);
     if (root.dataset?.d35ePacsPieceRefresh !== "true") {
@@ -665,18 +664,6 @@ function appendActorSheetControls(app, html) {
   const title = root?.querySelector?.(".window-header .window-title");
   const form = root?.querySelector?.("form");
   wireNativeArmorProfileSlots(actor, root);
-  if ((title || form) && !root.querySelector("[data-d35e-pacs-armor-sync]") && isEnabled(SETTINGS.enableArmor, true) && getArmorWorkflowMode() === ARMOR_WORKFLOW_MODES.legacyAggregate) {
-    const button = document.createElement("a");
-    button.classList.add("d35e-pacs-header-button");
-    button.dataset.d35ePacsArmorSync = "true";
-    appendIconText(button, "fas fa-shield-alt", "Piecemeal Armor");
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      void openArmorSyncDialog(actor);
-    });
-    if (title) title.after(button);
-    else form.prepend(button);
-  }
   const activeLedgerEntries = game.user?.isGM ? getCalledShotLedger(actor).filter((entry) => !entry.restoredAt) : [];
   if ((title || form) && activeLedgerEntries.length && !root.querySelector("[data-d35e-pacs-called-shot-ledger]")) {
     const button = document.createElement("a");
@@ -709,7 +696,7 @@ function appendActorSheetControls(app, html) {
       event.preventDefault();
       event.stopPropagation();
       const item = actor.items.get(armorButton.dataset.itemId);
-      if (item && getArmorWorkflowMode() === ARMOR_WORKFLOW_MODES.nativeProfile && !isPiecemealArmorPiece(item)) {
+      if (item && !isPiecemealArmorPiece(item)) {
         void item.update({ [`flags.${MODULE_ID}.${FLAGS.piecemeal}.enabled`]: true }, { d35ePacsProfile: true }).then(() => item.sheet?.render(true));
       } else {
         item?.sheet?.render(true);

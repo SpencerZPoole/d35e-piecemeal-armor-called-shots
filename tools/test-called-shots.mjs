@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
+import { OUTCOME_MODES } from "../scripts/constants.js";
 import {
+  applyAutomaticCalledShotOutcome,
   buildAttackExtraPart,
+  calledShotOutcomeNeedsConfirmation,
   calculateCalledShotSituationalPenalty,
   clearCalledShot,
   consumeCalledShot,
   determineCalledShotSeverity,
   getCalledShotFeatState,
+  getCalledShotOutcomeMode,
   getPendingCalledShot,
   noteCalledShotAttackSequence,
   stageCalledShot,
@@ -102,9 +106,18 @@ globalThis.canvas = {
 };
 globalThis.game = {
   user: {
+    isGM: true,
     targets: new Set([targetToken])
+  },
+  settings: {
+    get(_moduleId, key) {
+      if (key === "calledShotProfiles") return profiles;
+      if (key === "calledShotOutcomeMode") return currentOutcomeMode;
+      return true;
+    }
   }
 };
+let currentOutcomeMode = OUTCOME_MODES.confirmSevere;
 const rangedActor = {
   id: "ranged",
   getActiveTokens() {
@@ -119,5 +132,51 @@ assert.equal(rangePenalty.penalty, -4);
 assert.equal(determineCalledShotSeverity({ damage: 10, crit: false }), "normal");
 assert.equal(determineCalledShotSeverity({ damage: 10, crit: true }), "critical");
 assert.equal(determineCalledShotSeverity({ damage: 40, crit: false, debilitatingMinimum: 40, targetActor: { system: { attributes: { hp: { max: 70 } } } } }), "debilitating");
+assert.equal(getCalledShotOutcomeMode(), OUTCOME_MODES.confirmSevere);
+assert.equal(calledShotOutcomeNeedsConfirmation("normal"), false);
+assert.equal(calledShotOutcomeNeedsConfirmation("critical"), true);
+assert.equal(calledShotOutcomeNeedsConfirmation("debilitating"), true);
+
+currentOutcomeMode = OUTCOME_MODES.advisory;
+const advisoryOutcome = await applyAutomaticCalledShotOutcome({
+  targetActor: { id: "target-advisory", system: { attributes: { hp: { max: 30 } } } },
+  context: {
+    hit: true,
+    crit: false,
+    finalDamage: { damage: 5 },
+    payload: { locationId: "ear", profileId: profile.id, debilitatingMinimum: 50 }
+  }
+});
+assert.deepEqual(advisoryOutcome, { applied: false, skipped: true, reason: "advisory", severity: "normal" });
+
+currentOutcomeMode = OUTCOME_MODES.confirmSevere;
+let confirmationAsked = false;
+const declinedOutcome = await applyAutomaticCalledShotOutcome({
+  targetActor: { id: "target-declined", system: { attributes: { hp: { max: 30 } } } },
+  context: {
+    hit: true,
+    crit: true,
+    finalDamage: { damage: 5 },
+    payload: { locationId: "ear", profileId: profile.id, debilitatingMinimum: 50 }
+  },
+  confirmOutcome: async () => {
+    confirmationAsked = true;
+    return false;
+  }
+});
+assert.equal(confirmationAsked, true);
+assert.deepEqual(declinedOutcome, { applied: false, skipped: true, reason: "declined", severity: "critical" });
+
+globalThis.game.user.isGM = false;
+const nonGmOutcome = await applyAutomaticCalledShotOutcome({
+  targetActor: { id: "target-non-gm", system: { attributes: { hp: { max: 30 } } } },
+  context: {
+    hit: true,
+    crit: true,
+    finalDamage: { damage: 5 },
+    payload: { locationId: "ear", profileId: profile.id, debilitatingMinimum: 50 }
+  }
+});
+assert.deepEqual(nonGmOutcome, { applied: false, skipped: true, reason: "requiresGmConfirmation", severity: "critical" });
 
 console.log("test-called-shots: ok");

@@ -8,11 +8,19 @@ globalThis.foundry = {
     }
   }
 };
+const registeredSettings = new Map();
+const registeredMenus = new Map();
 globalThis.game = {
   user: {
     targets: []
   },
   settings: {
+    register(moduleId, key, config) {
+      registeredSettings.set(key, { moduleId, key, ...config });
+    },
+    registerMenu(moduleId, key, config) {
+      registeredMenus.set(key, { moduleId, key, ...config });
+    },
     get(moduleId, key) {
       if (key === "calledShotProfiles") return activeProfiles;
       if (key === "enableCalledShots") return true;
@@ -22,7 +30,8 @@ globalThis.game = {
 };
 
 const { getDefaultCalledShotProfiles } = await import("../scripts/profiles.js");
-const { buildProfileManagerContext, updateProfilesFromProfileManager } = await import("../scripts/settings.js");
+const { OUTCOME_MODES, SETTINGS } = await import("../scripts/constants.js");
+const { buildProfileManagerContext, registerSettings, updateProfilesFromProfileManager } = await import("../scripts/settings.js");
 const {
   CALLED_SHOT_QUEUE_NAME,
   CALLED_SHOT_SELECT_NAME,
@@ -34,6 +43,17 @@ const {
 
 const profiles = getDefaultCalledShotProfiles();
 let activeProfiles = profiles;
+registerSettings();
+assert.equal(registeredSettings.get(SETTINGS.rulesMode).config, false);
+assert.equal(registeredSettings.get(SETTINGS.armorWorkflowMode).config, false);
+assert.equal(registeredSettings.get(SETTINGS.calledShotLocalArmorMode).config, false);
+assert.equal(registeredSettings.get(SETTINGS.showGmOnlyDetails).config, false);
+assert.equal(registeredSettings.get(SETTINGS.enableArmor).name, "Enable piecemeal armor");
+assert.equal(registeredSettings.get(SETTINGS.enableCalledShots).name, "Enable called shots");
+assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).name, "Called-shot effect automation");
+assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).default, OUTCOME_MODES.confirmSevere);
+assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).config, true);
+assert.equal(registeredMenus.has("calledShotProfileEditor"), true);
 const context = buildProfileManagerContext(profiles);
 assert.equal(context.activeProfileId, "pf1e-uc-raw-adapted");
 assert.ok(context.locations.length >= 10);

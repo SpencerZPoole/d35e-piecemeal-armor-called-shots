@@ -123,11 +123,7 @@ export function normalizeRulesMode(value) {
 
 export function getCurrentRulesMode(options = {}) {
   if (options.rulesMode) return normalizeRulesMode(options.rulesMode);
-  try {
-    return normalizeRulesMode(game.settings.get(MODULE_ID, SETTINGS.rulesMode));
-  } catch (_error) {
-    return RULES_MODES.rawAdapted;
-  }
+  return RULES_MODES.rawAdapted;
 }
 
 export function parseArmorCoverageTokens(value) {

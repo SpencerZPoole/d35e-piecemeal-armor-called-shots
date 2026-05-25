@@ -324,12 +324,17 @@ async function patchD35EDamageHelper() {
   ActorDamageHelper.applyDamage = async function d35ePacsApplyDamage(...args) {
     const result = await original.call(this, ...args);
     const context = takeCalledShotDamageContext(getUserId());
-    if (context?.payload?.rulesMode === RULES_MODES.rawAdapted && context.targetActor) {
+    if (settingEnabled(SETTINGS.enableCalledShots, true) && context?.targetActor) {
       try {
-        await applyAutomaticCalledShotOutcome({
+        const outcome = await applyAutomaticCalledShotOutcome({
           targetActor: context.targetActor,
           context
         });
+        if (outcome?.reason === "requiresGmConfirmation") {
+          ui.notifications?.warn("A GM must confirm this severe called-shot outcome before actor effects are applied.");
+        } else if (outcome?.reason === "declined") {
+          ui.notifications?.info("Severe called-shot outcome was not applied.");
+        }
       } catch (error) {
         console.error(`${MODULE_ID} | Failed to apply automatic called-shot outcome.`, error);
         ui.notifications?.error("Could not apply the called-shot outcome automatically. Check the console for details.");

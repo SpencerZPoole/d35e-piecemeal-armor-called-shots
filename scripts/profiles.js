@@ -56,8 +56,8 @@ export const DEFAULT_CALLED_SHOT_PROFILES = Object.freeze({
       source: "Pathfinder RPG Ultimate Combat variant rules, pages 193-205, adapted for D35E by table configuration.",
       notes: [
         "This is not D&D 3.5 RAW.",
-        "RAW-adapted mode automates outcomes where D35E exposes a safe native field and records the rest as reversible actor notes and flags.",
-        "Legacy mode keeps the older advisory workflow for tables that do not want automatic severe effects."
+        "The module automates outcomes where D35E exposes a safe native field and records the rest as reversible actor notes and flags.",
+        "Use the outcome automation setting to ask the GM before severe effects, apply effects automatically, or keep outcomes advisory only."
       ],
       locations: [
         {
