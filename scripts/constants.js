@@ -54,6 +54,12 @@ export const PIECE_CATEGORIES = Object.freeze({
   torso: "torso"
 });
 
+export const PACS_EQUIPMENT_SLOTS = Object.freeze({
+  [PIECE_CATEGORIES.torso]: "pacsTorso",
+  [PIECE_CATEGORIES.arms]: "pacsArms",
+  [PIECE_CATEGORIES.legs]: "pacsLegs"
+});
+
 export const MAGIC_MODES = Object.freeze({
   none: "none",
   separatePiece: "separatePiece",

@@ -14,7 +14,8 @@ for (const language of manifest.languages ?? []) {
   const data = JSON.parse(fs.readFileSync(fullPath, "utf8"));
   assert(Object.keys(data).length > 0, `${language.path} must contain at least one key`);
   for (const [key, value] of Object.entries(data)) {
-    assert(key.startsWith("D35E-PACS."), `Localization key must use D35E-PACS prefix: ${key}`);
+    const allowedSystemSlotKey = key.startsWith("D35E.EquipSlotPacs");
+    assert(key.startsWith("D35E-PACS.") || allowedSystemSlotKey, `Localization key must use D35E-PACS prefix or supported D35E PAcS slot key: ${key}`);
     assert(typeof value === "string" && value.trim().length > 0, `Localization value must be non-empty: ${key}`);
   }
 }

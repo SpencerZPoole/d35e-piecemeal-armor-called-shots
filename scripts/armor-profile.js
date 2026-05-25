@@ -4,6 +4,7 @@ import {
   INTERNAL_ARMOR_PROFILE_NAME,
   MAGIC_MODES,
   MODULE_ID,
+  PACS_EQUIPMENT_SLOTS,
   PIECE_CATEGORIES,
   SETTINGS
 } from "./constants.js";
@@ -37,6 +38,14 @@ const CATEGORY_LABELS = Object.freeze({
   [PIECE_CATEGORIES.arms]: "Arms",
   [PIECE_CATEGORIES.legs]: "Legs"
 });
+const PACS_SLOT_TO_CATEGORY = Object.freeze(Object.fromEntries(
+  Object.entries(PACS_EQUIPMENT_SLOTS).map(([category, slot]) => [slot, category])
+));
+const PACS_SLOT_LABEL_KEYS = Object.freeze({
+  [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.torso]]: "D35E.EquipSlotPacsTorso",
+  [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.arms]]: "D35E.EquipSlotPacsArms",
+  [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.legs]]: "D35E.EquipSlotPacsLegs"
+});
 
 function keyForValue(value) {
   return String(value ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -58,6 +67,45 @@ function itemCollectionGet(items, id) {
   return getItems({ items }).find((item) => item.id === id || item._id === id) ?? null;
 }
 
+export function categoryForPacsEquipmentSlot(slot) {
+  return PACS_SLOT_TO_CATEGORY[slot] ?? "";
+}
+
+export function profileSlotForCategory(category) {
+  const normalized = normalizePieceCategory(category);
+  return normalized ? PACS_EQUIPMENT_SLOTS[normalized] ?? null : null;
+}
+
+export function isPacsEquipmentSlot(slot) {
+  return Boolean(categoryForPacsEquipmentSlot(slot));
+}
+
+export function registerPacsEquipmentSlots() {
+  const d35eConfig = globalThis.CONFIG?.D35E;
+  if (!d35eConfig) return false;
+
+  const defaultCapacities = d35eConfig.defaultSlotCapacities ?? {};
+  const nextCapacities = {};
+  let inserted = false;
+  for (const [key, value] of Object.entries(defaultCapacities)) {
+    if (Object.values(PACS_EQUIPMENT_SLOTS).includes(key)) continue;
+    nextCapacities[key] = value;
+    if (key !== "armor") continue;
+    for (const slot of Object.values(PACS_EQUIPMENT_SLOTS)) nextCapacities[slot] = 1;
+    inserted = true;
+  }
+  if (!inserted) {
+    for (const slot of Object.values(PACS_EQUIPMENT_SLOTS)) nextCapacities[slot] = 1;
+  }
+  d35eConfig.defaultSlotCapacities = nextCapacities;
+  d35eConfig.equipmentSlots = d35eConfig.equipmentSlots ?? {};
+  d35eConfig.equipmentSlots.misc = {
+    ...(d35eConfig.equipmentSlots.misc ?? {}),
+    ...PACS_SLOT_LABEL_KEYS
+  };
+  return true;
+}
+
 export function getArmorWorkflowMode() {
   try {
     const value = game.settings.get(MODULE_ID, SETTINGS.armorWorkflowMode);
@@ -69,14 +117,23 @@ export function getArmorWorkflowMode() {
 
 export function readArmorProfile(actor) {
   const flag = getFlagData(actor, FLAGS.armorProfile) ?? {};
+  const flagSlots = flag.slots ?? {};
+  const slots = {
+    [PIECE_CATEGORIES.torso]: Object.hasOwn(flagSlots, PIECE_CATEGORIES.torso) ? flagSlots[PIECE_CATEGORIES.torso] || null : null,
+    [PIECE_CATEGORIES.arms]: Object.hasOwn(flagSlots, PIECE_CATEGORIES.arms) ? flagSlots[PIECE_CATEGORIES.arms] || null : null,
+    [PIECE_CATEGORIES.legs]: Object.hasOwn(flagSlots, PIECE_CATEGORIES.legs) ? flagSlots[PIECE_CATEGORIES.legs] || null : null
+  };
+  for (const item of getItems(actor)) {
+    const category = item?.system?.equipped === true ? categoryForPacsEquipmentSlot(item.system?.slot) : "";
+    if (!category || slots[category]) continue;
+    if (Object.hasOwn(flagSlots, category)) continue;
+    if (isAggregateArmorItem(item) || isInternalArmorProfileItem(item)) continue;
+    slots[category] = item.id ?? item._id ?? null;
+  }
   return {
     version: 2,
     baselineItemId: flag.baselineItemId || null,
-    slots: {
-      [PIECE_CATEGORIES.torso]: flag.slots?.[PIECE_CATEGORIES.torso] || null,
-      [PIECE_CATEGORIES.arms]: flag.slots?.[PIECE_CATEGORIES.arms] || null,
-      [PIECE_CATEGORIES.legs]: flag.slots?.[PIECE_CATEGORIES.legs] || null
-    },
+    slots,
     updatedAt: flag.updatedAt ?? null
   };
 }
@@ -100,12 +157,22 @@ function isNativeArmorItem(item) {
     item.system?.equipmentType === "armor" &&
     !item.system?.melded &&
     !item.broken &&
+    !categoryForPacsEquipmentSlot(item.system?.slot) &&
     !isAggregateArmorItem(item) &&
     !isInternalArmorProfileItem(item);
 }
 
-function findEquippedNativeBaseline(actor) {
-  return getItems(actor).find((item) => isNativeArmorItem(item) && item.system?.equipped === true && !isPiecemealArmorPiece(item)) ?? null;
+function profileSlotItemIds(profile) {
+  return new Set(Object.values(profile?.slots ?? {}).filter(Boolean));
+}
+
+function findEquippedNativeBaselines(actor, excludedItemIds = new Set()) {
+  return getItems(actor).filter((item) =>
+    isNativeArmorItem(item) &&
+    item.system?.equipped === true &&
+    !isPiecemealArmorPiece(item) &&
+    !excludedItemIds.has(item.id ?? item._id)
+  );
 }
 
 function pieceCatalogEntry(id) {
@@ -193,16 +260,56 @@ function sourceItemIdsForPieces(pieces) {
   return [...new Set(pieces.map((piece) => piece.sourceItemId).filter(Boolean))];
 }
 
+function sourceRolesForPieces(pieces) {
+  const roles = new Map();
+  for (const piece of pieces) {
+    if (!piece.sourceItemId) continue;
+    const current = roles.get(piece.sourceItemId) ?? {
+      sourceItemId: piece.sourceItemId,
+      itemName: piece.sourceItemName ?? piece.name,
+      role: piece.sourceKind === "baseline" ? "baseline" : "override",
+      categories: []
+    };
+    if (piece.sourceKind !== "baseline") current.role = "override";
+    if (!current.categories.includes(piece.pieceCategory)) current.categories.push(piece.pieceCategory);
+    roles.set(piece.sourceItemId, current);
+  }
+  return roles;
+}
+
+function chooseBaselineItem(actor, profile, hasOverrides, unresolved, warnings) {
+  const items = actor?.items ?? [];
+  const profileBaseline = itemCollectionGet(items, profile.baselineItemId);
+  const assignedProfileItems = profileSlotItemIds(profile);
+  const candidates = findEquippedNativeBaselines(actor, assignedProfileItems);
+  if (profileBaseline && !assignedProfileItems.has(profileBaseline.id ?? profileBaseline._id) && candidates.some((item) => item.id === profileBaseline.id || item._id === profileBaseline._id)) return profileBaseline;
+  if (candidates.length === 1) return candidates[0];
+  if (candidates.length > 1) {
+    const note = {
+      category: "baseline",
+      reason: "multipleNativeArmor",
+      itemNames: candidates.map((item) => item.name)
+    };
+    if (hasOverrides) unresolved.push(note);
+    else warnings.push(note);
+    return null;
+  }
+  if (profileBaseline && !assignedProfileItems.has(profileBaseline.id ?? profileBaseline._id) && !isPiecemealArmorPiece(profileBaseline)) return profileBaseline;
+  return null;
+}
+
 export function resolveArmorProfile(actor, options = {}) {
   const profile = readArmorProfile(actor);
   const items = actor?.items ?? [];
   const explicitProfile = hasExplicitProfile(profile);
-  const baselineItem = itemCollectionGet(items, profile.baselineItemId) ?? findEquippedNativeBaseline(actor);
+  const hasOverrides = Object.values(profile.slots).some(Boolean);
+  const unresolved = [];
+  const warnings = [];
+  const baselineItem = chooseBaselineItem(actor, profile, hasOverrides, unresolved, warnings);
   const baselineCatalog = baselineItem && !isPiecemealArmorPiece(baselineItem)
     ? catalogPiecesForItem(baselineItem, "baseline")
     : { piecesByCategory: new Map(), unresolved: false, suit: null };
   const resolved = [];
-  const unresolved = [];
   const slotItems = {};
 
   for (const category of CATEGORY_ORDER) {
@@ -228,10 +335,10 @@ export function resolveArmorProfile(actor, options = {}) {
   }
 
   const sourceItemIds = sourceItemIdsForPieces(resolved);
+  const sourceRoles = sourceRolesForPieces(resolved);
   const summary = calculatePiecemealArmorFromPieces(resolved, { rulesMode: options.rulesMode ?? getCurrentRulesMode(options) });
   summary.sourceItemIds = sourceItemIds;
 
-  const hasOverrides = Object.values(profile.slots).some(Boolean);
   const status = unresolved.length
     ? ARMOR_PROFILE_STATUS.needsPieceValues
     : resolved.length === 0
@@ -249,7 +356,9 @@ export function resolveArmorProfile(actor, options = {}) {
     slotItems,
     pieces: resolved,
     unresolved,
+    warnings,
     sourceItemIds,
+    sourceRoles,
     summary,
     status,
     carrier: findProfileCarrier(actor),
@@ -305,6 +414,17 @@ async function ensureEquipped(item) {
   await item.update({ "system.equipped": true }, { _slotBypass: true, d35ePacsProfile: true });
 }
 
+async function refreshActorArmorMath(actor) {
+  if (!actor) return;
+  // D35E refreshes actor math for normal equip toggles, but our profile updates
+  // also rewrite armor values and hidden carrier data without a user equip click.
+  if (actor.refresh) {
+    await actor.refresh({ d35ePacsProfile: true });
+    return;
+  }
+  await actor.update?.({}, { d35ePacsProfile: true });
+}
+
 async function ensureNativeBaselineEquipped(actor, resolution) {
   const baselineId = resolution.profile.baselineItemId ?? resolution.baselineItem?.id ?? resolution.baselineItem?._id;
   const baseline = itemCollectionGet(actor.items, baselineId);
@@ -316,11 +436,28 @@ async function ensureNativeBaselineEquipped(actor, resolution) {
   return baseline;
 }
 
+async function restoreItemsOutsideProfile(actor, sourceItemIds) {
+  const restored = [];
+  const activeSources = new Set(sourceItemIds);
+  for (const item of getItems(actor)) {
+    if (activeSources.has(item.id ?? item._id)) continue;
+    const update = buildRestoreUpdate(item);
+    if (!update) continue;
+    restored.push({ itemId: item.id, itemName: item.name, update });
+    if (item.update) await item.update(update, { _slotBypass: true, d35ePacsProfile: true });
+    if (item.unsetFlag) {
+      await item.unsetFlag(MODULE_ID, FLAGS.nativeBackup);
+      await item.unsetFlag(MODULE_ID, FLAGS.armorProfile);
+    }
+  }
+  return restored;
+}
+
 function buildProfileCarrierData(resolution) {
   const data = buildAggregateItemData(resolution.summary, { internal: true });
   data.name = INTERNAL_ARMOR_PROFILE_NAME;
   data.system.description = {
-    value: "Internal D35E armor carrier generated from the actor's Piecemeal Armor Profile. It is hidden from normal inventory UI."
+    value: "Internal D35E armor carrier generated from the actor's PAcS inventory slots. It is hidden from normal inventory UI."
   };
   data.flags[MODULE_ID][FLAGS.internalArmor] = {
     isInternal: true,
@@ -391,6 +528,11 @@ export async function setArmorProfileSlot(actor, category, itemId) {
   const normalized = normalizePieceCategory(category);
   if (!normalized) throw new Error(`Unknown armor profile category: ${category}`);
   const profile = readArmorProfile(actor);
+  if (itemId) {
+    for (const existingCategory of CATEGORY_ORDER) {
+      if (existingCategory !== normalized && profile.slots[existingCategory] === itemId) profile.slots[existingCategory] = null;
+    }
+  }
   profile.slots[normalized] = itemId || null;
   await setActorArmorProfile(actor, profile);
   return applyArmorProfile(actor, { migrateLegacy: false });
@@ -420,6 +562,7 @@ export async function applyArmorProfile(actor, { migrateLegacy = true } = {}) {
     const restored = await restoreBackedUpItems(actor);
     const carrier = findProfileCarrier(actor);
     if (carrier) await deleteItemIfPresent(actor, carrier);
+    await refreshActorArmorMath(actor);
     return {
       ...resolution,
       skipped: true,
@@ -434,6 +577,7 @@ export async function applyArmorProfile(actor, { migrateLegacy = true } = {}) {
     if (resolution.status === ARMOR_PROFILE_STATUS.nativeArmor) await ensureNativeBaselineEquipped(actor, resolution);
     const carrier = findProfileCarrier(actor);
     if (carrier) await deleteItemIfPresent(actor, carrier);
+    await refreshActorArmorMath(actor);
     return {
       ...resolution,
       restored,
@@ -441,26 +585,31 @@ export async function applyArmorProfile(actor, { migrateLegacy = true } = {}) {
     };
   }
 
-  if (resolution.baselineItem && !resolution.profile.baselineItemId) {
-    const profile = readArmorProfile(actor);
-    profile.baselineItemId = resolution.baselineItem.id ?? resolution.baselineItem._id ?? null;
-    await setActorArmorProfile(actor, profile);
-  }
-
+  const restored = await restoreItemsOutsideProfile(actor, resolution.sourceItemIds);
   for (const sourceId of resolution.sourceItemIds) {
     const item = itemCollectionGet(actor.items, sourceId);
     if (!item) continue;
-    const update = buildNeutralizeUpdate(item);
+    const role = resolution.sourceRoles.get(sourceId) ?? { role: "source", categories: [] };
+    const primaryCategory = role.categories[0] ?? null;
+    const update = buildNeutralizeUpdate(item, {
+      profileRole: role.role,
+      profileSlot: role.role === "override" ? profileSlotForCategory(primaryCategory) : null
+    });
     update[`flags.${MODULE_ID}.${FLAGS.armorProfile}`] = {
       role: "source",
+      sourceRole: role.role,
+      category: primaryCategory,
+      profileSlot: role.role === "override" ? profileSlotForCategory(primaryCategory) : null,
       profileAppliedAt: new Date().toISOString()
     };
     await item.update?.(update, { _slotBypass: true, d35ePacsProfile: true });
   }
   if (resolution.visibleLegacyAggregate) await deleteItemIfPresent(actor, resolution.visibleLegacyAggregate);
   const carrier = await upsertProfileCarrier(actor, resolution);
+  await refreshActorArmorMath(actor);
   return {
     ...resolution,
+    restored,
     carrierId: carrier?.id ?? null
   };
 }

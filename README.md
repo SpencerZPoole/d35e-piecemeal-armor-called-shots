@@ -26,10 +26,10 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 
 ## Features
 
-- Adds a native-feeling actor-sheet Piecemeal Armor Profile with Baseline, Torso, Arms, and Legs controls.
-- Lets the normal D35E armor slot seed a baseline suit or torso piece, then overrides only the categories a table mixes.
+- Adds `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` slots directly to D35E's native Armor and Equipment inventory list.
+- Uses the normal D35E `Armor` slot as the baseline suit or torso piece, then overrides only the categories a table mixes.
 - Provides a starter catalog for common RAW armor pieces such as padded, leather, studded leather, hide, chain, and plate arms/legs/torso.
-- Keeps simple baseline-only armor native to D35E while using a hidden internal D35E armor carrier only for composite piecemeal math.
+- Keeps simple baseline-only armor native to D35E while using a hidden slotless D35E armor carrier only for composite piecemeal math.
 - Adds a `Called Shot` dropdown inside D35E's native attack/use dialog.
 - Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as `Called Shot: Ear -10`.
 - Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.
@@ -47,14 +47,12 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 
 ![Module settings for D35E Piecemeal Armor And Called Shots](docs/assets/module-settings.png)
 
-![Piecemeal armor profile controls](docs/assets/piecemeal-armor-profile.png)
-
 ## Quick Start
 
 1. Open a D35E world, go to `Game Settings > Manage Modules`, enable the module, and reload if Foundry asks.
 2. Equip ordinary armor normally. With no piecemeal overrides, D35E keeps handling armor AC exactly as before.
-3. Open the actor sheet inventory and use the `Piecemeal Armor Profile` panel to choose a baseline and optional Torso, Arms, or Legs overrides.
-4. Drag an armor item from inventory or a compendium onto a profile slot, or choose it from the slot dropdown. The module applies composite armor math automatically when the profile has overrides.
+3. Open the actor sheet inventory. The normal D35E `Armor` slot is the baseline armor.
+4. Drag armor items onto `PAcS: Torso`, `PAcS: Arms`, or `PAcS: Legs` when the actor mixes pieces. Empty PAcS slots inherit from the baseline armor when that armor maps to the category.
 5. Click a normal D35E weapon or attack use control and choose a target from the native dialog's `Called Shot` dropdown.
 6. Roll normally. The called-shot penalty appears in the D35E attack breakdown.
 7. Use D35E's native Apply Damage button. If local armor AC is enabled, AC Details shows the location adjustment.
@@ -102,7 +100,7 @@ After Foundry is ready, the module exposes `game.d35ePiecemealCalledShots`:
 - `resolveArmorProfile(actor)`
 - `applyArmorProfile(actor, options)`
 - `clearArmorProfile(actor)`
-- `setArmorProfileBaseline(actor, itemId)`
+- `setArmorProfileBaseline(actor, itemId)` for migration or advanced scripts; the primary UI uses the native D35E `Armor` slot as baseline.
 - `setArmorProfileSlot(actor, category, itemId)`
 - `previewArmorSync(actor)`
 - `syncArmorAggregate(actor, options)`

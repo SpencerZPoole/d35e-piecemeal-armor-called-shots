@@ -6,6 +6,7 @@ import {
   INTERNAL_ARMOR_PROFILE_NAME,
   MAGIC_MODES,
   MODULE_ID,
+  PACS_EQUIPMENT_SLOTS,
   PIECE_CATEGORIES,
   RULES_MODES,
   SETTINGS
@@ -26,7 +27,10 @@ const MISC_VISUAL_SLOTS = new Set([
   "wrists",
   "hands",
   "ring",
-  "feet"
+  "feet",
+  PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.torso],
+  PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.arms],
+  PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.legs]
 ]);
 
 export const RAW_ARMOR_PIECE_CATALOG = Object.freeze([
@@ -474,22 +478,24 @@ export function calculateArmorPieceLocalTotal(summary, piece) {
 }
 
 export function buildAggregateItemData(summary, { internal = false } = {}) {
+  const armorValue = internal ? summary.armorBonus + summary.enhancementBonus : summary.armorBonus;
+  const enhancementValue = internal ? 0 : summary.enhancementBonus;
   return {
     name: internal ? INTERNAL_ARMOR_PROFILE_NAME : AGGREGATE_ARMOR_NAME,
     type: "equipment",
     system: {
       equipped: true,
-      equipmentType: "armor",
-      equipmentSubtype: summary.equipmentSubtype,
+      equipmentType: internal ? "misc" : "armor",
+      equipmentSubtype: internal ? "clothing" : summary.equipmentSubtype,
       masterwork: false,
       armor: {
-        value: summary.armorBonus,
-        enh: summary.enhancementBonus,
+        value: armorValue,
+        enh: enhancementValue,
         dex: summary.maxDex,
         acp: summary.acp === 0 ? 0 : -Math.abs(summary.acp)
       },
       spellFailure: summary.spellFailure,
-      slot: "armor",
+      slot: internal ? "slotless" : "armor",
       weight: 0,
       price: summary.cost ?? 0,
       description: {
@@ -562,21 +568,22 @@ export function inferSyncedComponentVisualSlot(item) {
     "slotless";
 }
 
-export function buildNeutralizeUpdate(item) {
+export function buildNeutralizeUpdate(item, { profileRole = "source", profileSlot = null } = {}) {
   const backup = getFlagData(item, FLAGS.nativeBackup);
   const native = backup?.native ?? buildNativeSnapshot(item);
+  const keepArmorSlot = profileRole === "baseline";
 
   return {
     "system.equipped": true,
-    "system.equipmentType": "misc",
-    "system.equipmentSubtype": "clothing",
+    "system.equipmentType": keepArmorSlot ? "armor" : "misc",
+    "system.equipmentSubtype": keepArmorSlot ? native.equipmentSubtype : "clothing",
     "system.masterwork": false,
     "system.armor.value": 0,
     "system.armor.enh": 0,
     "system.armor.dex": null,
     "system.armor.acp": 0,
     "system.spellFailure": 0,
-    "system.slot": inferSyncedComponentVisualSlot(item),
+    "system.slot": keepArmorSlot ? native.slot ?? "slotless" : profileSlot ?? inferSyncedComponentVisualSlot(item),
     [`flags.${MODULE_ID}.${FLAGS.nativeBackup}`]: backup ?? {
       backedUpAt: new Date().toISOString(),
       native

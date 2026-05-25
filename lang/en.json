@@ -3,5 +3,8 @@
   "D35E-PACS.CalledShot": "Called Shot",
   "D35E-PACS.PiecemealArmor": "Piecemeal Armor",
   "D35E-PACS.SyncArmor": "Sync Piecemeal Armor",
-  "D35E-PACS.EditProfiles": "Edit called shot profiles"
+  "D35E-PACS.EditProfiles": "Edit called shot profiles",
+  "D35E.EquipSlotPacsTorso": "PAcS: Torso",
+  "D35E.EquipSlotPacsArms": "PAcS: Arms",
+  "D35E.EquipSlotPacsLegs": "PAcS: Legs"
 }

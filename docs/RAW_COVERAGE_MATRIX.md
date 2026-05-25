@@ -6,7 +6,7 @@
 | D&D 3.5 called shots RAW | Not claimed | No canonical 3.5 subsystem is bundled. |
 | PF1e piecemeal armor | RAW-adapted default | Uses the supplied Ultimate Combat rules for piece categories, complete suits, worst ACP/ASF/max Dex, mixed-suit ASF, hasty donning, mithral, and magic/masterwork precedence where D35E can represent the result. |
 | PF1e called shots | RAW-adapted default | Uses Ultimate Combat Table 5-4 penalties, feat-gated full attacks, severity thresholds, saves, DR-negated no-effect behavior, and automatic outcome specs. |
-| D35E armor math | Automated through native profile | Baseline-only armor stays native. Composite profiles use a hidden zero-weight D35E carrier so D35E remains responsible for final AC, ACP, max Dex, ASF, and speed calculations. |
+| D35E armor math | Automated through native inventory slots | Baseline-only armor stays native in D35E's `Armor` slot. Composite profiles use hidden slotless carrier math plus visible `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` inventory slots. |
 | Local armor AC | Automated in Apply Damage | Called-shot locations can replace the active profile's armor contribution with matching piece coverage. Touch called shots are checked against normal AC. |
 | Called-shot hit adjudication | Automated after Apply Damage | D35E determines hit/crit and post-DR damage; the module determines severity from that result. |
 | Severe called-shot effects | Automated with restore ledger | Death, severing/maiming flags, suffocation notes, bleed notes, conditions, and ability damage/drain are applied or recorded, then recoverable by a GM restore control. |

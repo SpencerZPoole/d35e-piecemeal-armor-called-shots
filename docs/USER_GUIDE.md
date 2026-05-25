@@ -4,7 +4,7 @@ D35E Piecemeal Armor And Called Shots adds optional-rule helpers to the D35E Fou
 
 The module has two main workflows:
 
-- Piecemeal armor: use the actor-sheet Piecemeal Armor Profile to keep ordinary D35E armor native until the table mixes Torso, Arms, or Legs pieces.
+- Piecemeal armor: use D35E's normal inventory. The native `Armor` slot is the baseline, and the module adds `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` slots for mixed pieces.
 - Called shots: pick a called-shot location from D35E's normal attack dialog, roll normally, and let D35E Apply Damage resolve hit, local armor AC, severity, and automatic outcomes.
 
 ## First Five Minutes
@@ -12,7 +12,7 @@ The module has two main workflows:
 1. Open a D35E world, go to `Game Settings > Manage Modules`, enable the module, and reload if Foundry asks.
 2. Open an actor sheet.
 3. Equip ordinary armor normally. With no profile overrides, D35E handles armor AC normally.
-4. If the actor mixes pieces, use the actor sheet `Piecemeal Armor Profile` panel to set a baseline and optional Torso, Arms, or Legs overrides.
+4. If the actor mixes pieces, drag armor items onto `PAcS: Torso`, `PAcS: Arms`, or `PAcS: Legs` in the actor sheet's Armor and Equipment list.
 5. Open a weapon or attack from the normal D35E sheet controls.
 6. Choose a location from the native attack dialog's `Called Shot` dropdown, or leave it on `None`.
 7. Roll the attack and expand the result to see the called-shot modifier in D35E's native breakdown.
@@ -22,9 +22,8 @@ The module has two main workflows:
 
 | Control | Location | Purpose |
 | --- | --- | --- |
-| `Piecemeal Armor Profile` | Actor sheet inventory area | Sets baseline armor and Torso/Arms/Legs overrides. |
-| Baseline armor | Profile panel | Uses a normal D35E armor item as the default armor source. |
-| Torso/Arms/Legs override | Profile panel | Replaces only that armor category. Empty slots inherit the baseline when the baseline catalog supports that category. |
+| Native `Armor` slot | Actor sheet Armor and Equipment list | Uses a normal D35E armor item as the baseline armor source. |
+| `PAcS: Torso`, `PAcS: Arms`, `PAcS: Legs` | Actor sheet Armor and Equipment list | Replaces only that armor category. Empty PAcS slots inherit the native Armor baseline when the baseline catalog supports that category. |
 | `Worn in profile` chip | Actor inventory rows | Marks source items whose native D35E armor math is temporarily neutralized to prevent double-counting. |
 | `Called Shot` dropdown | D35E attack/use dialog | Applies a configured called-shot penalty through the native attack workflow. |
 | Full-attack picker | Opens after `Full Attack` when configured | Lets the user choose `None` or a location for each D35E attack label. |
@@ -42,7 +41,7 @@ Settings:
 - `Rules mode`: `RAW-adapted automation` is the default and applies Ultimate Combat style formulas, feat limits, severity, saves, and outcomes where D35E can support them. `Legacy v1.0 workflow` keeps the older permissive full-attack behavior and manual outcome buttons.
 - `Edit called shot profiles`: opens the profile editor for locations, attack penalties, severity tiers, coverage slots, and automatic or legacy manual effects.
 - `Piecemeal armor workflow`: `Native armor profile` is the v1.2 default. `Legacy aggregate sync` keeps the old manual sync/restore workflow for older worlds that still need it.
-- `Enable piecemeal armor automation`: shows the actor armor profile, piece slots, local armor data, and legacy compatibility tools.
+- `Enable piecemeal armor automation`: adds the PAcS inventory slots, item piece fields, local armor data, and legacy compatibility tools.
 - `Enable called shot helper`: adds the `Called Shot` selector to D35E's native attack dialog and applies the configured attack penalty to the native roll breakdown.
 - `Called shots on full attacks`: controls whether full attacks ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections. See [Full Attacks](#full-attacks).
 - `Called-shot local armor AC`: controls whether D35E's native Apply Damage AC check uses the called location's piecemeal armor instead of the active armor profile's total armor contribution, shows that adjustment only, or ignores local armor. See [Local Armor AC](#local-armor-ac).
@@ -117,21 +116,17 @@ Automatic effects are recorded on a target actor ledger with the source message,
 
 The v1.2 workflow starts from the D35E armor users already understand. Equip normal armor normally. If the actor is only wearing one ordinary D35E armor item and no profile overrides are set, D35E remains the source of truth for AC.
 
-When the actor mixes armor pieces, open the actor sheet inventory area and use `Piecemeal Armor Profile`.
+When the actor mixes armor pieces, open the actor sheet inventory area and stay in D35E's normal Armor and Equipment list.
 
-![Piecemeal armor profile controls](assets/piecemeal-armor-profile.png)
+Inventory slots:
 
-Profile controls:
+- `Armor`: the ordinary D35E armor slot. This is the baseline armor source.
+- `PAcS: Torso`: replaces only torso armor.
+- `PAcS: Arms`: replaces only arm armor.
+- `PAcS: Legs`: replaces only leg armor.
+- Clear icon on a PAcS slot item: restores that item and empties the PAcS slot.
 
-- `Baseline armor`: the ordinary D35E armor item used as the default source.
-- `Torso override`: replaces only torso armor.
-- `Arms override`: replaces only arm armor.
-- `Legs override`: replaces only leg armor.
-- `Apply Profile`: recomputes the profile if a sheet did not refresh automatically.
-- `Clear Profile`: restores source items and returns to native D35E armor behavior.
-- `Migrate Legacy`: appears only when older visible aggregate/component data is available to convert into profile slots.
-
-Empty override slots inherit from the baseline when the baseline maps to that category. For example, studded leather in the baseline can fill torso, arms, and legs. A breastplate maps to torso only, so empty arms and legs remain unarmored unless a table assigns overrides.
+Empty PAcS slots inherit from the native Armor baseline when the baseline maps to that category. For example, studded leather in the Armor slot can fill torso, arms, and legs. A breastplate maps to torso only, so empty arms and legs remain unarmored unless a table assigns overrides.
 
 RAW-adapted math:
 
@@ -142,7 +137,7 @@ RAW-adapted math:
 
 Known armor items use the module catalog for padded, leather, studded leather, hide, chain, breastplate/plate torso, half-plate, and full plate mappings. Unknown custom armor is marked `Needs piece values` instead of being guessed. Use the shield icon on an inventory row to open explicit piece fields for unusual published pieces or custom 3.5e adaptations before assigning them.
 
-When a composite profile is active, the module creates a hidden zero-weight D35E armor carrier so D35E still owns the final AC, max Dex, ACP, ASF, and speed math. Source items remain visible in inventory with a `worn in profile` chip, and their native armor math is backed up and neutralized to prevent double-counting. The old visible `Piecemeal Armor Aggregate` item is only used in `Legacy aggregate sync` mode.
+When a composite profile is active, the module creates a hidden zero-weight, slotless D35E carrier so D35E still owns the final AC, max Dex, ACP, ASF, and speed math without occupying the visible Armor slot. Source items remain visible in inventory with a `worn in profile` chip, and their native armor math is backed up and neutralized to prevent double-counting. The old visible `Piecemeal Armor Aggregate` item is only used in `Legacy aggregate sync` mode.
 
 ## Profile Editor
 
@@ -182,7 +177,7 @@ That is expected in RAW-adapted mode for some critical and debilitating outcomes
 
 ### Armor totals or weight look doubled
 
-Use `Clear Profile` on the actor's `Piecemeal Armor Profile`, then assign the baseline and overrides again. In the native profile workflow, only the hidden profile carrier should contribute composite D35E armor math; source items should show `worn in profile` and should not also contribute native armor AC.
+Clear each occupied `PAcS:` slot with its clear icon, then assign the pieces again. In the native profile workflow, only the hidden slotless profile carrier should contribute composite D35E armor math; source items should show `worn in profile` and should not also contribute native armor AC.
 
 ### The profile says Needs piece values
 
@@ -198,7 +193,7 @@ GitHub issues are the preferred place for bug reports, compatibility notes, and 
 
 ### I still see a Piecemeal Armor Aggregate item
 
-Open module settings and confirm `Piecemeal armor workflow` is set to `Native armor profile`. Then use the actor profile's `Migrate Legacy` action or `Clear Profile`. The visible aggregate is retained only for the legacy workflow.
+Open module settings and confirm `Piecemeal armor workflow` is set to `Native armor profile`. Clear occupied `PAcS:` slots if the actor is already using the native workflow. The visible aggregate is retained only for the legacy workflow.
 
 ### Local armor did not change the Apply Damage AC
 

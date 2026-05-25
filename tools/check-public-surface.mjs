@@ -53,11 +53,11 @@ if (findings.length) {
 const requiredPublicText = [
   {
     file: "README.md",
-    text: "Piecemeal Armor Profile"
+    text: "PAcS: Torso"
   },
   {
     file: "docs/USER_GUIDE.md",
-    text: "Piecemeal Armor Profile"
+    text: "PAcS: Torso"
   },
   {
     file: "docs/USER_GUIDE.md",
@@ -73,7 +73,7 @@ const requiredPublicText = [
   },
   {
     file: "scripts/ui.js",
-    text: "Use the normal D35E armor slot as a baseline"
+    text: "Assigned armor to PAcS"
   },
   {
     file: "README.md",

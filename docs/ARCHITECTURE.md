@@ -4,7 +4,7 @@ The module is intentionally additive. It does not edit D35E system files, patch 
 
 ## Piecemeal Armor
 
-The default v1.2 armor workflow is an actor-level Piecemeal Armor Profile. The actor's normal D35E armor item can seed a baseline, and Torso/Arms/Legs assignments override only the selected category. Known armor names map to catalog pieces; explicit component flags are used for unusual or custom pieces.
+The default v1.2 armor workflow is an actor-level profile presented through D35E's native inventory. The actor's normal D35E `Armor` slot seeds the baseline, and module-owned `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` slots override only the selected category. Known armor names map to catalog pieces; explicit component flags are used for unusual or custom pieces.
 
 When no overrides are active, D35E's native armor item remains the source of truth. When a composite profile is active, the module:
 
@@ -12,11 +12,11 @@ When no overrides are active, D35E's native armor item remains the source of tru
 2. Calculates the final armor profile.
 3. Stores each source item's native D35E armor fields under a module backup flag.
 4. Neutralizes native armor fields on source items so D35E does not double count them.
-5. Creates or updates one hidden zero-weight D35E equipment carrier named `PAcS Armor Profile`.
+5. Creates or updates one hidden zero-weight, slotless D35E equipment carrier named `PAcS Armor Profile`.
 
 In RAW-adapted mode, aggregate armor math follows the supplied Ultimate Combat reference as closely as D35E can represent: armor bonuses and weight/cost are summed, a complete arms+legs+torso suit gains `+1`, max Dex/ACP/ASF use worst-piece behavior, mixed complete suits add `+5%` ASF, and separately enchanted pieces use the most protective category for masterwork/enhancement benefit. Legacy mode preserves the older v1.0 summed ACP/ASF/enhancement behavior.
 
-Clearing the profile reverses backed-up fields and removes the hidden carrier. The old visible `Piecemeal Armor Aggregate` path remains behind the `Legacy aggregate sync` setting for older worlds.
+Clearing PAcS slots reverses backed-up fields and removes the hidden carrier when the actor returns to baseline-only or unarmored native behavior. The old visible `Piecemeal Armor Aggregate` path remains behind the `Legacy aggregate sync` setting for older worlds.
 
 ## Called Shots
 

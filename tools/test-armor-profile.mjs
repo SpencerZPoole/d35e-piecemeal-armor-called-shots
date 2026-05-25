@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { ARMOR_PROFILE_STATUS, applyArmorProfile, clearArmorProfile, migrateLegacyArmorProfile, resolveArmorProfile, setArmorProfileBaseline, setArmorProfileSlot } from "../scripts/armor-profile.js";
-import { FLAGS, MODULE_ID } from "../scripts/constants.js";
+import { ARMOR_PROFILE_STATUS, applyArmorProfile, categoryForPacsEquipmentSlot, clearArmorProfile, migrateLegacyArmorProfile, registerPacsEquipmentSlots, resolveArmorProfile, setArmorProfileBaseline, setArmorProfileSlot } from "../scripts/armor-profile.js";
+import { FLAGS, MODULE_ID, PACS_EQUIPMENT_SLOTS } from "../scripts/constants.js";
 
 globalThis.game = {
   settings: {
@@ -9,6 +9,19 @@ globalThis.game = {
       if (key === "armorWorkflowMode") return "nativeProfile";
       if (key === "rulesMode") return "rawAdapted";
       return true;
+    }
+  }
+};
+
+globalThis.CONFIG = {
+  D35E: {
+    defaultSlotCapacities: {
+      armor: 1,
+      shield: 1,
+      slotless: 999
+    },
+    equipmentSlots: {
+      misc: { slotless: "D35E.EquipSlotSlotless" }
     }
   }
 };
@@ -65,6 +78,7 @@ function actor(items = [], flags = {}) {
     id: "actor-1",
     items,
     flags,
+    refreshCount: 0,
     getFlag(moduleId, key) {
       return this.flags?.[moduleId]?.[key];
     },
@@ -86,9 +100,19 @@ function actor(items = [], flags = {}) {
         const index = this.items.findIndex((item) => item.id === id);
         if (index >= 0) this.items.splice(index, 1);
       }
+    },
+    async refresh(options = {}) {
+      this.refreshCount += 1;
+      this.lastRefreshOptions = options;
+      return this;
     }
   };
 }
+
+assert.equal(registerPacsEquipmentSlots(), true);
+assert.deepEqual(Object.keys(CONFIG.D35E.defaultSlotCapacities).slice(0, 5), ["armor", "pacsTorso", "pacsArms", "pacsLegs", "shield"]);
+assert.equal(CONFIG.D35E.equipmentSlots.misc.pacsTorso, "D35E.EquipSlotPacsTorso");
+assert.equal(categoryForPacsEquipmentSlot(PACS_EQUIPMENT_SLOTS.arms), "arms");
 
 const studded = equipment("studded", "Studded Leather", {
   equipped: true,
@@ -101,6 +125,8 @@ let resolved = resolveArmorProfile(profileActor);
 assert.equal(resolved.status, ARMOR_PROFILE_STATUS.nativeArmor);
 assert.equal(resolved.summary.armorBonus, 3);
 assert.equal(resolved.summary.completeSuit, true);
+await applyArmorProfile(profileActor);
+assert.equal(profileActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
 
 const unequippedStudded = equipment("studded-2", "Studded Leather", {
   equipped: false,
@@ -116,6 +142,76 @@ assert.equal(unequippedStudded.system.equipped, true);
 assert.equal(unequippedStudded.system.equipmentType, "armor");
 assert.equal(baselineOnlyActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
 
+const armsOnlyStudded = equipment("studded-arms", "Studded Leather", {
+  equipped: false,
+  armor: { value: 3, enh: 0, dex: 5, acp: 0 },
+  spellFailure: 15,
+  weight: 20
+});
+const armsOnlyActor = actor([armsOnlyStudded]);
+await setArmorProfileSlot(armsOnlyActor, "arms", "studded-arms");
+resolved = resolveArmorProfile(armsOnlyActor);
+assert.equal(resolved.status, ARMOR_PROFILE_STATUS.compositeProfile);
+assert.equal(resolved.baselineItem, null);
+assert.equal(resolved.summary.armorBonus, 0);
+assert.equal(armsOnlyStudded.system.equipmentType, "misc");
+assert.equal(armsOnlyStudded.system.slot, PACS_EQUIPMENT_SLOTS.arms);
+let carrier = armsOnlyActor.items.find((item) => item.name === "PAcS Armor Profile");
+assert.equal(carrier.system.equipmentType, "misc");
+assert.equal(carrier.system.slot, "slotless");
+assert.equal(carrier.system.armor.value, 0);
+assert.equal(armsOnlyActor.refreshCount > 0, true);
+
+const equippedArmsOnlyStudded = equipment("equipped-studded-arms", "Studded Leather", {
+  equipped: true,
+  armor: { value: 3, enh: 0, dex: 5, acp: 0 },
+  spellFailure: 15,
+  weight: 20
+});
+const equippedArmsOnlyActor = actor([equippedArmsOnlyStudded]);
+await setArmorProfileSlot(equippedArmsOnlyActor, "arms", "equipped-studded-arms");
+resolved = resolveArmorProfile(equippedArmsOnlyActor);
+assert.equal(resolved.status, ARMOR_PROFILE_STATUS.compositeProfile);
+assert.equal(resolved.baselineItem, null);
+assert.equal(resolved.summary.armorBonus, 0);
+assert.equal(equippedArmsOnlyStudded.system.equipmentType, "misc");
+assert.equal(equippedArmsOnlyStudded.system.slot, PACS_EQUIPMENT_SLOTS.arms);
+assert.equal(equippedArmsOnlyActor.items.find((item) => item.name === "PAcS Armor Profile").system.armor.value, 0);
+assert.equal(equippedArmsOnlyActor.refreshCount > 0, true);
+
+const zeroStudded = equipment("zero-studded", "Studded Leather", { equipped: false });
+const zeroChain = equipment("zero-chain", "Chainmail", { equipped: false, equipmentSubtype: "mediumArmor" });
+const zeroActor = actor([zeroStudded, zeroChain]);
+await setArmorProfileSlot(zeroActor, "arms", "zero-studded");
+await setArmorProfileSlot(zeroActor, "legs", "zero-chain");
+resolved = resolveArmorProfile(zeroActor);
+assert.equal(resolved.summary.armorBonus, 0);
+assert.equal(zeroActor.items.find((item) => item.name === "PAcS Armor Profile").system.armor.value, 0);
+await setArmorProfileSlot(zeroActor, "arms", "zero-chain");
+resolved = resolveArmorProfile(zeroActor);
+assert.equal(resolved.profile.slots.arms, "zero-chain");
+assert.equal(resolved.profile.slots.legs, null);
+assert.equal(resolved.pieces.length, 1);
+assert.equal(resolved.summary.armorBonus, 1);
+
+const switchStudded = equipment("switch-studded", "Studded Leather", { equipped: false });
+const switchChain = equipment("switch-chain", "Chainmail", { equipped: false, equipmentSubtype: "mediumArmor" });
+const switchActor = actor([switchStudded, switchChain]);
+await setArmorProfileSlot(switchActor, "arms", "switch-studded");
+assert.equal(resolveArmorProfile(switchActor).summary.armorBonus, 0);
+await setArmorProfileSlot(switchActor, "arms", "switch-chain");
+resolved = resolveArmorProfile(switchActor);
+assert.equal(resolved.summary.armorBonus, 1);
+assert.equal(switchStudded.system.equipmentType, "armor");
+assert.equal(switchChain.system.equipmentType, "misc");
+assert.equal(switchChain.system.slot, PACS_EQUIPMENT_SLOTS.arms);
+assert.equal(switchActor.items.find((item) => item.name === "PAcS Armor Profile").system.armor.value, 1);
+await setArmorProfileSlot(switchActor, "arms", null);
+resolved = resolveArmorProfile(switchActor);
+assert.equal(resolved.status, ARMOR_PROFILE_STATUS.empty);
+assert.equal(switchChain.system.equipmentType, "armor");
+assert.equal(switchActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
+
 const chainmail = equipment("chainmail", "Chainmail", {
   equipped: false,
   equipmentSubtype: "mediumArmor",
@@ -127,15 +223,23 @@ profileActor = actor([studded, chainmail]);
 await setArmorProfileSlot(profileActor, "legs", "chainmail");
 resolved = resolveArmorProfile(profileActor);
 assert.equal(resolved.status, ARMOR_PROFILE_STATUS.compositeProfile);
-assert.equal(resolved.profile.baselineItemId, "studded");
+assert.equal(resolved.profile.baselineItemId, null);
+assert.equal(resolved.baselineItem.id, "studded");
 assert.equal(resolved.summary.armorBonus, 2);
 assert.equal(resolved.summary.completeSuit, true);
 assert.equal(profileActor.items.some((item) => item.name === "PAcS Armor Profile"), true);
-assert.equal(studded.system.equipmentType, "misc");
+carrier = profileActor.items.find((item) => item.name === "PAcS Armor Profile");
+assert.equal(carrier.system.equipmentType, "misc");
+assert.equal(carrier.system.slot, "slotless");
+assert.equal(carrier.system.armor.value, 2);
+assert.equal(studded.system.equipmentType, "armor");
+assert.equal(studded.system.armor.value, 0);
 assert.equal(chainmail.system.equipmentType, "misc");
+assert.equal(chainmail.system.slot, PACS_EQUIPMENT_SLOTS.legs);
 
 await clearArmorProfile(profileActor);
 assert.equal(studded.system.equipmentType, "armor");
+assert.equal(studded.system.armor.value, 3);
 assert.equal(chainmail.system.equipmentType, "armor");
 assert.equal(profileActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
 
