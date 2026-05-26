@@ -102,6 +102,27 @@ function formatSigned(value) {
   return number >= 0 ? `+${number}` : String(number);
 }
 
+function profileLocationArmor(summary, coverageSlot) {
+  const pieces = Array.isArray(summary?.activePieces) ? summary.activePieces : [];
+  const matchingPieces = pieces.filter((piece) => pieceCoversCalledShot(piece, coverageSlot));
+  return {
+    pieces: matchingPieces,
+    localTotal: matchingPieces.reduce((total, piece) => total + calculateArmorPieceLocalTotal(summary, piece), 0),
+    pieceCount: matchingPieces.length
+  };
+}
+
+function localArmorSourceName(localArmor, payload, mode) {
+  const label = payload?.locationLabel ?? payload?.coverageSlot ?? localArmor.coverageSlot;
+  const aggregate = numberOr(localArmor?.aggregateTotal);
+  const local = numberOr(localArmor?.localTotal);
+  const localLabel = localArmor?.source === "helmet"
+    ? localArmor.pieceCount ? "helmet" : "no helmet"
+    : "location";
+  const suffix = mode === LOCAL_ARMOR_MODES.display ? " (advisory)" : "";
+  return `Called Shot Location Armor: ${label} (profile ${aggregate} -> ${localLabel} ${local})${suffix}`;
+}
+
 function localArmorMode() {
   return LOCAL_ARMOR_MODES.adjust;
 }
@@ -271,7 +292,8 @@ export function calculateLocalArmorAdjustment(actor, coverageSlot) {
   }
 
   if (helmetRuleActive) {
-    const helmet = findActiveHelmetCoverage(actor, coverageSlot);
+    const inherited = profileLocationArmor(summary, coverageSlot);
+    const helmet = findActiveHelmetCoverage(actor, coverageSlot, { inheritedArmor: inherited.localTotal });
     if (!helmet) return null;
     const localTotal = helmet.localArmorBonus;
     if (aggregateTotal === 0 && localTotal === 0) return null;
@@ -284,6 +306,10 @@ export function calculateLocalArmorAdjustment(actor, coverageSlot) {
       adjustment: localTotal - aggregateTotal,
       pieceCount: helmet.id ? 1 : 0,
       source: "helmet",
+      inheritedLocalTotal: inherited.localTotal,
+      inheritedPieces: inherited.pieces.map((piece) => ({ id: piece.id, name: piece.name, total: calculateArmorPieceLocalTotal(summary, piece) })),
+      helmetCap: helmet.cap,
+      helmetName: helmet.name,
       pieces: helmet.id ? [{ id: helmet.id, name: helmet.name, total: localTotal }] : []
     };
   }
@@ -315,10 +341,7 @@ export function applyLocalArmorAdjustment(actor, finalAc, payload, { mode = LOCA
   if (!localArmor) return touchAdjustment ?? coverAdjustment;
 
   finalAc.acModifiers = Array.isArray(finalAc.acModifiers) ? finalAc.acModifiers : [];
-  const label = payload?.locationLabel ?? payload?.coverageSlot ?? localArmor.coverageSlot;
-  const sourceName = mode === LOCAL_ARMOR_MODES.display
-    ? `Called Shot Location Armor: ${label} (advisory)`
-    : `Called Shot Location Armor: ${label}`;
+  const sourceName = localArmorSourceName(localArmor, payload, mode);
   finalAc.acModifiers.push({
     sourceName,
     value: formatSigned(localArmor.adjustment)

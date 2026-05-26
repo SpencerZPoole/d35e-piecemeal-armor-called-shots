@@ -42,7 +42,7 @@ Settings:
 - `Edit called shot profiles`: opens the profile editor for locations, attack penalties, severity tiers, coverage slots, and outcome effects.
 - `Enable piecemeal armor`: adds the PAcS inventory slots, item piece fields, piecemeal armor math, hidden D35E carrier, and location armor data. Turning it off suspends piecemeal armor automation without disabling called shots.
 - `Enable called shots`: adds the `Called Shot` selector to D35E's native attack dialog, applies the configured attack penalty to the native roll breakdown, carries context into Apply Damage, and posts outcome cards. Turning it off does not disable piecemeal armor.
-- `Enable helmet head coverage house rule`: optional and disabled by default. Configured helmets in D35E's native `Head` slot protect Head, Eye, and Ear called shots through local armor AC without adding to total AC.
+- `Enable helmet head coverage house rule`: optional and disabled by default. Configured helmets in D35E's native `Head` slot cap inherited Head, Eye, and Ear local armor AC without adding to total AC.
 - `Apply helmet Spot/Listen penalties`: optional and disabled by default. Configured helmets in D35E's native `Head` slot add their table-defined Spot and Listen penalties to native D35E skill rolls.
 - `Called-shot effect automation`: controls actor changes after Apply Damage. `GM confirms severe effects` is the default: normal outcomes apply automatically, while critical and debilitating outcomes ask the GM first. `Apply effects automatically` applies all resolved outcomes. `Advisory only` never changes actor data unless the GM clicks a chat-card severity button.
 - `Called shots on full attacks`: controls whether full attacks ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections. See [Full Attacks](#full-attacks).
@@ -65,7 +65,7 @@ Fast-forward attacks keep D35E's no-dialog behavior. They do not show the called
 
 A called shot carries its location into D35E's native Apply Damage workflow. When the GM clicks Apply, the module adjusts the target's AC by replacing the active armor profile's total armor contribution with the matching piecemeal armor location.
 
-Example: if the armor profile contributes 18 armor AC but the target's legs contribute 17, a called shot to the legs applies `Called Shot Location Armor: Leg -1` in AC Details before D35E checks hit and crit. If the called location is better protected than the profile total, the adjustment can be positive.
+Example: if the armor profile contributes 18 armor AC but the target's legs contribute 17, a called shot to the legs applies an AC Details row such as `Called Shot Location Armor: Leg (profile 18 -> location 17) -1` before D35E checks hit and crit. If the called location is better protected than the profile total, the adjustment can be positive.
 
 Location armor AC needs piecemeal armor enabled, called shots enabled, an active armor profile or enabled helmet head coverage, and a called-shot profile location with matching coverage slot(s). Called-shot touch attacks are checked against normal AC rather than touch AC. No-check damage, missing targets, disabled subsystems, and targets without matching local armor keep D35E's normal behavior.
 
@@ -78,10 +78,10 @@ Workflow:
 1. Enable `Enable helmet head coverage house rule` in module settings.
 2. Add or configure an equipment item and equip it in D35E's native `Head` slot.
 3. Click the shield icon on that inventory row, open the item sheet, and check `Use as helmet head coverage`.
-4. Choose a helmet family or enter a custom head armor value. Blank custom armor uses the selected family's torso armor value as the local head armor.
+4. Choose a helmet family or enter a custom head armor cap. Blank custom armor uses the selected family's torso armor value as the cap.
 5. Leave coverage as `head; eyes; ears` unless your table wants a narrower or broader helmet.
 
-When the setting is on, Head, Eye, and Ear called shots use the configured helmet instead of the torso fallback. If no configured helmet is equipped in the `Head` slot, the local head armor is treated as `0`, so a head called shot against an armored target can lower the Apply Damage AC. Torso, heart, vitals, arms, hands, legs, and feet keep the normal PAcS location armor behavior.
+When the setting is on, Head, Eye, and Ear called shots use the configured helmet instead of the torso fallback. The helmet does not add armor by itself; it inherits the active armor profile's head/torso local protection and caps that value by the helmet family or custom cap. For example, a chain-family helmet on a chain torso can allow up to the chain torso's head protection, while a leather cap can limit that same inherited protection to the leather cap value. If no configured helmet is equipped in the `Head` slot, the local head armor is treated as `0`, so a head called shot against an armored target can lower the Apply Damage AC. Torso, heart, vitals, arms, hands, legs, and feet keep the normal PAcS location armor behavior.
 
 The separate `Apply helmet Spot/Listen penalties` setting reads the same configured helmet. Enter Spot and Listen penalty numbers on the item; the module adds a `Helmet (...)` row to native D35E Spot and Listen roll breakdowns. These penalties are table-defined and default to `0`; the module does not hardcode AD&D 2e helmet table values.
 
@@ -232,7 +232,7 @@ Clear occupied `PAcS:` slots if the actor is already using the native workflow. 
 
 Confirm piecemeal armor and called shots are both enabled. For normal PAcS armor, the target needs an active armor profile and a called-shot location whose coverage slot matches at least one resolved armor piece. No-check damage intentionally skips location armor AC.
 
-For the optional helmet house rule, also confirm the helmet setting is enabled, the helmet item is equipped in D35E's native `Head` slot, and `Use as helmet head coverage` is checked on that item.
+For the optional helmet house rule, also confirm the helmet setting is enabled, the helmet item is equipped in D35E's native `Head` slot, and `Use as helmet head coverage` is checked on that item. A magic item or equipment item with "Helmet" in its name will not affect local head armor until that checkbox and family/custom cap are configured.
 
 ### I want D&D 3.5 RAW only
 

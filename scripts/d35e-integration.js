@@ -2,7 +2,7 @@ import { FULL_ATTACK_FEAT_RULE_MODES, FULL_ATTACK_MODES, MODULE_ID, RULES_MODES,
 import { getCurrentRulesMode } from "./armor.js";
 import {
   applyAutomaticCalledShotOutcome,
-  buildAttackExtraPart,
+  buildAttackExtraParts,
   buildCalledShotCardPayload,
   clearCalledShot,
   consumeCalledShot,
@@ -337,11 +337,11 @@ export async function patchD35EAttackRolls() {
     const actor = options.actor ?? this.actor ?? this.item?.actor;
     if (settingEnabled(SETTINGS.enableCalledShots, true) && options.critical !== true) {
       calledShot = consumeCalledShot(actor, this.item);
-      const extraPart = buildAttackExtraPart(calledShot);
-      if (extraPart) {
+      const extraParts = buildAttackExtraParts(calledShot);
+      if (extraParts.length) {
         options = {
           ...options,
-          extraParts: [...(options.extraParts ?? []), extraPart]
+          extraParts: [...(options.extraParts ?? []), ...extraParts]
         };
       }
     }

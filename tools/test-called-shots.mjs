@@ -3,6 +3,8 @@ import { FULL_ATTACK_FEAT_RULE_MODES, FULL_ATTACK_MODES, OUTCOME_MODES, RULES_MO
 import {
   applyAutomaticCalledShotOutcome,
   buildAttackExtraPart,
+  buildAttackExtraParts,
+  buildCalledShotCardPayload,
   calledShotOutcomeNeedsConfirmation,
   calculateCalledShotSituationalPenalty,
   clearCalledShot,
@@ -32,6 +34,20 @@ const arm = getLocation(profile, "arm");
 assert.equal(arm.penalty, -2);
 assert.equal(arm.coverageSlot, "arms");
 assert.equal(arm.outcomes.critical.some((effect) => effect.type === "abilityDamage"), true);
+assert.deepEqual(Object.fromEntries(
+  ["arm", "chest", "ear", "eye", "hand", "head", "heart", "leg", "neck", "vitals"].map((id) => [id, getLocation(profile, id).penalty])
+), {
+  arm: -2,
+  chest: -2,
+  ear: -10,
+  eye: -10,
+  hand: -5,
+  head: -5,
+  heart: -10,
+  leg: -2,
+  neck: -10,
+  vitals: -5
+});
 assert.equal(getLocation(profile, "heart").penalty, -10);
 assert.equal(getLocation(profile, "heart").difficulty, "challenging");
 
@@ -106,6 +122,7 @@ assert.equal(getPendingCalledShot(actor, item, "user-1").locationId, "eye");
 
 const extra = buildAttackExtraPart(payload);
 assert.deepEqual(extra, { part: "-10", source: "Called Shot: Eye", value: -10 });
+assert.deepEqual(buildAttackExtraParts(payload), [{ part: "-10", source: "Called Shot: Eye", value: -10 }]);
 
 const consumed = consumeCalledShot(actor, item, "user-1");
 assert.equal(consumed.locationId, "eye");
@@ -298,6 +315,27 @@ game.user.targets = new Set([reachTarget]);
 const meleeReachPenalty = calculateCalledShotSituationalPenalty(rangedActor, { system: { actionType: "mwak" } }, "Scene.test.Token.reach");
 assert.equal(meleeReachPenalty.distance, 10);
 assert.equal(meleeReachPenalty.penalty, -2);
+game.user.targets = new Set([targetToken]);
+
+game.user.targets = new Set([reachTarget]);
+const meleeHead = stageCalledShot(rangedActor, { id: "claw", actor: rangedActor, system: { actionType: "mwak" } }, "head", {
+  profiles,
+  userId: "melee-head",
+  targetUuid: "Scene.test.Token.reach"
+});
+assert.equal(meleeHead.basePenalty, -5);
+assert.equal(meleeHead.rangePenalty, -2);
+assert.equal(meleeHead.penalty, -7);
+assert.deepEqual(buildAttackExtraParts(meleeHead), [
+  { part: "-5", source: "Called Shot: Head", value: -5 },
+  { part: "-2", source: "Called Shot Range/Reach", value: -2 }
+]);
+assert.deepEqual(buildCalledShotCardPayload(meleeHead).penaltyBreakdown, [
+  { label: "Called Shot: Head", value: -5, valueLabel: "-5" },
+  { label: "Called Shot Range/Reach", value: -2, valueLabel: "-2" }
+]);
+assert.equal(buildCalledShotCardPayload(meleeHead).hasPenaltyBreakdown, true);
+clearCalledShot(rangedActor, { id: "claw", actor: rangedActor, system: { actionType: "mwak" } }, "melee-head");
 game.user.targets = new Set([targetToken]);
 
 assert.equal(determineCalledShotSeverity({ damage: 10, crit: false }), "normal");

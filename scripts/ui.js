@@ -174,10 +174,16 @@ export async function createCalledShotChatCard({ payload, actor, item, attackTot
     : outcomeMode === OUTCOME_MODES.confirmSevere
       ? "<p><strong>Outcome:</strong> Use D35E's native Apply Damage button. Normal effects apply automatically; critical and debilitating effects ask the GM before changing the target.</p>"
       : "<p><strong>Outcome:</strong> Advisory only. Use D35E's Apply Damage result, then the GM can choose a severity to apply from this card.</p>";
+  const penaltyDetails = payload.hasPenaltyBreakdown
+    ? `<ul class="d35e-pacs-penalty-breakdown">${payload.penaltyBreakdown.map((part) => (
+      `<li>${escapeHtml(part.label)} ${escapeHtml(part.valueLabel)}</li>`
+    )).join("")}</ul>`
+    : "";
   const content = `
     <div class="d35e-pacs-chat-card">
       <h3>Called Shot: ${escapeHtml(payload.locationLabel)}</h3>
-      <p><strong>Penalty:</strong> ${payload.penalty}</p>
+      <p><strong>Penalty:</strong> ${escapeHtml(payload.penaltyLabel ?? payload.penalty)}</p>
+      ${penaltyDetails}
       <p><strong>Target:</strong> ${escapeHtml(targetName)}</p>
       <p><strong>Attack total:</strong> ${attackTotal ?? "unknown"}${isCriticalThreat ? " (critical threat)" : ""}</p>
       ${coverageText}
@@ -626,7 +632,7 @@ function injectPiecemealItemPanel(item, root, form) {
   helmetHeading.textContent = "Helmet head coverage house rule";
   const helmetHelp = document.createElement("p");
   helmetHelp.classList.add("d35e-pacs-help");
-  helmetHelp.textContent = "Configured helmets work from D35E's native Head slot. Their local armor applies only to Head, Eye, and Ear called shots when the house-rule setting is enabled.";
+  helmetHelp.textContent = "Configured helmets work from D35E's native Head slot. They inherit the active torso/head armor up to the helmet family or custom cap for Head, Eye, and Ear called shots only.";
   const helmetEnabledLabel = document.createElement("label");
   helmetEnabledLabel.classList.add("d35e-pacs-checkbox");
   const helmetEnabled = document.createElement("input");
@@ -638,8 +644,8 @@ function injectPiecemealItemPanel(item, root, form) {
   helmetGrid.classList.add("d35e-pacs-grid");
   helmetGrid.append(
     buildLabeledSelect("Helmet family ", `flags.${MODULE_ID}.${FLAGS.helmet}.armorFamily`, helmetFlag.armorFamily ?? helmetFlag.family ?? "", HELMET_FAMILY_OPTIONS),
-    buildLabeledInput("Custom head armor ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.localArmorBonus`, helmetFlag.localArmorBonus ?? "", {
-      placeholder: "blank = family torso AC"
+    buildLabeledInput("Custom head armor cap ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.localArmorBonus`, helmetFlag.localArmorBonus ?? "", {
+      placeholder: "blank = family cap"
     }),
     buildLabeledInput("Helmet coverage slot(s) ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.coverageSlots`, helmetFlag.coverageSlots ?? helmetFlag.coverageSlot ?? DEFAULT_HELMET_COVERAGE, {
       placeholder: DEFAULT_HELMET_COVERAGE

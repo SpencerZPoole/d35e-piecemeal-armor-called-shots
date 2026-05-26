@@ -66,6 +66,13 @@ function torsoArmorBonusForFamily(family) {
   return torso ? numberOr(torso.armorBonus, 0) : 0;
 }
 
+function inheritedHelmetArmor(cap, inheritedArmor) {
+  const capValue = numberOr(cap, 0);
+  const inheritedValue = numberOrNull(inheritedArmor);
+  if (inheritedValue === null) return capValue;
+  return Math.max(0, Math.min(capValue, inheritedValue));
+}
+
 export function getHelmetFlag(item) {
   return getFlagData(item, FLAGS.helmet) ?? {};
 }
@@ -104,25 +111,28 @@ export function helmetCoversCalledShot(item, coverageSlot) {
   return armorCoverageOverlaps(readHelmetCoverage(item), coverageSlot);
 }
 
-export function calculateHelmetLocalArmor(item) {
+export function calculateHelmetLocalArmor(item, { inheritedArmor = null } = {}) {
   const flag = getHelmetFlag(item);
   const custom = numberOrNull(flag.localArmorBonus);
-  const base = custom ?? torsoArmorBonusForFamily(flag.armorFamily ?? flag.family);
+  const cap = custom ?? torsoArmorBonusForFamily(flag.armorFamily ?? flag.family);
+  const base = inheritedHelmetArmor(cap, inheritedArmor);
   return {
     id: item?.id ?? item?._id ?? null,
     name: item?.name ?? "Helmet",
     armorFamily: keyForFamily(flag.armorFamily ?? flag.family),
     coverageSlots: readHelmetCoverage(item),
     localArmorBonus: numberOr(base, 0),
+    inheritedArmor: numberOrNull(inheritedArmor),
+    cap: numberOr(cap, 0),
     custom: custom !== null
   };
 }
 
-export function findActiveHelmetCoverage(actor, coverageSlot) {
+export function findActiveHelmetCoverage(actor, coverageSlot, options = {}) {
   if (!isHelmetHeadCoverageEnabled() || !isHeadCoverageTarget(coverageSlot)) return null;
   const helmets = getItems(actor)
     .filter((item) => isActiveHelmet(item) && helmetCoversCalledShot(item, coverageSlot))
-    .map((item) => calculateHelmetLocalArmor(item))
+    .map((item) => calculateHelmetLocalArmor(item, options))
     .sort((a, b) => b.localArmorBonus - a.localArmorBonus);
   if (helmets.length > 1) {
     console.warn(`${MODULE_ID} | Multiple configured helmets are equipped in the Head slot; using the strongest local head armor value.`);
@@ -133,6 +143,8 @@ export function findActiveHelmetCoverage(actor, coverageSlot) {
     armorFamily: "",
     coverageSlots: DEFAULT_HELMET_COVERAGE,
     localArmorBonus: 0,
+    inheritedArmor: numberOrNull(options.inheritedArmor),
+    cap: 0,
     custom: false
   };
 }

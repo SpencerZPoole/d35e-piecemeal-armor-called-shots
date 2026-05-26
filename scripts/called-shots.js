@@ -325,6 +325,47 @@ export function buildAttackExtraPart(payload) {
   };
 }
 
+function attackModifierPart(source, value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number === 0) return null;
+  return {
+    part: String(number),
+    source,
+    value: number
+  };
+}
+
+function formatSigned(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return String(value ?? "");
+  return number > 0 ? `+${number}` : String(number);
+}
+
+export function buildAttackExtraParts(payload) {
+  if (!payload) return [];
+  const locationLabel = payload.locationLabel ?? payload.locationId ?? "Called Shot";
+  const parts = [
+    attackModifierPart(`Called Shot: ${locationLabel}`, payload.basePenalty ?? payload.penalty),
+    attackModifierPart("Improved Called Shot", payload.featBonus),
+    attackModifierPart("Additional Called Shot", payload.repeatPenalty),
+    ...(payload.rangeParts ?? []).map((part) => attackModifierPart(part.label ?? "Called Shot Range/Reach", part.value))
+  ].filter(Boolean);
+
+  if (!parts.length) return [];
+  const total = parts.reduce((sum, part) => sum + Number(part.value || 0), 0);
+  const remainder = Number(payload.penalty) - total;
+  const remainderPart = attackModifierPart("Called Shot Adjustment", remainder);
+  return remainderPart ? [...parts, remainderPart] : parts;
+}
+
+export function buildCalledShotPenaltyBreakdown(payload) {
+  return buildAttackExtraParts(payload).map((part) => ({
+    label: part.source,
+    value: part.value,
+    valueLabel: formatSigned(part.value)
+  }));
+}
+
 export async function resolveTargetActor(targetUuid) {
   if (!targetUuid || !globalThis.fromUuid) return null;
   const document = await fromUuid(targetUuid);
@@ -444,8 +485,12 @@ export function buildCalledShotCardPayload(payload) {
   const profiles = getCalledShotProfiles();
   const profile = profiles.profiles.find((entry) => entry.id === payload.profileId) ?? getActiveProfile(profiles);
   const location = getLocation(profile, payload.locationId);
+  const penaltyBreakdown = buildCalledShotPenaltyBreakdown(payload);
   return {
     ...payload,
+    penaltyLabel: formatSigned(payload.penalty),
+    penaltyBreakdown,
+    hasPenaltyBreakdown: penaltyBreakdown.length > 1,
     profileLabel: profile.label,
     outcomes: location?.outcomes ?? {}
   };

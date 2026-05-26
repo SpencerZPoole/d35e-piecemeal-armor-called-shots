@@ -198,6 +198,10 @@
   margin: 4px 0;
 }
 
+.d35e-pacs-penalty-breakdown {
+  margin: 2px 0 6px 18px;
+}
+
 .d35e-pacs-armor-preview table,
 .d35e-pacs-ledger table {
   border-collapse: collapse;
