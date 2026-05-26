@@ -16,14 +16,14 @@ RAW-adapted piecemeal armor and called-shot automation for D35E, integrated into
 
 ## Long Description
 
-D35E Piecemeal Armor And Called Shots adds configurable optional-rule helpers for D35E worlds. The v1.2 piecemeal armor workflow lives in D35E's native inventory: ordinary D35E armor in the `Armor` slot remains the baseline, while `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` slots override only the categories a table mixes. Baseline-only armor stays native to D35E; composite armor uses a hidden zero-weight, slotless D35E carrier so the final AC, max Dex, ACP, ASF, and speed math still flow through D35E without exposing a visible aggregate item. Called shots live inside the native D35E attack/use dialog, apply their attack penalty through D35E's normal modifier breakdown, can adjust D35E's native Apply Damage AC check for local piecemeal armor, and can apply, confirm, or leave advisory severity outcomes after D35E resolves hit/crit and post-DR damage.
+D35E Piecemeal Armor And Called Shots adds configurable optional-rule helpers for D35E worlds. The current piecemeal armor workflow lives in D35E's native inventory: ordinary D35E armor in the `Armor` slot remains the baseline, while `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` slots override only the categories a table mixes. Baseline-only armor stays native to D35E; composite armor uses a hidden zero-weight, slotless D35E carrier so the final AC, max Dex, ACP, ASF, and speed math still flow through D35E without exposing a visible aggregate item. Called shots live inside the native D35E attack/use dialog, apply their attack penalty through D35E's normal modifier breakdown, can adjust D35E's native Apply Damage AC check for local piecemeal armor, and can apply, confirm, or leave advisory severity outcomes after D35E resolves hit/crit and post-DR damage.
 
-The module is intentionally explicit that the bundled defaults are PF1e Ultimate Combat adaptation, not official D&D 3.5 RAW. The normal settings focus on table-facing choices: enabling piecemeal armor, enabling called shots, choosing full-attack behavior, choosing whether full-attack called shots require the optional feats, and deciding whether called-shot effects apply automatically, ask the GM before severe outcomes, or stay advisory only. GMs can edit locations, penalties, armor coverage slot(s), and outcome effects from module settings. Coverage fields accept multiple locations such as `head; eyes; ears` or `torso, arms, legs`, and a D35E-calibrated starter catalog fills common padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate mappings. The bundled `PAcS Called-Shot Feats` Item compendium provides convenience records for `Improved Called Shot` and `Greater Called Shot`; the `PAcS Helmets` compendium provides optional Head-slot helmet records whose starter values use the matching D35E full armor bonus for local Head/Eye/Ear armor only. These records remain optional-rule support items rather than D&D 3.5 RAW.
+The module is intentionally explicit that the bundled defaults are PF1e Ultimate Combat adaptation, not official D&D 3.5 RAW. The normal settings focus on table-facing choices: enabling piecemeal armor, enabling called shots, choosing full-attack behavior, choosing whether full-attack called shots require the optional feats, and deciding whether called-shot effects apply automatically, ask the GM before severe outcomes, or stay advisory only. GMs can edit locations, penalties, armor coverage slot(s), and outcome effects from module settings. Coverage fields accept multiple locations such as `head; eyes; ears` or `torso, arms, legs`, and a D35E-calibrated starter catalog fills common padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate mappings. Complete catalog suits are calibrated so piece armor plus the full-suit `+1` equals the matching D&D 3.5e armor bonus. Melee called shots preserve the RAW-adapted non-adjacent `-2`, including cases where reach makes the attack legal but the target is not adjacent. The bundled `PAcS Called-Shot Feats` Item compendium provides convenience records for `Improved Called Shot` and `Greater Called Shot`; the `PAcS Helmets` compendium provides optional Head-slot helmet records whose starter values use the matching D35E full armor bonus for local Head/Eye/Ear armor only. These records remain optional-rule support items rather than D&D 3.5 RAW.
 
 ## Compatibility
 
 - Foundry VTT minimum: `14`
-- Foundry VTT verified: `14.362`
+- Foundry VTT verified: `14.363`
 - System: `D35E`
 - D35E minimum: `3.0.2`
 - D35E verified: `3.0.2`
@@ -31,10 +31,10 @@ The module is intentionally explicit that the bundled defaults are PF1e Ultimate
 
 ## Version Entry
 
-- Version: `1.2.1`
-- Package Manifest URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.2.1/module.json`
-- Download URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.2.1/d35e-piecemeal-armor-called-shots-v1.2.1.zip`
-- Release Notes URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/tag/v1.2.1`
+- Version: `1.3.0`
+- Package Manifest URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.3.0/module.json`
+- Download URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.3.0/d35e-piecemeal-armor-called-shots-v1.3.0.zip`
+- Release Notes URL: `https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/tag/v1.3.0`
 
 ## User Install URL
 

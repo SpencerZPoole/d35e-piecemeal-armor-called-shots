@@ -6,6 +6,7 @@
 | D&D 3.5 called shots RAW | Not claimed | No canonical 3.5 subsystem is bundled. |
 | PF1e piecemeal armor | RAW-adapted default | Uses the supplied Ultimate Combat rules for piece categories, complete suits, worst ACP/ASF/max Dex, mixed-suit ASF, hasty donning, mithral, and magic/masterwork precedence where D35E can represent the result. |
 | PF1e called shots | RAW-adapted default | Uses Ultimate Combat Table 5-4 penalties, feat-gated full attacks, severity thresholds, saves, DR-negated no-effect behavior, and automatic outcome specs. |
+| Called-shot range/reach | RAW-adapted default | Melee called shots add `-2` when the target is not adjacent, even if the attacker has reach. Ranged called shots double range-increment penalties, with at least `-2` beyond 30 feet. |
 | D35E armor math | Automated through native inventory slots | Baseline-only armor stays native in D35E's `Armor` slot. Composite profiles use hidden slotless carrier math plus visible `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` inventory slots. |
 | Local armor AC | Automated in Apply Damage | Called-shot locations can replace the active profile's armor contribution with matching piece coverage. Touch called shots are checked against normal AC. |
 | Helmet head coverage | Optional house rule | Disabled by default. Configured D35E `Head` slot helmets can supply their own local Head/Eye/Ear armor only; they do not change total AC or RAW piecemeal suit math. Bundled starter values use the matching D35E full armor bonus and remain editable for grittier tables. |

@@ -18,10 +18,10 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/late
 
 After installation, open a D35E world, go to **Game Settings > Manage Modules**, enable **D35E Piecemeal Armor And Called Shots**, and reload if Foundry asks.
 
-Versioned release assets are published on GitHub. For v1.2.1, the release manifest is:
+Versioned release assets are published on GitHub. For v1.3.0, the release manifest is:
 
 ```text
-https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.2.1/module.json
+https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.3.0/module.json
 ```
 
 ## Features
@@ -31,7 +31,7 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 - Provides a D35E-calibrated starter catalog for common piecemeal armor mappings such as padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate.
 - Keeps simple baseline-only armor native to D35E while using a hidden slotless D35E armor carrier only for composite piecemeal math.
 - Adds a `Called Shot` dropdown inside D35E's native attack/use dialog.
-- Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as `Called Shot: Ear -10`.
+- Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as `Called Shot: Ear -10` or `Called Shot Range/Reach: not adjacent -2`.
 - Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.
 - Lets armor components and called-shot profile locations name multiple coverage slots, such as `head; eyes; ears`.
 - Offers an optional, disabled-by-default helmet house rule that uses configured equipment in D35E's native `Head` slot for Head/Eye/Ear local armor and optional Spot/Listen penalties.
@@ -65,7 +65,7 @@ See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for the full end-user guide.
 
 ## Compatibility
 
-- Foundry VTT: verified on v14.362.
+- Foundry VTT: verified on v14.363.
 - D35E: verified on D35E 3.0.2.
 - Foundry v13: not marked verified until a real v13 smoke test is completed.
 
@@ -76,6 +76,10 @@ The module is additive. It does not edit D35E system files, mutate actors on wor
 Module settings live in Foundry's right sidebar gear tab under `Game Settings > D35E Piecemeal Armor And Called Shots`. The main toggles are `Enable piecemeal armor` and `Enable called shots`, so either half of the module can be used independently. `Called-shot full-attack feat rules` defaults to `Require feats (RAW-adapted)`, while `Warn only` and `Do not require feats` let a table loosen the full-attack permission check without granting feat bonuses. `Called-shot effect automation` defaults to `GM confirms severe effects`: normal outcomes apply after D35E Apply Damage, but critical and debilitating outcomes ask the GM before changing actor data. Optional helmet head coverage and helmet Spot/Listen penalties are separate house-rule toggles, disabled by default. The called-shot profile editor is available in the same settings category. Profiles are world settings, so a GM can clone or replace the bundled defaults with table-specific locations, penalties, coverage, and effects.
 
 When piecemeal armor and called shots are both enabled, the native Apply Damage check automatically uses location armor for matching called-shot coverage. Coverage slot fields accept one value or a delimiter-separated list, so a broader armor piece can cover `torso, arms, legs`. If the helmet house rule is enabled, a configured item equipped in D35E's native `Head` slot can cover `head; eyes; ears` with its own local head armor value, without adding to the actor's total AC. The bundled helmet starter values use the matching D35E full armor bonus for called-shot local armor only; GMs can lower those values for grittier family-cap tables. Simply equipping an item named "helmet" is not enough; the item must come from `PAcS Helmets` or be marked `Use as helmet head coverage`.
+
+Melee called shots follow the RAW-adapted range rule: a non-adjacent target adds `Called Shot Range/Reach: not adjacent -2`, even if the attacker has D35E reach and can legally attack that square. The D35E `Reach` field expects a number of feet such as `10` or `15`, not a size word. Ranged called shots double range-increment penalties, with at least `-2` beyond 30 feet.
+
+The bundled armor catalog uses the PF1e piecemeal structure but is calibrated for D35E/D&D 3.5e armor bonuses. For a complete catalog suit, `torso + arms + legs + full-suit +1` equals the normal D&D 3.5e armor bonus, so a chainmail suit resolves to `5` and full plate resolves to `8`.
 
 The module includes `PAcS Called-Shot Feats` and `PAcS Helmets` compendia under the Foundry Compendium Packs sidebar. Import `Improved Called Shot` and `Greater Called Shot` when a character should receive the automated feat benefits. Import helmets when your table enables the helmet house rule and wants preconfigured Head-slot items for the D35E armor types. These items are optional-rule support records for D35E, not D&D 3.5 RAW.
 
@@ -93,6 +97,7 @@ Supported effect specs:
 
 - Called-shot automation can apply lethal and permanent outcomes. The default setting asks the GM before critical or debilitating effects are applied, and GMs can restore applied effects from the target actor's `Called Shot Effects` header button.
 - The bundled defaults are optional-rule adaptation, not D&D 3.5 RAW.
+- The piecemeal catalog is D35E-calibrated, not exact Pathfinder RAW.
 - Fast-forward attacks keep D35E's no-dialog behavior and do not show the called-shot selector.
 - Some Ultimate Combat results have no exact D35E native field. Those are recorded as explicit actor flags or ActiveEffect notes instead of pretending D35E has native support.
 
@@ -106,9 +111,9 @@ After Foundry is ready, the module exposes `game.d35ePiecemealCalledShots`:
 - `clearArmorProfile(actor)`
 - `setArmorProfileBaseline(actor, itemId)` for migration or advanced scripts; the primary UI uses the native D35E `Armor` slot as baseline.
 - `setArmorProfileSlot(actor, category, itemId)`
-- `previewArmorSync(actor)`
-- `syncArmorAggregate(actor, options)`
-- `restoreArmorComponents(actor)`
+- `previewArmorSync(actor)` for legacy aggregate migration or recovery tooling.
+- `syncArmorAggregate(actor, options)` for legacy aggregate migration or recovery tooling.
+- `restoreArmorComponents(actor)` for legacy aggregate migration or recovery tooling.
 - `getCalledShotProfiles()`
 - `getCalledShotOptions()`
 - `stageCalledShot(actor, item, locationId, options)`

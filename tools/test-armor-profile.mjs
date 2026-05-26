@@ -685,6 +685,21 @@ assert.equal(resolved.status, ARMOR_PROFILE_STATUS.compositeProfile);
 assert.equal(resolved.summary.armorBonus, 5);
 assert.equal(resolved.summary.completeSuit, false);
 
+const materialObjectArmor = equipment("material-object", "Chainmail", {
+  equipped: false,
+  equipmentSubtype: "mediumArmor",
+  material: {}
+});
+const materialObjectActor = actor([materialObjectArmor], {
+  [MODULE_ID]: {
+    [FLAGS.armorProfile]: {
+      slots: { arms: "material-object" }
+    }
+  }
+});
+resolved = resolveArmorProfile(materialObjectActor);
+assert.equal(resolved.summary.material.material, "");
+
 const custom = equipment("custom", "Mirror-Bright Weird Armor", { equipped: false });
 const unresolvedActor = actor([custom], {
   [MODULE_ID]: {
@@ -698,6 +713,42 @@ assert.equal(resolved.status, ARMOR_PROFILE_STATUS.needsPieceValues);
 const skipped = await applyArmorProfile(unresolvedActor);
 assert.equal(skipped.reason, "needsPieceValues");
 assert.equal(unresolvedActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
+
+const configuredHelmet = equipment("configured-helmet", "Full Plate Helm", {
+  equipmentType: "misc",
+  equipmentSubtype: "clothing",
+  equipped: true,
+  slot: PACS_EQUIPMENT_SLOTS.legs
+}, {
+  [MODULE_ID]: {
+    [FLAGS.helmet]: {
+      enabled: true,
+      localArmorBonus: 8,
+      coverageSlots: "head; eyes; ears"
+    }
+  }
+});
+const inferredHelmetActor = actor([configuredHelmet]);
+resolved = resolveArmorProfile(inferredHelmetActor);
+assert.equal(resolved.status, ARMOR_PROFILE_STATUS.empty);
+assert.equal(resolved.profile.slots.legs, null);
+assert.equal(resolved.summary.armorBonus, 0);
+
+const explicitHelmetActor = actor([configuredHelmet], {
+  [MODULE_ID]: {
+    [FLAGS.armorProfile]: {
+      slots: { legs: "configured-helmet" }
+    }
+  }
+});
+resolved = resolveArmorProfile(explicitHelmetActor);
+assert.equal(resolved.status, ARMOR_PROFILE_STATUS.needsPieceValues);
+assert.deepEqual(resolved.unresolved, [{
+  category: "legs",
+  itemId: "configured-helmet",
+  itemName: "Full Plate Helm",
+  reason: "unknownArmor"
+}]);
 
 const staleCarrierActor = actor([breastplate, custom], {
   [MODULE_ID]: {

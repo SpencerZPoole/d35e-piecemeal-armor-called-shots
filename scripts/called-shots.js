@@ -65,10 +65,16 @@ export function getCalledShotFullAttackFeatRuleMode() {
 
 function tokenCenter(token) {
   if (token?.center) return token.center;
-  const gridSize = globalThis.canvas?.grid?.size || 100;
+  const bounds = tokenBounds(token);
+  if (bounds) {
+    return {
+      x: bounds.x + bounds.width / 2,
+      y: bounds.y + bounds.height / 2
+    };
+  }
   return {
-    x: (token?.x ?? token?.object?.x ?? 0) + ((token?.w ?? token?.width ?? token?.object?.w ?? 1) * gridSize / 2),
-    y: (token?.y ?? token?.object?.y ?? 0) + ((token?.h ?? token?.height ?? token?.object?.h ?? 1) * gridSize / 2)
+    x: Number(token?.x ?? token?.object?.x ?? token?.document?.x ?? 0),
+    y: Number(token?.y ?? token?.object?.y ?? token?.document?.y ?? 0)
   };
 }
 
@@ -89,10 +95,11 @@ function dimensionPixels(value, fallback = 1) {
 
 function tokenBounds(token) {
   if (!token) return null;
-  const x = Number(token?.x ?? token?.object?.x ?? token?.document?.x ?? 0);
-  const y = Number(token?.y ?? token?.object?.y ?? token?.document?.y ?? 0);
-  const width = dimensionPixels(token?.w ?? token?.object?.w ?? token?.document?.width ?? token?.width, 1);
-  const height = dimensionPixels(token?.h ?? token?.object?.h ?? token?.document?.height ?? token?.height, 1);
+  const document = token?.document ?? token?.object?.document ?? null;
+  const x = Number(token?.x ?? token?.object?.x ?? document?.x ?? 0);
+  const y = Number(token?.y ?? token?.object?.y ?? document?.y ?? 0);
+  const width = dimensionPixels(document?.width ?? token?.w ?? token?.object?.w ?? token?.width, 1);
+  const height = dimensionPixels(document?.height ?? token?.h ?? token?.object?.h ?? token?.height, 1);
   return {
     x,
     y,

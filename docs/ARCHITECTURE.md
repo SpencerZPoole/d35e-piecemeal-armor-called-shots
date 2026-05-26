@@ -4,7 +4,7 @@ The module is intentionally additive. It does not edit D35E system files, patch 
 
 ## Piecemeal Armor
 
-The default v1.2 armor workflow is an actor-level profile presented through D35E's native inventory. The actor's normal D35E `Armor` slot seeds the baseline, and module-owned `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` slots override only the selected category. Known armor names map to catalog pieces; explicit component flags are used for unusual or custom pieces.
+The default armor workflow is an actor-level profile presented through D35E's native inventory. The actor's normal D35E `Armor` slot seeds the baseline, and module-owned `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` slots override only the selected category. Known armor names map to catalog pieces; explicit component flags are used for unusual or custom pieces.
 
 When no overrides are active, D35E's native armor item remains the source of truth. When a composite profile is active, the module:
 
@@ -14,7 +14,7 @@ When no overrides are active, D35E's native armor item remains the source of tru
 4. Neutralizes native armor fields on source items so D35E does not double count them.
 5. Creates or updates one hidden zero-weight, slotless D35E equipment carrier named `PAcS Armor Profile`.
 
-Aggregate armor math follows the supplied Ultimate Combat reference as closely as D35E can represent: armor bonuses and weight/cost are summed, a complete arms+legs+torso suit gains `+1`, max Dex/ACP/ASF use worst-piece behavior, mixed complete suits add `+5%` ASF, and separately enchanted pieces use the most protective category for masterwork/enhancement benefit. The old v1.0 summed ACP/ASF/enhancement behavior remains available only through internal compatibility helpers and tests.
+Aggregate armor math follows the supplied Ultimate Combat reference as closely as D35E can represent: armor bonuses and weight/cost are summed, a complete arms+legs+torso suit gains `+1`, max Dex/ACP/ASF use worst-piece behavior, mixed complete suits add `+5%` ASF, and separately enchanted pieces use the most protective category for masterwork/enhancement benefit. The bundled catalog is D35E-calibrated, so complete catalog suits close to normal D&D 3.5e armor bonuses after that `+1` instead of copying PF1e armor totals exactly. The old v1.0 summed ACP/ASF/enhancement behavior remains available only through internal compatibility helpers and tests.
 
 Clearing PAcS slots reverses backed-up fields and removes the hidden carrier when the actor returns to baseline-only or unarmored native behavior. The old visible `Piecemeal Armor Aggregate` path is retained only as migration and recovery support for older worlds.
 
@@ -45,6 +45,8 @@ Feat benefits still come from actual actor feats. Name-based detection looks for
 The module ships the `PAcS Called-Shot Feats` Item compendium as a convenience pack. It exists so GMs do not have to create those feat records by hand in D35E; it is not a separate rules engine and does not make the PF1e-derived optional feats into D&D 3.5 RAW.
 
 Fast-forward attacks keep D35E's no-dialog behavior and do not show called-shot UI.
+
+RAW-adapted range/reach penalties are calculated before the payload reaches D35E attack math. Melee called shots use occupied-token adjacency, not center-to-center distance, so Large and Huge tokens do not get false penalties while touching by edge or corner. A target inside a creature's D35E reach but not adjacent still receives the called-shot `-2`, matching the Ultimate Combat text. Ranged called shots keep the doubled range-increment penalty behavior.
 
 ## Effects
 

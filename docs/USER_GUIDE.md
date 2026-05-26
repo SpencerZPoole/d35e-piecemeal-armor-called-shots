@@ -62,6 +62,16 @@ Leave the selector on `None` for a normal attack. Choose a location when the att
 
 Fast-forward attacks keep D35E's no-dialog behavior. They do not show the called-shot dropdown.
 
+Default location penalties:
+
+| Location | Attack penalty |
+| --- | ---: |
+| Arm, Chest, Leg | -2 |
+| Hand, Head, Vitals | -5 |
+| Ear, Eye, Heart, Neck | -10 |
+
+Those defaults come from the PF1e Ultimate Combat called-shot table and can be edited in the profile editor.
+
 ## Location Armor AC
 
 A called shot carries its location into D35E's native Apply Damage workflow. When the GM clicks Apply, the module adjusts the target's AC by replacing the active armor profile's total armor contribution with the matching piecemeal armor location.
@@ -134,6 +144,19 @@ Open Foundry's Compendium Packs sidebar and look for `PAcS Helmets`. The pack co
 
 These helmets are optional house-rule support items. Their starter local armor values use the matching D35E full armor bonus and affect only Head, Eye, and Ear called-shot local armor while the helmet setting is enabled. They do not add normal AC, and their Spot/Listen penalties default to `0` until a GM edits them.
 
+Starter helmet local armor values:
+
+| Helmet style | Head local armor |
+| --- | ---: |
+| Padded | 1 |
+| Leather | 2 |
+| Studded leather, Hide | 3 |
+| Scale mail, Chain shirt | 4 |
+| Chainmail, Breastplate | 5 |
+| Banded mail, Splint mail | 6 |
+| Half-plate | 7 |
+| Full plate | 8 |
+
 ## Called-Shot Chat Cards
 
 After a called-shot roll, the module posts a chat card. Use D35E's native Apply Damage button, and the module resolves hit state, post-DR damage, severity, saves, and outcomes after D35E finishes its damage workflow.
@@ -155,7 +178,7 @@ Applied effects are recorded on a target actor ledger with the source message, a
 
 ## Piecemeal Armor
 
-The v1.2 workflow starts from the D35E armor users already understand. Equip normal armor normally. If the actor is only wearing one ordinary D35E armor item and no profile overrides are set, D35E remains the source of truth for AC.
+The current workflow starts from the D35E armor users already understand. Equip normal armor normally. If the actor is only wearing one ordinary D35E armor item and no profile overrides are set, D35E remains the source of truth for AC.
 
 When the actor mixes armor pieces, open the actor sheet inventory area and stay in D35E's normal Armor and Equipment list.
 
@@ -179,6 +202,23 @@ RAW-adapted math:
 - Mixed full suits add the RAW `+5%` arcane spell failure adjustment.
 
 The bundled catalog is D35E-calibrated. It keeps the PF1e piecemeal structure, but complete catalog suits are adjusted so `torso + arms + legs + full-suit +1` equals the normal D&D 3.5e armor bonus. For example, chainmail resolves as `3 + 1 + 0 + 1 = 5`, and full plate resolves as `5 + 1 + 1 + 1 = 8`. Chain shirt and breastplate are torso-only entries, so they do not get a suit bonus unless the table deliberately adds other pieces.
+
+Starter armor bonus mapping:
+
+| Armor | Torso | Arms | Legs | Complete suit |
+| --- | ---: | ---: | ---: | ---: |
+| Padded | 0 | 0 | 0 | 1 |
+| Leather | 1 | 0 | 0 | 2 |
+| Studded leather | 1 | 0 | 1 | 3 |
+| Hide | 2 | 0 | 0 | 3 |
+| Scale mail | 2 | 1 | 0 | 4 |
+| Chain shirt | 4 | n/a | n/a | n/a |
+| Chainmail | 3 | 1 | 0 | 5 |
+| Breastplate | 5 | n/a | n/a | n/a |
+| Banded mail | 4 | 1 | 0 | 6 |
+| Splint mail | 4 | 1 | 0 | 6 |
+| Half-plate | 5 | 1 | 0 | 7 |
+| Full plate | 5 | 1 | 1 | 8 |
 
 Known armor items use the module catalog for padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate/plate torso, banded mail, splint mail, half-plate, and full plate mappings. Unknown custom armor is marked `Needs piece values` instead of being guessed. Use the shield icon on an inventory row to open explicit piece fields for unusual published pieces or custom 3.5e adaptations before assigning them.
 

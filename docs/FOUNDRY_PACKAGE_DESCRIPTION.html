@@ -32,10 +32,11 @@
   <li>Adds <code>PAcS: Torso</code>, <code>PAcS: Arms</code>, and <code>PAcS: Legs</code> slots directly to D35E's normal Armor and Equipment inventory list.</li>
   <li>Uses the native D35E <code>Armor</code> slot as the baseline suit source, with PAcS slots overriding only the categories a table mixes.</li>
   <li>Provides a D35E-calibrated starter catalog for padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate mappings.</li>
+  <li>Calibrates complete catalog suits so torso + arms + legs + the full-suit bonus equals the matching D&amp;D 3.5e armor bonus.</li>
   <li>Keeps baseline-only armor native to D35E and uses a hidden zero-weight D35E carrier only when composite profile math is active.</li>
   <li>Marks profile source items as worn in profile while preventing duplicate armor AC and weight.</li>
   <li>Adds a <code>Called Shot</code> dropdown inside D35E's native attack/use dialog.</li>
-  <li>Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as <code>Called Shot: Ear -10</code>.</li>
+  <li>Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as <code>Called Shot: Ear -10</code> or <code>Called Shot Range/Reach: not adjacent -2</code>.</li>
   <li>Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.</li>
   <li>Offers an optional helmet house rule for Head/Eye/Ear local armor without adding helmet armor to normal AC.</li>
   <li>Enforces Improved/Greater Called Shot full-attack limits by default while offering table-facing warn-only and no-requirement options.</li>
@@ -50,11 +51,15 @@
 
 <p>The module uses D35E-native item data for the final armor contribution. Composite profiles use a hidden zero-weight carrier and reversible source-item backups, so users no longer manage a visible aggregate item or a separate profile panel.</p>
 
+<p>The bundled armor catalog is a D35E-calibrated adaptation. It keeps the PF1e piecemeal structure, but a complete catalog suit closes to the normal D&amp;D 3.5e armor bonus after the full-suit <code>+1</code>.</p>
+
 <h3>Called-Shot Workflow</h3>
 
 <p>Players use the normal D35E attack or item controls. The native attack dialog gains a <strong>Called Shot</strong> selector. Choosing a location applies the configured attack penalty through D35E's existing roll breakdown and posts a GM-facing outcome card after the roll.</p>
 
 <p>Full attacks honor Improved Called Shot and Greater Called Shot by default. Module settings can ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections on full attacks. A separate full-attack feat-rule setting can keep the RAW-adapted gate, allow the workflow with warnings, or allow it without warnings. Feat bonuses still require the actor to actually have the feat.</p>
+
+<p>Melee called shots apply the RAW-adapted non-adjacent <code>-2</code> as a separate breakdown row. Reach can make a melee attack legal, but it does not remove that penalty unless the target is actually adjacent. Ranged called shots double range-increment penalties, with at least <code>-2</code> beyond 30 feet.</p>
 
 <h3>Automatic Outcomes And Restore</h3>
 
@@ -73,9 +78,9 @@
 <h3>Compatibility</h3>
 
 <ul>
-  <li>Foundry VTT: minimum 14, verified 14.362.</li>
+  <li>Foundry VTT: minimum 14, verified 14.363.</li>
   <li>D35E system: minimum 3.0.2, verified 3.0.2.</li>
-  <li>Module version: 1.2.1.</li>
+  <li>Module version: 1.3.0.</li>
 </ul>
 
 <h3>Documentation And Support</h3>

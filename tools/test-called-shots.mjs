@@ -372,6 +372,32 @@ game.user.targets = new Set([hugeEdgeAdjacentTarget]);
 assert.equal(areCalledShotTokensAdjacent(hugeActor, "Scene.test.Token.huge-edge"), true);
 assert.equal(calculateCalledShotSituationalPenalty(hugeActor, { system: { actionType: "mwak" } }, "Scene.test.Token.huge-edge").penalty, 0);
 
+const hugeDocumentActor = {
+  id: "huge-document",
+  system: { traits: { reach: "" } },
+  getActiveTokens() {
+    return [{
+      x: 0,
+      y: 0,
+      w: 100,
+      h: 100,
+      document: { x: 0, y: 0, width: 3, height: 3 }
+    }];
+  }
+};
+const hugeDocumentAdjacentTarget = {
+  document: { uuid: "Scene.test.Token.huge-document-edge", x: 300, y: 0, width: 1, height: 1 },
+  x: 300,
+  y: 0,
+  w: 100,
+  h: 100
+};
+game.user.targets = new Set([hugeDocumentAdjacentTarget]);
+assert.equal(areCalledShotTokensAdjacent(hugeDocumentActor, "Scene.test.Token.huge-document-edge"), true);
+const hugeDocumentAdjacentPenalty = calculateCalledShotSituationalPenalty(hugeDocumentActor, { system: { actionType: "mwak" } }, "Scene.test.Token.huge-document-edge");
+assert.equal(hugeDocumentAdjacentPenalty.distance < 12, true);
+assert.equal(hugeDocumentAdjacentPenalty.penalty, 0);
+
 const hugeCornerAdjacentTarget = {
   document: { uuid: "Scene.test.Token.huge-corner" },
   x: 300,

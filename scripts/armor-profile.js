@@ -66,6 +66,15 @@ function cloneData(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function firstTextValue(...values) {
+  for (const value of values) {
+    if (typeof value !== "string" && typeof value !== "number") continue;
+    const text = String(value).trim();
+    if (text) return text;
+  }
+  return "";
+}
+
 function itemCollectionGet(items, id) {
   if (!id) return null;
   if (items?.get) return items.get(id) ?? null;
@@ -217,7 +226,7 @@ export function readArmorProfile(actor) {
     const category = item?.system?.equipped === true ? categoryForPacsEquipmentSlot(item.system?.slot) : "";
     if (!category || slots[category]) continue;
     if (Object.hasOwn(flagSlots, category)) continue;
-    if (isAggregateArmorItem(item) || isInternalArmorProfileItem(item)) continue;
+    if (!isArmorProfileSourceItem(item)) continue;
     slots[category] = item.id ?? item._id ?? null;
   }
   return {
@@ -286,6 +295,20 @@ function isNativeArmorItem(item) {
     !isInternalArmorProfileItem(item);
 }
 
+function isArmorProfileCatalogSourceItem(item) {
+  const native = getFlagData(item, FLAGS.nativeBackup)?.native ?? null;
+  return item?.type === "equipment" &&
+    (item.system?.equipmentType === "armor" || native?.equipmentType === "armor") &&
+    !item.system?.melded &&
+    !item.broken &&
+    !isAggregateArmorItem(item) &&
+    !isInternalArmorProfileItem(item);
+}
+
+function isArmorProfileSourceItem(item) {
+  return isPiecemealArmorPiece(item) || isArmorProfileCatalogSourceItem(item);
+}
+
 function profileSlotItemIds(profile) {
   return new Set(Object.values(profile?.slots ?? {}).filter(Boolean));
 }
@@ -320,9 +343,15 @@ function suitCatalogMatch(item) {
 
 function pieceFromCatalog(entry, item, category, { sourceKind = "profile", fullBaselineSuit = false } = {}) {
   const system = item?.system ?? {};
-  const enhancementBonus = Number(getProperty(system, "armor.enh") ?? 0) || 0;
-  const material = keyForValue(getProperty(system, "material.type") || getProperty(system, "material") || "");
-  const masterwork = system.masterwork === true || enhancementBonus > 0 || ["mithral", "adamantine"].includes(material);
+  const native = getFlagData(item, FLAGS.nativeBackup)?.native ?? {};
+  const enhancementBonus = Number(native.armor?.enh ?? getProperty(system, "armor.enh") ?? 0) || 0;
+  const material = keyForValue(firstTextValue(
+    getProperty(native, "material.type"),
+    getProperty(native, "material"),
+    getProperty(system, "material.type"),
+    getProperty(system, "material")
+  ));
+  const masterwork = native.masterwork === true || system.masterwork === true || enhancementBonus > 0 || ["mithral", "adamantine"].includes(material);
   return {
     ...cloneData(entry),
     id: `${item?.id ?? item?._id ?? "catalog"}:${entry.id}:${category}`,
@@ -372,6 +401,8 @@ function pieceFromItemForCategory(item, category) {
       };
     }
   }
+
+  if (!isArmorProfileCatalogSourceItem(item)) return { piece: null, unresolved: true };
 
   const { piecesByCategory, unresolved } = catalogPiecesForItem(item, "override");
   return {
@@ -433,7 +464,7 @@ export function resolveArmorProfile(actor, options = {}) {
   const unresolved = [];
   const warnings = [];
   const baselineItem = chooseBaselineItem(actor, profile, hasOverrides, unresolved, warnings);
-  const baselineCatalog = baselineItem && !isPiecemealArmorPiece(baselineItem)
+  const baselineCatalog = baselineItem && !isPiecemealArmorPiece(baselineItem) && isArmorProfileCatalogSourceItem(baselineItem)
     ? catalogPiecesForItem(baselineItem, "baseline")
     : { piecesByCategory: new Map(), unresolved: false, suit: null };
   const resolved = [];
@@ -459,6 +490,8 @@ export function resolveArmorProfile(actor, options = {}) {
 
   if (explicitProfile && baselineItem && baselineCatalog.unresolved) {
     unresolved.push({ category: "baseline", itemId: baselineItem.id, itemName: baselineItem.name, reason: "unknownBaseline" });
+  } else if (explicitProfile && baselineItem && !isPiecemealArmorPiece(baselineItem) && !isArmorProfileCatalogSourceItem(baselineItem)) {
+    unresolved.push({ category: "baseline", itemId: baselineItem.id, itemName: baselineItem.name, reason: "notArmor" });
   }
 
   const sourceItemIds = sourceItemIdsForPieces(resolved);
