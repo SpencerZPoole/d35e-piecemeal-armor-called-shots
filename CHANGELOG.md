@@ -7,6 +7,7 @@
 - Added a `PAcS Armor Pieces` Item compendium with ready-to-use torso, arm, and leg override records generated from the D35E-calibrated armor catalog.
 - Added pack generation and validation for `[PAcS]` armor piece items, including half-plate, full plate, breastplate, chain shirt, chainmail, and studded leather examples.
 - Hardened explicit PAcS piece assignment so a piece dropped on the wrong category is rejected instead of silently changing category.
+- Fixed called-shot local armor so an exposed location on an otherwise armored PAcS target shows `unarmored location 0` in D35E Apply Damage AC Details instead of silently using full AC.
 - Updated onboarding docs, package copy, and troubleshooting to explain the recommended baseline-plus-piece workflow.
 
 ## 1.3.0

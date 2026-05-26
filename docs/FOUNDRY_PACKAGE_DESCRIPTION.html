@@ -38,7 +38,7 @@
   <li>Marks profile source items as worn in profile while preventing duplicate armor AC and weight.</li>
   <li>Adds a <code>Called Shot</code> dropdown inside D35E's native attack/use dialog.</li>
   <li>Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as <code>Called Shot: Ear -10</code> or <code>Called Shot Range/Reach: not adjacent -2</code>.</li>
-  <li>Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.</li>
+  <li>Can adjust D35E's native Apply Damage AC check for called shots that target covered, weaker, stronger, or exposed piecemeal armor locations.</li>
   <li>Offers an optional helmet house rule for Head/Eye/Ear local armor without adding helmet armor to normal AC.</li>
   <li>Enforces Improved/Greater Called Shot full-attack limits by default while offering table-facing warn-only and no-requirement options.</li>
   <li>Includes <code>PAcS Armor Pieces</code>, <code>PAcS Called-Shot Feats</code>, and <code>PAcS Helmets</code> compendia with convenience records for optional-rule setup.</li>
@@ -66,7 +66,7 @@
 
 <h3>Automatic Outcomes And Restore</h3>
 
-<p>When piecemeal armor and called shots are both enabled, location armor AC can change D35E's native Apply Damage hit and crit check. D35E Apply Damage determines hit, crit, and post-DR damage; the module then determines normal, critical, or debilitating severity and applies, confirms, or leaves advisory outcomes based on the table setting. Severe outcomes such as death or permanent maiming are recorded in a called-shot ledger so a GM can restore them from the target actor sheet if needed.</p>
+<p>When piecemeal armor and called shots are both enabled, location armor AC can change D35E's native Apply Damage hit and crit check. Covered locations use their matching piece value, and exposed locations show <code>unarmored location 0</code> in AC Details instead of silently keeping the full armor profile. D35E Apply Damage determines hit, crit, and post-DR damage; the module then determines normal, critical, or debilitating severity and applies, confirms, or leaves advisory outcomes based on the table setting. Severe outcomes such as death or permanent maiming are recorded in a called-shot ledger so a GM can restore them from the target actor sheet if needed.</p>
 
 <h3>Configuration</h3>
 
