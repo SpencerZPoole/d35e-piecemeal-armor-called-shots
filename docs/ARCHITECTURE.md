@@ -6,6 +6,8 @@ The module is intentionally additive. It does not edit D35E system files, patch 
 
 The default armor workflow is an actor-level profile presented through D35E's native inventory. The actor's normal D35E `Armor` slot seeds the baseline, and module-owned `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` slots override only the selected category. Known armor names map to catalog pieces; explicit component flags are used for unusual or custom pieces.
 
+The `PAcS Armor Pieces` Item compendium is generated from the same calibrated catalog and suit mapping. It is an onboarding and data-entry aid, not a separate rules table. Display names stay user-searchable, such as `[PAcS] Half-Plate, Legs`, while flags retain the mapped category, armor family, coverage, and piece statistics. Explicit pack pieces are category-locked: a leg piece dropped on `PAcS: Arms` is rejected with a clear warning instead of being silently reinterpreted.
+
 When no overrides are active, D35E's native armor item remains the source of truth. When a composite profile is active, the module:
 
 1. Resolves baseline and override items into RAW-adapted armor pieces.

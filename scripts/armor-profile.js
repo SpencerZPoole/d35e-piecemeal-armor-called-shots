@@ -47,6 +47,11 @@ const PACS_SLOT_LABEL_KEYS = Object.freeze({
   [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.arms]]: "PAcS: Arms",
   [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.legs]]: "PAcS: Legs"
 });
+const PROFILE_CATEGORY_LABELS = Object.freeze({
+  [PIECE_CATEGORIES.torso]: "Torso",
+  [PIECE_CATEGORIES.arms]: "Arms",
+  [PIECE_CATEGORIES.legs]: "Legs"
+});
 const AC_SOURCE_DETAIL_PATHS = Object.freeze([
   "system.attributes.ac.normal.total",
   "system.attributes.ac.flatFooted.total"
@@ -786,6 +791,14 @@ export async function setArmorProfileSlot(actor, category, itemId) {
   if (!normalized) throw new Error(`Unknown armor profile category: ${category}`);
   const profile = readArmorProfile(actor);
   if (itemId) {
+    const item = itemCollectionGet(actor?.items ?? [], itemId);
+    if (item && isPiecemealArmorPiece(item)) {
+      const piece = readArmorPiece(item);
+      const explicitCategory = normalizePieceCategory(piece.pieceCategory);
+      if (explicitCategory && explicitCategory !== normalized) {
+        throw new Error(`${item.name ?? "This item"} is a ${PROFILE_CATEGORY_LABELS[explicitCategory] ?? explicitCategory} armor piece. Drop it on PAcS: ${PROFILE_CATEGORY_LABELS[explicitCategory] ?? explicitCategory}.`);
+      }
+    }
     if (profile.baselineItemId === itemId) {
       profile.baselineItemId = null;
     } else if (!profile.baselineItemId) {

@@ -18,10 +18,10 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/late
 
 After installation, open a D35E world, go to **Game Settings > Manage Modules**, enable **D35E Piecemeal Armor And Called Shots**, and reload if Foundry asks.
 
-Versioned release assets are published on GitHub. For v1.3.0, the release manifest is:
+Versioned release assets are published on GitHub. For v1.4.0, the release manifest is:
 
 ```text
-https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.3.0/module.json
+https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.4.0/module.json
 ```
 
 ## Features
@@ -29,6 +29,7 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 - Adds `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` slots directly to D35E's native Armor and Equipment inventory list.
 - Uses the normal D35E `Armor` slot as the baseline suit or torso piece, then overrides only the categories a table mixes.
 - Provides a D35E-calibrated starter catalog for common piecemeal armor mappings such as padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate.
+- Ships a `PAcS Armor Pieces` compendium with ready-to-use items such as `[PAcS] Studded Leather, Legs`, `[PAcS] Chainmail, Torso`, and `[PAcS] Full Plate, Arms`.
 - Keeps simple baseline-only armor native to D35E while using a hidden slotless D35E armor carrier only for composite piecemeal math.
 - Adds a `Called Shot` dropdown inside D35E's native attack/use dialog.
 - Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as `Called Shot: Ear -10` or `Called Shot Range/Reach: not adjacent -2`.
@@ -36,7 +37,7 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 - Lets armor components and called-shot profile locations name multiple coverage slots, such as `head; eyes; ears`.
 - Offers an optional, disabled-by-default helmet house rule that uses configured equipment in D35E's native `Head` slot for Head/Eye/Ear local armor and optional Spot/Listen penalties.
 - Enforces RAW-adapted Improved/Greater Called Shot full-attack limits by default, with GM-facing warn-only and no-requirement modes for house rules.
-- Ships `PAcS Called-Shot Feats` and `PAcS Helmets` item compendia with convenience records for optional-rule setup.
+- Ships `PAcS Armor Pieces`, `PAcS Called-Shot Feats`, and `PAcS Helmets` item compendia with convenience records for optional-rule setup.
 - Automates called-shot severity and outcomes after D35E Apply Damage, with a default GM confirmation step for critical or debilitating effects and a restore ledger for misclick recovery.
 - Prevents double-counting by marking profile source items as worn in the profile while the hidden zero-weight carrier contributes composite D35E armor math.
 - Includes an in-Foundry profile editor for locations, penalties, coverage slot(s), and outcome effects.
@@ -54,12 +55,13 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 1. Open a D35E world, go to `Game Settings > Manage Modules`, enable the module, and reload if Foundry asks.
 2. Equip ordinary armor normally. With no piecemeal overrides, D35E keeps handling armor AC exactly as before.
 3. Open the actor sheet inventory. The normal D35E `Armor` slot is the baseline armor.
-4. Drag armor items onto `PAcS: Torso`, `PAcS: Arms`, or `PAcS: Legs` when the actor mixes pieces. Empty PAcS slots inherit from the baseline armor when that armor maps to the category.
-5. Click a normal D35E weapon or attack use control and choose a target from the native dialog's `Called Shot` dropdown.
-6. Roll normally. The called-shot penalty appears in the D35E attack breakdown.
-7. Use D35E's native Apply Damage button. When piecemeal armor and called shots are both enabled, AC Details shows the location armor adjustment.
-8. The module determines severity. By default, normal effects apply automatically, while critical and debilitating effects ask the GM before changing the target.
-9. For table-specific behavior, open Foundry's right sidebar gear icon, choose `Game Settings`, then select `D35E Piecemeal Armor And Called Shots`.
+4. For actual piecemeal overrides, open Foundry's Compendium Packs sidebar and use `PAcS Armor Pieces`. Import or drag items such as `[PAcS] Studded Leather, Legs` and `[PAcS] Chainmail, Torso`.
+5. Drag `[PAcS] ... Torso`, `[PAcS] ... Arms`, and `[PAcS] ... Legs` items onto the matching `PAcS:` inventory slots. Empty PAcS slots inherit from the baseline armor when that armor maps to the category.
+6. Click a normal D35E weapon or attack use control and choose a target from the native dialog's `Called Shot` dropdown.
+7. Roll normally. The called-shot penalty appears in the D35E attack breakdown.
+8. Use D35E's native Apply Damage button. When piecemeal armor and called shots are both enabled, AC Details shows the location armor adjustment.
+9. The module determines severity. By default, normal effects apply automatically, while critical and debilitating effects ask the GM before changing the target.
+10. For table-specific behavior, open Foundry's right sidebar gear icon, choose `Game Settings`, then select `D35E Piecemeal Armor And Called Shots`.
 
 See [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for the full end-user guide.
 
@@ -81,7 +83,7 @@ Melee called shots follow the RAW-adapted range rule: a non-adjacent target adds
 
 The bundled armor catalog uses the PF1e piecemeal structure but is calibrated for D35E/D&D 3.5e armor bonuses. For a complete catalog suit, `torso + arms + legs + full-suit +1` equals the normal D&D 3.5e armor bonus, so a chainmail suit resolves to `5` and full plate resolves to `8`.
 
-The module includes `PAcS Called-Shot Feats` and `PAcS Helmets` compendia under the Foundry Compendium Packs sidebar. Import `Improved Called Shot` and `Greater Called Shot` when a character should receive the automated feat benefits. Import helmets when your table enables the helmet house rule and wants preconfigured Head-slot items for the D35E armor types. These items are optional-rule support records for D35E, not D&D 3.5 RAW.
+The module includes `PAcS Armor Pieces`, `PAcS Called-Shot Feats`, and `PAcS Helmets` compendia under the Foundry Compendium Packs sidebar. Use `PAcS Armor Pieces` as the recommended source for torso, arm, and leg override items, with findable names such as `[PAcS] Studded Leather, Legs`. Import `Improved Called Shot` and `Greater Called Shot` when a character should receive the automated feat benefits. Import helmets when your table enables the helmet house rule and wants preconfigured Head-slot items for the D35E armor types. These items are optional-rule support records for D35E, not D&D 3.5 RAW.
 
 Supported effect specs:
 
@@ -100,6 +102,7 @@ Supported effect specs:
 - The piecemeal catalog is D35E-calibrated, not exact Pathfinder RAW.
 - Fast-forward attacks keep D35E's no-dialog behavior and do not show the called-shot selector.
 - Some Ultimate Combat results have no exact D35E native field. Those are recorded as explicit actor flags or ActiveEffect notes instead of pretending D35E has native support.
+- Imported `[PAcS]` armor piece items do not change AC just by sitting in inventory. Assign them to the matching `PAcS: Torso`, `PAcS: Arms`, or `PAcS: Legs` slot.
 
 ## Public API
 

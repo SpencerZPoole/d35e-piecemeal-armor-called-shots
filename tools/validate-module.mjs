@@ -20,6 +20,12 @@ assert(pkg.version === manifest.version, "package and manifest versions must mat
 assert(Array.isArray(manifest.esmodules) && manifest.esmodules.length === 1, "manifest needs exactly one esmodule entry");
 assert(Array.isArray(manifest.styles) && manifest.styles.length > 0, "manifest needs styles");
 assert(manifest.relationships?.systems?.some((system) => system.id === "D35E"), "manifest needs D35E system relationship");
+const armorPiecePack = manifest.packs?.find((pack) => pack.name === "armor-pieces");
+assert(armorPiecePack, "manifest needs armor-pieces pack");
+assert(armorPiecePack.label === "PAcS Armor Pieces", "armor-pieces label mismatch");
+assert(armorPiecePack.type === "Item", "armor-pieces must be an Item pack");
+assert(armorPiecePack.system === "D35E", "armor-pieces must declare D35E system");
+assert(armorPiecePack.path === "packs/armor-pieces", "armor-pieces path mismatch");
 const featPack = manifest.packs?.find((pack) => pack.name === "called-shot-feats");
 assert(featPack, "manifest needs called-shot-feats pack");
 assert(featPack.label === "PAcS Called-Shot Feats", "called-shot-feats label mismatch");
@@ -48,5 +54,6 @@ for (const file of [
 
 assert(fs.existsSync(path.join(root, featPack.path)), `Missing pack path: ${featPack.path}`);
 assert(fs.existsSync(path.join(root, helmetPack.path)), `Missing pack path: ${helmetPack.path}`);
+assert(fs.existsSync(path.join(root, armorPiecePack.path)), `Missing pack path: ${armorPiecePack.path}`);
 
 console.log("validate-module: ok");

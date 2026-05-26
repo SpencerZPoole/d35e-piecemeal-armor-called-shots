@@ -12,11 +12,12 @@ The module has two main workflows:
 1. Open a D35E world, go to `Game Settings > Manage Modules`, enable the module, and reload if Foundry asks.
 2. Open an actor sheet.
 3. Equip ordinary armor normally. With no profile overrides, D35E handles armor AC normally.
-4. If the actor mixes pieces, drag armor items onto `PAcS: Torso`, `PAcS: Arms`, or `PAcS: Legs` in the actor sheet's Armor and Equipment list.
-5. Open a weapon or attack from the normal D35E sheet controls.
-6. Choose a location from the native attack dialog's `Called Shot` dropdown, or leave it on `None`.
-7. Roll the attack and expand the result to see the called-shot modifier in D35E's native breakdown.
-8. Open the module settings when your table wants different locations, penalties, effects, automation, or full-attack behavior.
+4. If the actor mixes pieces, open the `PAcS Armor Pieces` compendium and use items such as `[PAcS] Studded Leather, Legs` or `[PAcS] Chainmail, Torso`.
+5. Drag those `[PAcS]` piece items onto the matching `PAcS: Torso`, `PAcS: Arms`, or `PAcS: Legs` slot in the actor sheet's Armor and Equipment list.
+6. Open a weapon or attack from the normal D35E sheet controls.
+7. Choose a location from the native attack dialog's `Called Shot` dropdown, or leave it on `None`.
+8. Roll the attack and expand the result to see the called-shot modifier in D35E's native breakdown.
+9. Open the module settings when your table wants different locations, penalties, effects, automation, or full-attack behavior.
 
 ## Where The Controls Live
 
@@ -27,10 +28,26 @@ The module has two main workflows:
 | `Worn in profile` chip | Actor inventory rows | Marks source items whose native D35E armor math is temporarily neutralized to prevent double-counting. |
 | `Called Shot` dropdown | D35E attack/use dialog | Applies a configured called-shot penalty through the native attack workflow. |
 | Full-attack picker | Opens after `Full Attack` when configured | Lets the user choose `None` or a location for each D35E attack label. |
+| `PAcS Armor Pieces` pack | Compendium Packs sidebar | Recommended source for ready-to-use torso, arm, and leg override items such as `[PAcS] Studded Leather, Legs`. |
 | `PAcS Called-Shot Feats` pack | Compendium Packs sidebar | Convenience item records for `Improved Called Shot` and `Greater Called Shot`. |
 | `PAcS Helmets` pack | Compendium Packs sidebar | Optional Head-slot helmet records for tables using the helmet local armor house rule. |
 | Called Shot Effects | Actor sheet header after an applied outcome | Lets a GM restore called-shot effects if the wrong damage card or target was used. |
 | Profile editor | Module settings | Edits locations, penalties, coverage slots, and outcome effects. |
+
+## Armor Piece Pack
+
+The easiest way to build a piecemeal outfit is to use the bundled `PAcS Armor Pieces` compendium.
+
+1. Open Foundry's Compendium Packs sidebar.
+2. Open `PAcS Armor Pieces`.
+3. Search for the armor type and category, such as `[PAcS] Studded Leather, Legs`, `[PAcS] Chainmail, Torso`, or `[PAcS] Full Plate, Arms`.
+4. Drag the item to the actor, then assign it to the matching `PAcS:` slot. You can also drag directly onto the slot when Foundry allows it.
+
+The normal D35E armor item still belongs in the native `Armor` slot when it is the baseline suit. The `[PAcS]` piece items are for overrides: torso, arms, and legs. Importing a `[PAcS]` item into inventory by itself does not change AC. The item changes armor math only after it is assigned to the matching `PAcS: Torso`, `PAcS: Arms`, or `PAcS: Legs` slot.
+
+The pack uses the module's D35E-calibrated PF1e piecemeal adaptation. For example, `[PAcS] Chainmail, Torso` is a chainmail-labeled item that carries the calibrated chain torso values, while `[PAcS] Half-Plate, Legs` is a half-plate-labeled item whose flags use the chain leg piece needed by the half-plate suit mapping. The display name matches what users search for; the hidden flags preserve the correct category and family math.
+
+If a `[PAcS]` item says `Legs`, drop it on `PAcS: Legs`. The module rejects explicit pack pieces dropped onto the wrong PAcS category instead of silently turning them into a different piece.
 
 ## Module Settings
 
@@ -194,6 +211,8 @@ Inventory slots:
 
 Empty PAcS slots inherit from the native Armor baseline when the baseline maps to that category. For example, studded leather in the Armor slot can fill torso, arms, and legs. A breastplate maps to torso only, so empty arms and legs remain unarmored unless a table assigns overrides.
 
+Recommended workflow: use ordinary D35E armor items for the native `Armor` baseline and use `PAcS Armor Pieces` for the three override slots. Dragging ordinary D35E armor items into PAcS slots is still supported as a convenience for existing actors and quick experiments, but the pack items are clearer because their names and flags already say which category they belong to.
+
 RAW-adapted math:
 
 - One resolved piece uses that piece's listed armor statistics.
@@ -268,13 +287,17 @@ That is expected for some critical and debilitating outcomes. The default `Calle
 
 Clear each occupied `PAcS:` slot with its clear icon, then assign the pieces again. In the native profile workflow, only the hidden slotless profile carrier should contribute composite D35E armor math; source items should show `worn in profile` and should not also contribute native armor AC.
 
+### I added a PAcS armor piece but my AC did not change
+
+Importing `[PAcS] Studded Leather, Legs` or another armor piece into inventory is only the first step. Assign it to the matching `PAcS:` slot in the Armor and Equipment list. The item does not contribute to AC until it is in `PAcS: Torso`, `PAcS: Arms`, or `PAcS: Legs`.
+
 ### The profile says Needs piece values
 
 The selected armor item is not in the starter catalog and is not configured as an explicit piecemeal armor item. Configure the item with piece category and armor values, then assign it again.
 
 ### Should pieces be armor or miscellaneous equipment?
 
-Armor items are easiest because they can be dragged from D35E compendiums or inventory into the profile slots. Miscellaneous records still work for custom table pieces when they have explicit module piece values.
+For normal use, prefer the `PAcS Armor Pieces` compendium. Those records are profile pieces: they stay harmless in inventory until assigned to a PAcS slot. Native D35E armor items still work as the baseline in `Armor`, and they can still be dragged into PAcS slots for quick setup or existing-world compatibility. Miscellaneous records also work for custom table pieces when they have explicit module piece values.
 
 ### Where should I report issues?
 

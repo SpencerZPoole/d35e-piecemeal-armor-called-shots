@@ -68,8 +68,16 @@ const requiredPublicText = [
     text: "PAcS: Torso"
   },
   {
+    file: "README.md",
+    text: "PAcS Armor Pieces"
+  },
+  {
     file: "docs/USER_GUIDE.md",
     text: "PAcS: Torso"
+  },
+  {
+    file: "docs/USER_GUIDE.md",
+    text: "[PAcS] Studded Leather, Legs"
   },
   {
     file: "docs/USER_GUIDE.md",

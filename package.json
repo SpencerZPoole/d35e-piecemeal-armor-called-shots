@@ -1,6 +1,6 @@
 {
   "name": "d35e-piecemeal-armor-called-shots",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "RAW-adapted PF1e-derived piecemeal armor and called-shot automation for the D35E Foundry system.",
   "private": true,
   "type": "module",
@@ -15,15 +15,17 @@
   "homepage": "https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots#readme",
   "scripts": {
     "check:js": "node --check scripts/constants.js && node --check scripts/profiles.js && node --check scripts/armor.js && node --check scripts/armor-profile.js && node --check scripts/helmet.js && node --check scripts/effects.js && node --check scripts/called-shots.js && node --check scripts/attack-dialog.js && node --check scripts/local-armor.js && node --check scripts/settings.js && node --check scripts/ui.js && node --check scripts/d35e-integration.js && node --check scripts/api.js && node --check scripts/module.js",
-    "check:tools": "node --check tools/build-called-shot-feat-pack.mjs && node --check tools/build-helmet-pack.mjs && node --check tools/build-release.mjs && node --check tools/check-localization.mjs && node --check tools/check-public-surface.mjs && node --check tools/publish-foundry-release.mjs && node --check tools/test-armor.mjs && node --check tools/test-armor-profile.mjs && node --check tools/test-called-shots.mjs && node --check tools/test-effects.mjs && node --check tools/test-feat-pack.mjs && node --check tools/test-helmet.mjs && node --check tools/test-local-armor.mjs && node --check tools/test-ux-helpers.mjs && node --check tools/validate-module.mjs",
+    "check:tools": "node --check tools/armor-piece-pack-documents.mjs && node --check tools/build-armor-piece-pack.mjs && node --check tools/build-called-shot-feat-pack.mjs && node --check tools/build-helmet-pack.mjs && node --check tools/build-release.mjs && node --check tools/check-localization.mjs && node --check tools/check-public-surface.mjs && node --check tools/publish-foundry-release.mjs && node --check tools/test-armor.mjs && node --check tools/test-armor-piece-pack.mjs && node --check tools/test-armor-profile.mjs && node --check tools/test-called-shots.mjs && node --check tools/test-effects.mjs && node --check tools/test-feat-pack.mjs && node --check tools/test-helmet.mjs && node --check tools/test-local-armor.mjs && node --check tools/test-ux-helpers.mjs && node --check tools/validate-module.mjs",
     "check:localization": "node tools/check-localization.mjs",
     "check:public": "node tools/check-public-surface.mjs",
     "build:release": "node tools/build-release.mjs",
-    "build:packs": "node tools/build-called-shot-feat-pack.mjs && node tools/build-helmet-pack.mjs",
+    "build:packs": "node tools/build-called-shot-feat-pack.mjs && node tools/build-helmet-pack.mjs && node tools/build-armor-piece-pack.mjs",
+    "build:armor-piece-pack": "node tools/build-armor-piece-pack.mjs",
     "build:helmet-pack": "node tools/build-helmet-pack.mjs",
     "publish:foundry": "node tools/publish-foundry-release.mjs",
     "publish:foundry:dry-run": "node tools/publish-foundry-release.mjs --dry-run",
     "test:armor": "node tools/test-armor.mjs",
+    "test:armor-piece-pack": "node tools/test-armor-piece-pack.mjs",
     "test:armor-profile": "node tools/test-armor-profile.mjs",
     "test:called-shots": "node tools/test-called-shots.mjs",
     "test:effects": "node tools/test-effects.mjs",
@@ -31,7 +33,7 @@
     "test:helmet": "node tools/test-helmet.mjs",
     "test:local-armor": "node tools/test-local-armor.mjs",
     "test:ux": "node tools/test-ux-helpers.mjs",
-    "validate": "node tools/validate-module.mjs && npm run check:js && npm run check:tools && npm run check:localization && npm run check:public && npm run test:armor && npm run test:armor-profile && npm run test:called-shots && npm run test:effects && npm run test:feat-pack && npm run test:helmet && npm run test:local-armor && npm run test:ux",
+    "validate": "node tools/validate-module.mjs && npm run check:js && npm run check:tools && npm run check:localization && npm run check:public && npm run test:armor && npm run test:armor-piece-pack && npm run test:armor-profile && npm run test:called-shots && npm run test:effects && npm run test:feat-pack && npm run test:helmet && npm run test:local-armor && npm run test:ux",
     "test": "npm run validate"
   }
 }
