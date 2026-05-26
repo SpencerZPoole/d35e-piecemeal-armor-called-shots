@@ -118,7 +118,7 @@ function localArmorSourceName(localArmor, payload, mode) {
   const local = numberOr(localArmor?.localTotal);
   const localLabel = localArmor?.source === "helmet"
     ? localArmor.pieceCount ? "helmet" : "no helmet"
-    : "location";
+    : localArmor?.source === "uncovered" ? "unarmored location" : "location";
   const suffix = mode === LOCAL_ARMOR_MODES.display ? " (advisory)" : "";
   return `Called Shot Location Armor: ${label} (profile ${aggregate} -> ${localLabel} ${local})${suffix}`;
 }
@@ -317,9 +317,8 @@ export function calculateLocalArmorAdjustment(actor, coverageSlot) {
 
   const pieces = (summary.activePieces?.length ? summary.activePieces : getPiecemealArmorPieces(actor).map(readArmorPiece));
   const matchingPieces = pieces.filter((piece) => pieceCoversCalledShot(piece, coverageSlot));
-  if (!matchingPieces.length) return null;
-
   const localTotal = matchingPieces.reduce((total, piece) => total + calculateArmorPieceLocalTotal(summary, piece), 0);
+  if (!matchingPieces.length && aggregateTotal === 0) return null;
   return {
     coverageSlot,
     normalizedSlot: normalizedSlots[0],
@@ -328,6 +327,7 @@ export function calculateLocalArmorAdjustment(actor, coverageSlot) {
     localTotal,
     adjustment: localTotal - aggregateTotal,
     pieceCount: matchingPieces.length,
+    source: matchingPieces.length ? "location" : "uncovered",
     pieces: matchingPieces.map((piece) => ({ id: piece.id, name: piece.name, total: calculateArmorPieceLocalTotal(summary, piece) }))
   };
 }

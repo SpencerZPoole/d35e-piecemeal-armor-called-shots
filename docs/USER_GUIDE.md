@@ -95,7 +95,7 @@ A called shot carries its location into D35E's native Apply Damage workflow. Whe
 
 Example: if the armor profile contributes 18 armor AC but the target's legs contribute 17, a called shot to the legs applies an AC Details row such as `Called Shot Location Armor: Leg (profile 18 -> location 17) -1` before D35E checks hit and crit. If the called location is better protected than the profile total, the adjustment can be positive.
 
-Location armor AC needs piecemeal armor enabled, called shots enabled, an active armor profile or enabled helmet head coverage, and a called-shot profile location with matching coverage slot(s). Called-shot touch attacks are checked against normal AC rather than touch AC. No-check damage, missing targets, disabled subsystems, and targets without matching local armor keep D35E's normal behavior.
+Location armor AC needs piecemeal armor enabled, called shots enabled, and an active armor profile or enabled helmet head coverage. Covered locations use the matching piece value; exposed locations use local armor `0`, so a called shot to an unarmored hand can reduce AC when the actor is otherwise armored. Called-shot touch attacks are checked against normal AC rather than touch AC. No-check damage, missing targets, disabled subsystems, and targets without a PAcS armor profile or configured helmet keep D35E's normal behavior.
 
 ## Helmet Head Coverage House Rule
 
@@ -309,7 +309,7 @@ Clear occupied `PAcS:` slots if the actor is already using the native workflow. 
 
 ### Location armor did not change the Apply Damage AC
 
-Confirm piecemeal armor and called shots are both enabled. For normal PAcS armor, the target needs an active armor profile and a called-shot location whose coverage slot matches at least one resolved armor piece. No-check damage intentionally skips location armor AC.
+Confirm piecemeal armor and called shots are both enabled. For normal PAcS armor, the target needs an active armor profile. If the called location is not covered by a resolved piece, AC Details should still show `Called Shot Location Armor` with `unarmored location 0`. No-check damage intentionally skips location armor AC.
 
 For the optional helmet house rule, also confirm the helmet setting is enabled, the helmet item is equipped in D35E's native `Head` slot, and `Use as helmet head coverage` is checked on that item. A magic item or equipment item with "Helmet" in its name will not affect local head armor until that checkbox and a head local armor bonus or D35E family starter value are configured.
 

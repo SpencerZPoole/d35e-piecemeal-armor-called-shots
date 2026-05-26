@@ -189,7 +189,24 @@ const dedupedCoverage = calculateLocalArmorAdjustment({
 assert.equal(dedupedCoverage.localTotal, 7);
 assert.equal(dedupedCoverage.pieceCount, 1);
 assert.equal(calculateLocalArmorAdjustment({ ...actor, items: actor.items.slice(1) }, "legs"), null);
-assert.equal(calculateLocalArmorAdjustment(actor, "hands"), null);
+const uncoveredHands = calculateLocalArmorAdjustment(actor, "hands");
+assert.equal(uncoveredHands.aggregateTotal, 5);
+assert.equal(uncoveredHands.localTotal, 0);
+assert.equal(uncoveredHands.adjustment, -5);
+assert.equal(uncoveredHands.pieceCount, 0);
+assert.equal(uncoveredHands.source, "uncovered");
+const torsoOnlyHands = calculateLocalArmorAdjustment({
+  ...actor,
+  items: [
+    aggregate(4, 0),
+    piece("torso", "torso", 4, 0)
+  ]
+}, "hands");
+assert.equal(torsoOnlyHands.aggregateTotal, 4);
+assert.equal(torsoOnlyHands.localTotal, 0);
+assert.equal(torsoOnlyHands.adjustment, -4);
+assert.equal(torsoOnlyHands.source, "uncovered");
+assert.equal(calculateLocalArmorAdjustment({ id: "no-profile", items: [] }, "hands"), null);
 assert.equal(calculateLocalArmorAdjustment({ ...actor, items: [aggregate(5, 0, false), piece("legs", "legs", 4, 0)] }, "legs"), null);
 
 const payload = sanitizeCalledShotDamagePayload({
@@ -212,6 +229,24 @@ assert.deepEqual(extractCalledShotDamagePayloads({
   dc: { isHalf: true },
   attacks: [{ cards: [card], altCards: [card] }]
 }).map((entry) => entry?.locationId), ["leg", "leg", "leg"]);
+
+const handPayload = sanitizeCalledShotDamagePayload({
+  userId: "gm-1",
+  actorId: "attacker",
+  itemId: "sword",
+  targetUuid: "Scene.scene.Token.target-token",
+  profileId: "profile",
+  locationId: "hand",
+  locationLabel: "Hand",
+  penalty: -5,
+  coverageSlot: "hands"
+});
+const handAc = { ac: 21, acModifiers: [{ sourceName: "AC", value: 21 }] };
+const uncoveredApplied = applyLocalArmorAdjustment(actor, handAc, handPayload);
+assert.equal(uncoveredApplied.adjusted, true);
+assert.equal(handAc.ac, 16);
+assert.equal(handAc.acModifiers.at(-1).sourceName, "Called Shot Location Armor: Hand (profile 5 -> unarmored location 0)");
+assert.equal(handAc.acModifiers.at(-1).value, "-5");
 
 const finalAc = { ac: 21, acModifiers: [{ sourceName: "AC", value: 21 }] };
 const applied = applyLocalArmorAdjustment(actor, finalAc, payload);
@@ -251,5 +286,12 @@ const staged = applyStagedCalledShotLocalArmor(actor, stagedAc, "gm-1");
 assert.equal(staged.adjustment, -1);
 assert.equal(stagedAc.ac, 20);
 assert.equal(getStagedCalledShotDamageApplication("gm-1").localArmor.adjustment, -1);
+clearStagedCalledShotDamageApplication("gm-1");
+stageCalledShotDamageApplication(handPayload, { userId: "gm-1", messageId: "msg-hand" });
+const stagedHandAc = { ac: 21, acModifiers: [] };
+const stagedHand = applyStagedCalledShotLocalArmor(actor, stagedHandAc, "gm-1");
+assert.equal(stagedHand.adjustment, -5);
+assert.equal(stagedHandAc.ac, 16);
+assert.equal(stagedHandAc.acModifiers.at(-1).sourceName, "Called Shot Location Armor: Hand (profile 5 -> unarmored location 0)");
 
 console.log("test-local-armor: ok");
