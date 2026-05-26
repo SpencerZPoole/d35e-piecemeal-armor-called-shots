@@ -5,6 +5,7 @@ import {
   buildNeutralizeUpdate,
   buildRestoreUpdate,
   calculatePiecemealArmor,
+  calculatePiecemealArmorFromPieces,
   inferSyncedComponentVisualSlot,
   previewArmorSync,
   RAW_ARMOR_PIECE_CATALOG,
@@ -63,6 +64,70 @@ assert.equal(plateTorsoCatalog.pieceCategory, "torso");
 assert.equal(plateTorsoCatalog.armorBonus, 6);
 assert.equal(plateTorsoCatalog.coverageSlots.includes("heart"), true);
 
+function catalog(id) {
+  const entry = RAW_ARMOR_PIECE_CATALOG.find((piece) => piece.id === id);
+  assert.ok(entry, `Missing catalog entry: ${id}`);
+  return entry;
+}
+
+assert.deepEqual(
+  ["studded-leather-arms", "studded-leather-legs", "studded-leather-torso"].map((id) => {
+    const piece = catalog(id);
+    return {
+      id,
+      armorBonus: piece.armorBonus,
+      maxDex: piece.maxDex,
+      acp: piece.acp,
+      spellFailure: piece.spellFailure,
+      weight: piece.weight,
+      cost: piece.cost
+    };
+  }),
+  [
+    { id: "studded-leather-arms", armorBonus: 0, maxDex: 5, acp: 0, spellFailure: 15, weight: 2, cost: 5 },
+    { id: "studded-leather-legs", armorBonus: 1, maxDex: 5, acp: 0, spellFailure: 10, weight: 3, cost: 5 },
+    { id: "studded-leather-torso", armorBonus: 1, maxDex: 5, acp: 0, spellFailure: 15, weight: 15, cost: 15 }
+  ]
+);
+assert.deepEqual(
+  ["chain-arms", "chain-legs", "chain-torso"].map((id) => {
+    const piece = catalog(id);
+    return {
+      id,
+      armorBonus: piece.armorBonus,
+      maxDex: piece.maxDex,
+      acp: piece.acp,
+      spellFailure: piece.spellFailure,
+      weight: piece.weight,
+      cost: piece.cost
+    };
+  }),
+  [
+    { id: "chain-arms", armorBonus: 1, maxDex: 2, acp: 3, spellFailure: 30, weight: 5, cost: 25 },
+    { id: "chain-legs", armorBonus: 0, maxDex: 2, acp: 2, spellFailure: 15, weight: 10, cost: 25 },
+    { id: "chain-torso", armorBonus: 4, maxDex: 4, acp: 2, spellFailure: 30, weight: 25, cost: 100 }
+  ]
+);
+assert.deepEqual(
+  ["plate-arms", "plate-legs", "plate-torso"].map((id) => {
+    const piece = catalog(id);
+    return {
+      id,
+      armorBonus: piece.armorBonus,
+      maxDex: piece.maxDex,
+      acp: piece.acp,
+      spellFailure: piece.spellFailure,
+      weight: piece.weight,
+      cost: piece.cost
+    };
+  }),
+  [
+    { id: "plate-arms", armorBonus: 1, maxDex: 1, acp: 7, spellFailure: 35, weight: 10, cost: 375 },
+    { id: "plate-legs", armorBonus: 1, maxDex: 1, acp: 3, spellFailure: 20, weight: 10, cost: 925 },
+    { id: "plate-torso", armorBonus: 6, maxDex: 3, acp: 4, spellFailure: 35, weight: 30, cost: 200 }
+  ]
+);
+
 const summary = calculatePiecemealArmor([torso, arms, ignored]);
 assert.equal(summary.armorBonus, 4);
 assert.equal(summary.enhancementBonus, 1);
@@ -118,6 +183,51 @@ assert.equal(aggregate.system.armor.acp, -1);
 assert.equal(aggregate.system.weight, 0);
 assert.equal(aggregate.flags[MODULE_ID].aggregate.summary.weight, 15);
 
+const singleArmPiece = calculatePiecemealArmorFromPieces([catalog("chain-arms")]);
+assert.equal(singleArmPiece.completeSuit, false);
+assert.equal(singleArmPiece.armorBonus, 1);
+assert.equal(singleArmPiece.maxDex, 2);
+assert.equal(singleArmPiece.acp, 3);
+assert.equal(singleArmPiece.spellFailure, 30);
+assert.equal(singleArmPiece.weight, 5);
+assert.equal(singleArmPiece.cost, 25);
+
+const partialMixedSuit = calculatePiecemealArmorFromPieces([catalog("chain-torso"), catalog("studded-leather-legs")]);
+assert.equal(partialMixedSuit.completeSuit, false);
+assert.equal(partialMixedSuit.mixedSuit, false);
+assert.equal(partialMixedSuit.armorBonus, 5);
+assert.equal(partialMixedSuit.spellFailure, 30);
+assert.equal(partialMixedSuit.mixedSuitSpellFailurePenalty, 0);
+
+const studdedSuit = calculatePiecemealArmorFromPieces([
+  catalog("studded-leather-torso"),
+  catalog("studded-leather-arms"),
+  catalog("studded-leather-legs")
+]);
+assert.equal(studdedSuit.completeSuit, true);
+assert.equal(studdedSuit.mixedSuit, false);
+assert.equal(studdedSuit.armorBonus, 3);
+assert.equal(studdedSuit.suitArmorBonus, 1);
+assert.equal(studdedSuit.maxDex, 5);
+assert.equal(studdedSuit.acp, 0);
+assert.equal(studdedSuit.spellFailure, 15);
+assert.equal(studdedSuit.weight, 20);
+assert.equal(studdedSuit.cost, 25);
+
+const chainSuit = calculatePiecemealArmorFromPieces([
+  catalog("chain-torso"),
+  catalog("chain-arms"),
+  catalog("chain-legs")
+]);
+assert.equal(chainSuit.completeSuit, true);
+assert.equal(chainSuit.armorBonus, 6);
+assert.equal(chainSuit.maxDex, 2);
+assert.equal(chainSuit.acp, 3);
+assert.equal(chainSuit.spellFailure, 30);
+assert.equal(chainSuit.weight, 40);
+assert.equal(chainSuit.cost, 150);
+assert.equal(chainSuit.equipmentSubtype, "mediumArmor");
+
 const fullSuit = calculatePiecemealArmor([
   item("suit-torso", "Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorFamily: "plate", armorBonus: 6, acp: 4, spellFailure: 35, weight: 30 }),
   item("suit-legs", "Legs", { enabled: true, pieceCategory: "legs", coverageSlots: "legs", armorFamily: "plate", armorBonus: 2, acp: 3, spellFailure: 20, weight: 15 }),
@@ -146,6 +256,12 @@ const mixedSuit = calculatePiecemealArmor([
 assert.equal(mixedSuit.mixedSuit, true);
 assert.equal(mixedSuit.spellFailure, 40);
 
+const hastyPiece = calculatePiecemealArmor([
+  item("hasty-plate-torso", "Hasty Plate Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorFamily: "plate", armorBonus: 6, acp: 4, spellFailure: 35, donState: "hasty" })
+]);
+assert.equal(hastyPiece.armorBonus, 5);
+assert.equal(hastyPiece.acp, 5);
+
 const zeroValuePieces = calculatePiecemealArmor([
   item("zero-arms", "Studded leather arms", { enabled: true, pieceCategory: "arms", coverageSlots: "arms", armorFamily: "studded-leather", armorBonus: 0 }),
   item("zero-legs", "Chain legs", { enabled: true, pieceCategory: "legs", coverageSlots: "legs", armorFamily: "chain", armorBonus: 0 })
@@ -169,6 +285,47 @@ const enhancedRows = buildArmorProfileSourceDetailRows(enhancedPiece);
 assert.equal(enhancedRows.at(-1).name, "PAcS Enhancement");
 assert.equal(enhancedRows.at(-1).value, 2);
 assert.equal(enhancedRows.reduce((total, row) => total + row.value, 0), enhancedPiece.armorBonus + enhancedPiece.enhancementBonus);
+
+const separatelyEnhancedSuit = calculatePiecemealArmor([
+  item("separate-torso", "Separately Enhanced Torso", {
+    enabled: true,
+    pieceCategory: "torso",
+    coverageSlots: "torso",
+    armorFamily: "plate",
+    armorBonus: 6,
+    enhancementBonus: 1,
+    magicMode: "separatePiece"
+  }),
+  item("separate-legs", "Separately Enhanced Legs", {
+    enabled: true,
+    pieceCategory: "legs",
+    coverageSlots: "legs",
+    armorFamily: "plate",
+    armorBonus: 1,
+    enhancementBonus: 4,
+    magicMode: "separatePiece"
+  }),
+  item("separate-arms", "Separately Enhanced Arms", {
+    enabled: true,
+    pieceCategory: "arms",
+    coverageSlots: "arms",
+    armorFamily: "plate",
+    armorBonus: 1,
+    enhancementBonus: 5,
+    magicMode: "separatePiece"
+  })
+]);
+assert.equal(separatelyEnhancedSuit.magic.appliedPieceId, "separate-torso");
+assert.equal(separatelyEnhancedSuit.enhancementBonus, 1);
+
+const enchantedSuit = calculatePiecemealArmor([
+  item("magic-suit-torso", "Magic Suit Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorFamily: "plate", armorBonus: 6, enhancementBonus: 2, magicMode: "suit", suitId: "plate-suit" }),
+  item("magic-suit-legs", "Magic Suit Legs", { enabled: true, pieceCategory: "legs", coverageSlots: "legs", armorFamily: "plate", armorBonus: 1, enhancementBonus: 2, magicMode: "suit", suitId: "plate-suit" }),
+  item("magic-suit-arms", "Magic Suit Arms", { enabled: true, pieceCategory: "arms", coverageSlots: "arms", armorFamily: "plate", armorBonus: 1, enhancementBonus: 2, magicMode: "suit", suitId: "plate-suit" })
+]);
+assert.equal(enchantedSuit.magic.mode, "suit");
+assert.equal(enchantedSuit.enhancementBonus, 2);
+assert.equal(enchantedSuit.armorBonus, 9);
 
 const mithralSuit = calculatePiecemealArmor([
   item("mithral-torso", "Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorFamily: "chain", material: "mithral", armorBonus: 4, maxDex: 4, acp: 4, spellFailure: 25, equipmentSubtype: "mediumArmor", weight: 20 }),

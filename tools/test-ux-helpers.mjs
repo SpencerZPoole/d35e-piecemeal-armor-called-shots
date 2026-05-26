@@ -30,7 +30,7 @@ globalThis.game = {
 };
 
 const { getDefaultCalledShotProfiles } = await import("../scripts/profiles.js");
-const { FULL_ATTACK_FEAT_RULE_MODES, OUTCOME_MODES, SETTINGS } = await import("../scripts/constants.js");
+const { FULL_ATTACK_FEAT_RULE_MODES, FULL_ATTACK_MODES, OUTCOME_MODES, SETTINGS } = await import("../scripts/constants.js");
 const { buildProfileManagerContext, registerSettings, updateProfilesFromProfileManager } = await import("../scripts/settings.js");
 const {
   CALLED_SHOT_QUEUE_NAME,
@@ -57,10 +57,25 @@ assert.equal(registeredSettings.get(SETTINGS.enableHelmetSkillPenalties).default
 assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).name, "Called-shot effect automation");
 assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).default, OUTCOME_MODES.confirmSevere);
 assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).config, true);
+assert.deepEqual(Object.keys(registeredSettings.get(SETTINGS.calledShotOutcomeMode).choices), [
+  OUTCOME_MODES.confirmSevere,
+  OUTCOME_MODES.automatic,
+  OUTCOME_MODES.advisory
+]);
+assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackMode).name, "Called shots on full attacks");
+assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackMode).default, FULL_ATTACK_MODES.perAttack);
+assert.deepEqual(Object.keys(registeredSettings.get(SETTINGS.calledShotFullAttackMode).choices), [
+  FULL_ATTACK_MODES.perAttack,
+  FULL_ATTACK_MODES.first,
+  FULL_ATTACK_MODES.all,
+  FULL_ATTACK_MODES.disabled
+]);
 assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).name, "Called-shot full-attack feat rules");
 assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).default, FULL_ATTACK_FEAT_RULE_MODES.require);
 assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).choices[FULL_ATTACK_FEAT_RULE_MODES.warnOnly], "Warn only");
 assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).config, true);
+assert.equal(registeredSettings.get(SETTINGS.locationArmorOverlay).name, "Show location armor overlay");
+assert.equal(registeredSettings.get(SETTINGS.locationArmorOverlay).default, false);
 assert.equal(registeredMenus.has("calledShotProfileEditor"), true);
 const context = buildProfileManagerContext(profiles);
 assert.equal(context.activeProfileId, "pf1e-uc-raw-adapted");

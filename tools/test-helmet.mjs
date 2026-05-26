@@ -107,6 +107,7 @@ assert.equal(calculateHelmetLocalArmor(customHelmet).localArmorBonus, 3);
 const actorWithHelmet = profileActor([plateHelmet]);
 let resolved = resolveArmorProfile(actorWithHelmet);
 assert.equal(resolved.summary.armorBonus, 2);
+assert.equal(resolved.summary.maxDex, 2);
 assert.equal(resolved.summary.activePieces.some((piece) => piece.id === "plate-helm"), false);
 
 helmetCoverageEnabled = false;
@@ -127,6 +128,7 @@ assert.equal(helmetHead.source, "helmet");
 assert.equal(helmetHead.localTotal, 6);
 assert.equal(helmetHead.adjustment, 4);
 assert.equal(helmetHead.pieceCount, 1);
+assert.equal(resolveArmorProfile(actorWithHelmet).summary.armorBonus, 2);
 assert.equal(calculateLocalArmorAdjustment(actorWithHelmet, "ear").localTotal, 6);
 assert.equal(calculateLocalArmorAdjustment(actorWithHelmet, "eye").localTotal, 6);
 assert.equal(calculateLocalArmorAdjustment(actorWithHelmet, "torso").adjustment, -1);
@@ -138,6 +140,24 @@ assert.equal(ignoredHelmet.adjustment, -2);
 const customActor = profileActor([customHelmet]);
 assert.equal(calculateLocalArmorAdjustment(customActor, "head").localTotal, 3);
 assert.equal(calculateLocalArmorAdjustment(customActor, "head").adjustment, 1);
+
+const disabledHelmet = helmet("disabled-helm");
+disabledHelmet.flags[MODULE_ID].helmet.enabled = false;
+const disabledActor = profileActor([disabledHelmet]);
+assert.equal(calculateLocalArmorAdjustment(disabledActor, "head").localTotal, 0);
+
+const weakerHelmet = helmet("weaker-helm", { name: "Leather Cap", armorFamily: "leather" });
+const strongerHelmet = helmet("stronger-helm", { name: "Great Helm", customLocalArmorBonus: 8, localArmorBonus: 8 });
+let warningText = "";
+const originalWarn = console.warn;
+console.warn = (message) => {
+  warningText = String(message);
+};
+const multiHelmet = calculateLocalArmorAdjustment(profileActor([weakerHelmet, strongerHelmet]), "head");
+console.warn = originalWarn;
+assert.equal(multiHelmet.localTotal, 8);
+assert.equal(multiHelmet.pieces[0].name, "Great Helm");
+assert.match(warningText, /Multiple configured helmets/);
 
 helmetSkillPenaltiesEnabled = false;
 let hookData = { skillSourceDetails: [] };
@@ -158,5 +178,18 @@ assert.deepEqual(hookData.skillSourceDetails, [{ name: "Helmet (Test Helmet)", v
 hookData = { skillSourceDetails: [] };
 assert.equal(applyHelmetSkillPenaltyToHookData(actorWithHelmet, "jmp", hookData), null);
 assert.deepEqual(hookData.skillSourceDetails, []);
+
+const mildPenaltyHelmet = helmet("mild-penalty", { name: "Mild Helm", spotPenalty: 1, listenPenalty: 1 });
+const severePenaltyHelmet = helmet("severe-penalty", { name: "Severe Helm", spotPenalty: 5, listenPenalty: 3 });
+warningText = "";
+console.warn = (message) => {
+  warningText = String(message);
+};
+hookData = { skillSourceDetails: [] };
+const largestSpotPenalty = applyHelmetSkillPenaltyToHookData(profileActor([mildPenaltyHelmet, severePenaltyHelmet]), "spt", hookData);
+console.warn = originalWarn;
+assert.equal(largestSpotPenalty.penalty, -5);
+assert.deepEqual(hookData.skillSourceDetails, [{ name: "Helmet (Severe Helm)", value: -5 }]);
+assert.match(warningText, /Multiple configured helmets/);
 
 console.log("test-helmet: ok");

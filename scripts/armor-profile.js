@@ -572,6 +572,21 @@ async function unequipSuspendedOverrideItems(actor, profile) {
   return unequipped;
 }
 
+async function unequipNativeArmorOutsideProfile(actor, sourceItemIds = []) {
+  const sourceIds = new Set(sourceItemIds);
+  const unequipped = [];
+  for (const item of getItems(actor)) {
+    const itemId = item?.id ?? item?._id;
+    if (!item?.update || !itemId || sourceIds.has(itemId)) continue;
+    if (!isNativeArmorItem(item) || item.system?.equipped !== true) continue;
+    const update = { "system.equipped": false };
+    if (item.system?.slot === "armor") update["system.slot"] = "slotless";
+    unequipped.push({ itemId, itemName: item.name, update });
+    await item.update(update, { _slotBypass: true, d35ePacsProfile: true });
+  }
+  return unequipped;
+}
+
 async function deleteItemIfPresent(actor, item) {
   if (!actor || !item?.id) return false;
   if (actor.deleteEmbeddedDocuments) {
@@ -831,6 +846,7 @@ export async function applyArmorProfile(actor, { migrateLegacy = true } = {}) {
   }
 
   const restored = await restoreItemsOutsideProfile(actor, resolution.sourceItemIds);
+  const unequippedNativeArmor = await unequipNativeArmorOutsideProfile(actor, resolution.sourceItemIds);
   for (const sourceId of resolution.sourceItemIds) {
     const item = itemCollectionGet(actor.items, sourceId);
     if (!item) continue;
@@ -855,6 +871,7 @@ export async function applyArmorProfile(actor, { migrateLegacy = true } = {}) {
   return {
     ...resolution,
     restored,
+    unequippedNativeArmor,
     reconciliation,
     carrierId: carrier?.id ?? null
   };
@@ -881,6 +898,8 @@ function shouldRefreshProfileForItem(item) {
 function scheduleProfileApply(actor) {
   if (!actor || !isArmorAutomationEnabled() || getArmorWorkflowMode() !== ARMOR_WORKFLOW_MODES.nativeProfile) return;
   globalThis.window?.setTimeout?.(() => {
+    const actors = globalThis.game?.actors;
+    if (actor.id && actors?.has?.(actor.id) === false) return;
     applyArmorProfile(actor, { migrateLegacy: false }).catch((error) => {
       console.error(`${MODULE_ID} | Failed to refresh piecemeal armor profile.`, error);
     });

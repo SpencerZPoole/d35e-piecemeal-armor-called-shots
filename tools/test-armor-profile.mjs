@@ -154,6 +154,11 @@ assert.equal(resolved.summary.armorBonus, 3);
 assert.equal(resolved.summary.completeSuit, true);
 await applyArmorProfile(profileActor);
 assert.equal(profileActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
+assert.equal(studded.system.equipmentType, "armor");
+assert.equal(studded.system.equipped, true);
+assert.equal(studded.system.armor.value, 3);
+assert.equal(studded.system.armor.dex, 5);
+assert.equal(studded.system.weight, 20);
 
 const unequippedStudded = equipment("studded-2", "Studded Leather", {
   equipped: false,
@@ -357,6 +362,42 @@ assert.equal(suspendCarrier.getFlag(MODULE_ID, FLAGS.internalArmor).suspended, f
 assert.equal(suspendOverride.system.equipmentType, "misc");
 assert.equal(suspendOverride.system.slot, PACS_EQUIPMENT_SLOTS.legs);
 
+const staleNativeBaseline = equipment("stale-native-chain", "Chainmail", {
+  equipped: true,
+  equipmentSubtype: "mediumArmor",
+  armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+  spellFailure: 30,
+  slot: "armor",
+  weight: 40
+});
+const replacementBaseline = equipment("replacement-studded", "Studded Leather", {
+  equipped: true,
+  armor: { value: 3, enh: 0, dex: 5, acp: 0 },
+  spellFailure: 15,
+  slot: "armor",
+  weight: 20
+});
+const replacementOverride = equipment("replacement-chain-arms", "Chainmail", {
+  equipped: false,
+  equipmentSubtype: "mediumArmor",
+  armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+  spellFailure: 30,
+  weight: 40
+});
+const staleNativeActor = actor([staleNativeBaseline, replacementBaseline, replacementOverride]);
+await setArmorProfileBaseline(staleNativeActor, "stale-native-chain");
+await setArmorProfileBaseline(staleNativeActor, "replacement-studded");
+await setArmorProfileSlot(staleNativeActor, "arms", "replacement-chain-arms");
+resolved = resolveArmorProfile(staleNativeActor);
+assert.equal(resolved.status, ARMOR_PROFILE_STATUS.compositeProfile);
+assert.equal(resolved.summary.armorBonus, 4);
+assert.equal(staleNativeBaseline.system.equipped, false);
+assert.equal(staleNativeBaseline.system.slot, "slotless");
+assert.equal(replacementBaseline.system.equipped, true);
+assert.equal(replacementBaseline.system.armor.value, 0);
+carrier = staleNativeActor.items.find((item) => item.name === "PAcS Armor Profile");
+assert.equal(carrier.system.armor.value, 4);
+
 const chainmail = equipment("chainmail", "Chainmail", {
   equipped: false,
   equipmentSubtype: "mediumArmor",
@@ -384,7 +425,55 @@ assert.equal(chainmail.system.equipmentType, "misc");
 assert.equal(chainmail.system.slot, PACS_EQUIPMENT_SLOTS.legs);
 assert.equal(chainmail.system.armor.dex, null);
 assert.equal(carrier.system.armor.dex, 2);
+assert.equal(carrier.system.weight, 0);
+assert.equal(carrier.getFlag(MODULE_ID, FLAGS.aggregate).summary.weight, 27);
 
+const mixedOverrideStudded = equipment("mixed-studded", "Studded Leather", {
+  equipped: true,
+  armor: { value: 3, enh: 0, dex: 5, acp: 0 },
+  spellFailure: 15,
+  weight: 20
+});
+const mixedOverrideChainTorso = equipment("mixed-chain-torso", "Chainmail", {
+  equipped: false,
+  equipmentSubtype: "mediumArmor",
+  armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+  spellFailure: 30,
+  weight: 40
+});
+const mixedOverrideChainArms = equipment("mixed-chain-arms", "Chainmail", {
+  equipped: false,
+  equipmentSubtype: "mediumArmor",
+  armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+  spellFailure: 30,
+  weight: 40
+});
+const mixedOverrideActor = actor([mixedOverrideStudded, mixedOverrideChainTorso, mixedOverrideChainArms]);
+await setArmorProfileSlot(mixedOverrideActor, "torso", "mixed-chain-torso");
+await setArmorProfileSlot(mixedOverrideActor, "arms", "mixed-chain-arms");
+resolved = resolveArmorProfile(mixedOverrideActor);
+assert.equal(resolved.status, ARMOR_PROFILE_STATUS.compositeProfile);
+assert.equal(resolved.profile.baselineItemId, "mixed-studded");
+assert.equal(resolved.summary.completeSuit, true);
+assert.equal(resolved.summary.mixedSuit, true);
+assert.equal(resolved.summary.armorBonus, 7);
+assert.equal(resolved.summary.maxDex, 2);
+assert.equal(resolved.summary.acp, 3);
+assert.equal(resolved.summary.spellFailure, 35);
+assert.equal(resolved.summary.weight, 33);
+carrier = mixedOverrideActor.items.find((item) => item.name === "PAcS Armor Profile");
+assert.equal(carrier.system.armor.value, 7);
+assert.equal(carrier.system.armor.dex, 2);
+assert.equal(carrier.system.armor.acp, -3);
+assert.equal(carrier.system.spellFailure, 35);
+assert.equal(carrier.system.weight, 0);
+assert.equal(mixedOverrideStudded.system.armor.value, 0);
+assert.equal(mixedOverrideStudded.system.armor.dex, null);
+assert.equal(mixedOverrideChainTorso.system.slot, PACS_EQUIPMENT_SLOTS.torso);
+assert.equal(mixedOverrideChainArms.system.slot, PACS_EQUIPMENT_SLOTS.arms);
+
+resolved = resolveArmorProfile(profileActor);
+carrier = profileActor.items.find((item) => item.name === "PAcS Armor Profile");
 profileActor.sourceDetails = {
   [NORMAL_AC_PATH]: [
     { name: "Base", value: 10 },
@@ -482,6 +571,23 @@ nativeSourceActor.sourceDetails = {
 decoration = decorateArmorProfileSourceDetails(nativeSourceActor);
 assert.equal(decoration.decorated, false);
 assert.deepEqual(nativeSourceActor.sourceDetails[NORMAL_AC_PATH], [{ name: "Base", value: 10 }, { name: "Armor [Equipment -> Studded Leather]", value: 3 }]);
+
+const multipleNativeActor = actor([
+  equipment("native-studded", "Studded Leather", { equipped: true, armor: { value: 3, enh: 0, dex: 5, acp: 0 } }),
+  equipment("native-chain", "Chainmail", { equipped: true, equipmentSubtype: "mediumArmor", armor: { value: 5, enh: 0, dex: 2, acp: 5 } })
+]);
+resolved = resolveArmorProfile(multipleNativeActor);
+assert.equal(resolved.status, ARMOR_PROFILE_STATUS.empty);
+assert.equal(resolved.baselineItem, null);
+assert.deepEqual(resolved.warnings, [{
+  category: "baseline",
+  reason: "multipleNativeArmor",
+  itemNames: ["Studded Leather", "Chainmail"]
+}]);
+await applyArmorProfile(multipleNativeActor);
+assert.equal(multipleNativeActor.items.some((item) => item.name === "PAcS Armor Profile"), false);
+assert.equal(multipleNativeActor.items.get("native-studded").system.armor.value, 3);
+assert.equal(multipleNativeActor.items.get("native-chain").system.armor.value, 5);
 
 await clearArmorProfile(profileActor);
 assert.equal(studded.system.equipmentType, "armor");
