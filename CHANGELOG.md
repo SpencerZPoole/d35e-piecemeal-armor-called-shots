@@ -8,6 +8,7 @@
 - Added a `PAcS Helmets` Item compendium with preconfigured optional helmet records for the D35E-calibrated armor styles.
 - Added optional configured helmet Spot/Listen penalties that appear in native D35E skill roll breakdowns without permanently changing actor skill values.
 - Documented helmet coverage as a non-RAW table option separate from RAW-adapted Torso/Arms/Legs piecemeal armor math.
+- Fixed melee called-shot range/reach adjacency detection for Large/Huge tokens while preserving the RAW `-2` penalty when a target is within reach but not adjacent.
 
 ## 1.2.1
 

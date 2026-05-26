@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { FULL_ATTACK_FEAT_RULE_MODES, FULL_ATTACK_MODES, OUTCOME_MODES, RULES_MODES, SETTINGS } from "../scripts/constants.js";
 import {
+  areCalledShotTokensAdjacent,
   applyAutomaticCalledShotOutcome,
   buildAttackExtraPart,
   buildAttackExtraParts,
@@ -12,6 +13,7 @@ import {
   determineCalledShotSeverity,
   getCalledShotFullAttackFeatRuleMode,
   getCalledShotFeatState,
+  getD35EReachFeet,
   getCalledShotOutcomeMode,
   getPendingCalledShot,
   noteCalledShotAttackSequence,
@@ -315,6 +317,7 @@ game.user.targets = new Set([reachTarget]);
 const meleeReachPenalty = calculateCalledShotSituationalPenalty(rangedActor, { system: { actionType: "mwak" } }, "Scene.test.Token.reach");
 assert.equal(meleeReachPenalty.distance, 10);
 assert.equal(meleeReachPenalty.penalty, -2);
+assert.equal(meleeReachPenalty.adjacent, false);
 game.user.targets = new Set([targetToken]);
 
 game.user.targets = new Set([reachTarget]);
@@ -328,14 +331,92 @@ assert.equal(meleeHead.rangePenalty, -2);
 assert.equal(meleeHead.penalty, -7);
 assert.deepEqual(buildAttackExtraParts(meleeHead), [
   { part: "-5", source: "Called Shot: Head", value: -5 },
-  { part: "-2", source: "Called Shot Range/Reach", value: -2 }
+  { part: "-2", source: "Called Shot Range/Reach: not adjacent", value: -2 }
 ]);
 assert.deepEqual(buildCalledShotCardPayload(meleeHead).penaltyBreakdown, [
   { label: "Called Shot: Head", value: -5, valueLabel: "-5" },
-  { label: "Called Shot Range/Reach", value: -2, valueLabel: "-2" }
+  { label: "Called Shot Range/Reach: not adjacent", value: -2, valueLabel: "-2" }
 ]);
 assert.equal(buildCalledShotCardPayload(meleeHead).hasPenaltyBreakdown, true);
 clearCalledShot(rangedActor, { id: "claw", actor: rangedActor, system: { actionType: "mwak" } }, "melee-head");
+game.user.targets = new Set([targetToken]);
+
+const adjacentMediumTarget = {
+  document: { uuid: "Scene.test.Token.adjacent-medium" },
+  x: 100,
+  y: 0,
+  w: 1,
+  h: 1
+};
+game.user.targets = new Set([adjacentMediumTarget]);
+assert.equal(areCalledShotTokensAdjacent(rangedActor, "Scene.test.Token.adjacent-medium"), true);
+const adjacentMediumPenalty = calculateCalledShotSituationalPenalty(rangedActor, { system: { actionType: "mwak" } }, "Scene.test.Token.adjacent-medium");
+assert.equal(adjacentMediumPenalty.penalty, 0);
+assert.equal(adjacentMediumPenalty.adjacent, true);
+
+const hugeActor = {
+  id: "huge",
+  system: { traits: { reach: "" } },
+  getActiveTokens() {
+    return [{ x: 0, y: 0, w: 3, h: 3 }];
+  }
+};
+const hugeEdgeAdjacentTarget = {
+  document: { uuid: "Scene.test.Token.huge-edge" },
+  x: 300,
+  y: 100,
+  w: 1,
+  h: 1
+};
+game.user.targets = new Set([hugeEdgeAdjacentTarget]);
+assert.equal(areCalledShotTokensAdjacent(hugeActor, "Scene.test.Token.huge-edge"), true);
+assert.equal(calculateCalledShotSituationalPenalty(hugeActor, { system: { actionType: "mwak" } }, "Scene.test.Token.huge-edge").penalty, 0);
+
+const hugeCornerAdjacentTarget = {
+  document: { uuid: "Scene.test.Token.huge-corner" },
+  x: 300,
+  y: 300,
+  w: 1,
+  h: 1
+};
+game.user.targets = new Set([hugeCornerAdjacentTarget]);
+assert.equal(areCalledShotTokensAdjacent(hugeActor, "Scene.test.Token.huge-corner"), true);
+assert.equal(calculateCalledShotSituationalPenalty(hugeActor, { system: { actionType: "mwak" } }, "Scene.test.Token.huge-corner").penalty, 0);
+
+const hugeBeyondAdjacentTarget = {
+  document: { uuid: "Scene.test.Token.huge-beyond" },
+  x: 400,
+  y: 100,
+  w: 1,
+  h: 1
+};
+game.user.targets = new Set([hugeBeyondAdjacentTarget]);
+const hugeBeyondPenalty = calculateCalledShotSituationalPenalty(hugeActor, { system: { actionType: "mwak" } }, "Scene.test.Token.huge-beyond");
+assert.equal(hugeBeyondPenalty.adjacent, false);
+assert.equal(hugeBeyondPenalty.penalty, -2);
+
+const reachActor = {
+  id: "reach",
+  system: { traits: { reach: "15" } },
+  getActiveTokens() {
+    return [{ x: 0, y: 0, w: 1, h: 1 }];
+  }
+};
+game.user.targets = new Set([reachTarget]);
+const withinReachButNotAdjacent = calculateCalledShotSituationalPenalty(reachActor, { system: { actionType: "mwak" } }, "Scene.test.Token.reach");
+assert.equal(getD35EReachFeet(reachActor), 15);
+assert.equal(withinReachButNotAdjacent.reachFeet, 15);
+assert.equal(withinReachButNotAdjacent.adjacent, false);
+assert.equal(withinReachButNotAdjacent.penalty, -2);
+
+const invalidReachActor = {
+  ...reachActor,
+  system: { traits: { reach: "huge" } }
+};
+const invalidReachPenalty = calculateCalledShotSituationalPenalty(invalidReachActor, { system: { actionType: "mwak" } }, "Scene.test.Token.reach");
+assert.equal(getD35EReachFeet(invalidReachActor), null);
+assert.equal(invalidReachPenalty.reachFeet, null);
+assert.equal(invalidReachPenalty.penalty, -2);
 game.user.targets = new Set([targetToken]);
 
 assert.equal(determineCalledShotSeverity({ damage: 10, crit: false }), "normal");

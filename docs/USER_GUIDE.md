@@ -116,6 +116,12 @@ The full-attack feat setting has three modes:
 
 Even in `Warn only` or `Do not require feats`, actual feat benefits stay tied to actor feats. Improved still supplies the `+2` only when the actor has `Improved Called Shot`, and Greater still supplies the `40` debilitating threshold only when the actor has `Greater Called Shot`. When multiple called shots happen in one full attack, each additional called shot after the first still takes the repeated-called-shot `-5` penalty so the relaxed modes do not become stronger than the Greater Called Shot workflow.
 
+## Range And Reach Penalties
+
+The RAW-adapted called-shot range rules are applied as separate attack-breakdown rows. Melee called shots add `Called Shot Range/Reach: not adjacent -2` when the target is not adjacent to the attacker. A creature's D35E `Reach` field can still matter for whether the melee attack is valid, but reach does not remove this called-shot penalty unless the tokens are actually adjacent. D35E's native `Reach` field expects a number of feet, such as `10` or `15`, not a size word like `Huge`.
+
+Ranged called shots keep the Ultimate Combat range behavior: range-increment penalties are doubled, with at least `-2` against targets beyond 30 feet.
+
 ## Called-Shot Feat Pack
 
 Open Foundry's Compendium Packs sidebar and look for `PAcS Called-Shot Feats`. The pack contains `Improved Called Shot` and `Greater Called Shot` as small D35E Item records that can be imported or dragged to an actor like other feats.

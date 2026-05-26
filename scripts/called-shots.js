@@ -72,6 +72,37 @@ function tokenCenter(token) {
   };
 }
 
+function gridSizePixels() {
+  return globalThis.canvas?.grid?.size ?? globalThis.canvas?.dimensions?.size ?? 100;
+}
+
+function gridDistanceFeet() {
+  return globalThis.canvas?.scene?.grid?.distance ?? globalThis.canvas?.dimensions?.distance ?? 5;
+}
+
+function dimensionPixels(value, fallback = 1) {
+  const gridSize = gridSizePixels();
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return fallback * gridSize;
+  return number <= 10 ? number * gridSize : number;
+}
+
+function tokenBounds(token) {
+  if (!token) return null;
+  const x = Number(token?.x ?? token?.object?.x ?? token?.document?.x ?? 0);
+  const y = Number(token?.y ?? token?.object?.y ?? token?.document?.y ?? 0);
+  const width = dimensionPixels(token?.w ?? token?.object?.w ?? token?.document?.width ?? token?.width, 1);
+  const height = dimensionPixels(token?.h ?? token?.object?.h ?? token?.document?.height ?? token?.height, 1);
+  return {
+    x,
+    y,
+    width,
+    height,
+    right: x + width,
+    bottom: y + height
+  };
+}
+
 function actorToken(actor) {
   return actor?.getActiveTokens?.()[0] ?? actor?.token ?? null;
 }
@@ -90,9 +121,25 @@ export function measureCalledShotDistance(actor, targetUuid) {
   if (!source || !target || !globalThis.canvas) return null;
   const a = tokenCenter(source);
   const b = tokenCenter(target);
-  const gridSize = canvas.grid?.size || 100;
-  const gridDistance = canvas.scene?.grid?.distance || 5;
+  const gridSize = gridSizePixels();
+  const gridDistance = gridDistanceFeet();
   return Math.hypot((a.x ?? 0) - (b.x ?? 0), (a.y ?? 0) - (b.y ?? 0)) / gridSize * gridDistance;
+}
+
+export function areCalledShotTokensAdjacent(actor, targetUuid) {
+  const source = actorToken(actor);
+  const target = targetForUuid(targetUuid);
+  const sourceBounds = tokenBounds(source);
+  const targetBounds = tokenBounds(target);
+  if (!sourceBounds || !targetBounds) return null;
+  const gapX = Math.max(0, Math.max(sourceBounds.x - targetBounds.right, targetBounds.x - sourceBounds.right));
+  const gapY = Math.max(0, Math.max(sourceBounds.y - targetBounds.bottom, targetBounds.y - sourceBounds.bottom));
+  return gapX <= 1 && gapY <= 1;
+}
+
+export function getD35EReachFeet(actor) {
+  const reach = parseInt(getProperty(actor, "system.traits.reach"), 10);
+  return Number.isFinite(reach) && reach > 0 ? reach : null;
 }
 
 function isRangedAttack(item) {
@@ -110,11 +157,13 @@ export function calculateCalledShotSituationalPenalty(actor, item, targetUuid) {
   let penalty = 0;
 
   if (!isRangedAttack(item)) {
-    if (distance > (canvas?.scene?.grid?.distance || 5)) {
+    const adjacent = areCalledShotTokensAdjacent(actor, targetUuid);
+    const reachFeet = getD35EReachFeet(actor);
+    if (adjacent === false) {
       penalty -= 2;
-      parts.push({ label: "Called Shot Range/Reach", value: -2 });
+      parts.push({ label: "Called Shot Range/Reach: not adjacent", value: -2 });
     }
-    return { penalty, parts, distance };
+    return { penalty, parts, distance, adjacent, reachFeet };
   }
 
   if (distance > 30) {
