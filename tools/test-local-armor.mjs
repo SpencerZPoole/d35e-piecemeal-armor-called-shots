@@ -25,6 +25,8 @@ globalThis.game = {
       if (key === "calledShotLocalArmorMode") return LOCAL_ARMOR_MODES.adjust;
       if (key === "rulesMode") return "rawAdapted";
       if (key === "armorWorkflowMode") return "nativeProfile";
+      if (key === "enableHelmetHeadCoverage") return false;
+      if (key === "enableHelmetSkillPenalties") return false;
       return true;
     }
   }

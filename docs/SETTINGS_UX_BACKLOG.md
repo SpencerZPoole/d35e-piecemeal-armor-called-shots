@@ -4,7 +4,7 @@ These notes track the settings cleanup decisions from the native PAcS armor work
 
 ## Implemented Direction
 
-- The normal settings menu now focuses on table-facing controls: `Enable piecemeal armor`, `Enable called shots`, `Called-shot effect automation`, full-attack behavior, location overlay, and the called-shot profile editor.
+- The normal settings menu now focuses on table-facing controls: `Enable piecemeal armor`, `Enable called shots`, optional helmet house rules, `Called-shot effect automation`, full-attack behavior, location overlay, and the called-shot profile editor.
 - The old rules-mode setting is hidden from the normal UI. RAW-adapted armor and called-shot workflow behavior is the normal runtime path.
 - The old piecemeal workflow setting is hidden from the normal UI. The native D35E inventory workflow is the normal workflow; old aggregate behavior remains internal migration/recovery support.
 - Local armor AC is no longer a visible mode setting. When piecemeal armor and called shots are both enabled, called-shot Apply Damage checks use matching location armor automatically.

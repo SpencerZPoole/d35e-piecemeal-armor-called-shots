@@ -34,6 +34,7 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 - Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as `Called Shot: Ear -10`.
 - Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.
 - Lets armor components and called-shot profile locations name multiple coverage slots, such as `head; eyes; ears`.
+- Offers an optional, disabled-by-default helmet house rule that uses D35E's native `Head` slot for Head/Eye/Ear local armor and optional Spot/Listen penalties.
 - Enforces RAW-adapted Improved/Greater Called Shot full-attack limits.
 - Automates called-shot severity and outcomes after D35E Apply Damage, with a default GM confirmation step for critical or debilitating effects and a restore ledger for misclick recovery.
 - Prevents double-counting by marking profile source items as worn in the profile while the hidden zero-weight carrier contributes composite D35E armor math.
@@ -71,9 +72,9 @@ The module is additive. It does not edit D35E system files, mutate actors on wor
 
 ## Configuration
 
-Module settings live in Foundry's right sidebar gear tab under `Game Settings > D35E Piecemeal Armor And Called Shots`. The main toggles are `Enable piecemeal armor` and `Enable called shots`, so either half of the module can be used independently. `Called-shot effect automation` defaults to `GM confirms severe effects`: normal outcomes apply after D35E Apply Damage, but critical and debilitating outcomes ask the GM before changing actor data. The called-shot profile editor is available in the same settings category. Profiles are world settings, so a GM can clone or replace the bundled defaults with table-specific locations, penalties, coverage, and effects.
+Module settings live in Foundry's right sidebar gear tab under `Game Settings > D35E Piecemeal Armor And Called Shots`. The main toggles are `Enable piecemeal armor` and `Enable called shots`, so either half of the module can be used independently. `Called-shot effect automation` defaults to `GM confirms severe effects`: normal outcomes apply after D35E Apply Damage, but critical and debilitating outcomes ask the GM before changing actor data. Optional helmet head coverage and helmet Spot/Listen penalties are separate house-rule toggles, disabled by default. The called-shot profile editor is available in the same settings category. Profiles are world settings, so a GM can clone or replace the bundled defaults with table-specific locations, penalties, coverage, and effects.
 
-When piecemeal armor and called shots are both enabled, the native Apply Damage check automatically uses location armor for matching called-shot coverage. Coverage slot fields accept one value or a delimiter-separated list, so a helmet component can cover `head; eyes; ears` while a broader armor piece can cover `torso, arms, legs`.
+When piecemeal armor and called shots are both enabled, the native Apply Damage check automatically uses location armor for matching called-shot coverage. Coverage slot fields accept one value or a delimiter-separated list, so a broader armor piece can cover `torso, arms, legs`. If the helmet house rule is enabled, configured equipment in D35E's native `Head` slot can cover `head; eyes; ears` for called-shot local armor without adding to the actor's total AC.
 
 Supported effect specs:
 

@@ -18,6 +18,12 @@ Aggregate armor math follows the supplied Ultimate Combat reference as closely a
 
 Clearing PAcS slots reverses backed-up fields and removes the hidden carrier when the actor returns to baseline-only or unarmored native behavior. The old visible `Piecemeal Armor Aggregate` path is retained only as migration and recovery support for older worlds.
 
+## Helmet Head Coverage
+
+Helmet coverage is a separate disabled-by-default house rule, not a fourth RAW armor category. Configured equipment in D35E's native `Head` slot can supply local armor for Head/Eye/Ear called shots without joining the Torso/Arms/Legs profile, changing total AC, or appearing in the armor profile source breakdown.
+
+Optional Spot/Listen penalties use D35E's `D35E.preRollSkill` hook and append a named source row to `lis` and `spt` roll breakdowns. The module does not write permanent skill values for helmet penalties.
+
 ## Called Shots
 
 Called-shot profiles are stored as a world setting. The active profile supplies enabled locations, attack penalties, coverage slots, and outcome effects.

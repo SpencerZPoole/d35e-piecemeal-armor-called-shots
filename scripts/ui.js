@@ -8,6 +8,7 @@ import {
   setArmorProfileSlot
 } from "./armor-profile.js";
 import { getCalledShotLedger, restoreAllCalledShotLedgerEntries, restoreCalledShotLedgerEntry } from "./effects.js";
+import { DEFAULT_HELMET_COVERAGE, getHelmetFlag, HELMET_FAMILY_OPTIONS } from "./helmet.js";
 import { extractCalledShotDamagePayloads, stageCalledShotDamageApplication } from "./local-armor.js";
 
 function isEnabled(settingKey, fallback = true) {
@@ -27,6 +28,12 @@ function htmlRoot(html) {
 
 function sheetDocument(app) {
   return app?.item ?? app?.actor ?? app?.document ?? app?.object;
+}
+
+const pendingPacsItemPanelItemIds = new Set();
+
+function pacsPanelItemKey(item) {
+  return item?.uuid ?? item?.id ?? item?._id ?? null;
 }
 
 function escapeHtml(value) {
@@ -84,12 +91,22 @@ function isPiecemealPanelControl(control) {
     : false;
 }
 
-function persistPiecemealPanelControl(item, root, form, control) {
+function isHelmetPanelControl(control) {
+  return control instanceof HTMLInputElement || control instanceof HTMLSelectElement
+    ? control.name?.startsWith(`flags.${MODULE_ID}.${FLAGS.helmet}.`)
+    : false;
+}
+
+function isPacsPanelControl(control) {
+  return isPiecemealPanelControl(control) || isHelmetPanelControl(control);
+}
+
+function persistPacsPanelControl(item, root, form, control) {
   void item.update({ [control.name]: readPanelControlValue(control) }).then(() => {
     schedulePiecemealItemPanelRefresh(item, root, form);
   }).catch((error) => {
-    console.error(`${MODULE_ID} | Failed to save piecemeal armor field`, error);
-    ui.notifications?.error("Could not save the piecemeal armor field. Check the console for details.");
+    console.error(`${MODULE_ID} | Failed to save PAcS item field`, error);
+    ui.notifications?.error("Could not save the PAcS item field. Check the console for details.");
   });
 }
 
@@ -456,6 +473,9 @@ function appendInventoryIndicators(app, root) {
     } else if (pacsCategory) {
       chipText = "worn in profile";
       chipClass = "d35e-pacs-chip-synced";
+    } else if (getHelmetFlag(item).enabled === true) {
+      chipText = "helmet coverage";
+      chipClass = "d35e-pacs-chip-piece";
     } else if (item.getFlag?.(MODULE_ID, FLAGS.nativeBackup)) {
       chipText = "synced component";
       chipClass = "d35e-pacs-chip-synced";
@@ -525,16 +545,17 @@ export async function openCalledShotLedgerDialog(actor) {
 function injectPiecemealItemPanel(item, root, form) {
   if (root.querySelector("[data-d35e-pacs-piece-panel]")) return;
   const flag = item.getFlag?.(MODULE_ID, FLAGS.piecemeal) ?? {};
+  const helmetFlag = getHelmetFlag(item);
   const detailsTab = root.querySelector('.tab[data-tab="details"]') ?? root.querySelector(".tab.details");
   const insertTarget = detailsTab ?? form;
   const fieldset = document.createElement("fieldset");
   fieldset.classList.add("d35e-pacs-fieldset");
   fieldset.dataset.d35ePacsPiecePanel = "true";
   const legend = document.createElement("legend");
-  legend.textContent = "Piecemeal Armor";
+  legend.textContent = "PAcS Armor Options";
   const help = document.createElement("p");
   help.classList.add("d35e-pacs-help");
-  help.textContent = "Use these fields for custom or unusual armor pieces that are not in the profile catalog. Piece category drives Torso/Arms/Legs math, while coverage slot(s) map called-shot locations such as head; eyes; ears.";
+  help.textContent = "Use piecemeal fields for custom Torso/Arms/Legs armor pieces. Use helmet fields for the optional head-coverage house rule; helmets never add to total AC.";
   const enabledLabel = document.createElement("label");
   enabledLabel.classList.add("d35e-pacs-checkbox");
   const enabled = document.createElement("input");
@@ -601,29 +622,54 @@ function injectPiecemealItemPanel(item, root, form) {
   masterwork.checked = flag.masterwork === true || item.system?.masterwork === true;
   masterworkLabel.append(masterwork, document.createTextNode(" Masterwork piece"));
   grid.append(masterworkLabel);
-  fieldset.append(legend, help, enabledLabel, grid);
+  const helmetHeading = document.createElement("h4");
+  helmetHeading.textContent = "Helmet head coverage house rule";
+  const helmetHelp = document.createElement("p");
+  helmetHelp.classList.add("d35e-pacs-help");
+  helmetHelp.textContent = "Configured helmets work from D35E's native Head slot. Their local armor applies only to Head, Eye, and Ear called shots when the house-rule setting is enabled.";
+  const helmetEnabledLabel = document.createElement("label");
+  helmetEnabledLabel.classList.add("d35e-pacs-checkbox");
+  const helmetEnabled = document.createElement("input");
+  helmetEnabled.type = "checkbox";
+  helmetEnabled.name = `flags.${MODULE_ID}.${FLAGS.helmet}.enabled`;
+  helmetEnabled.checked = helmetFlag.enabled === true;
+  helmetEnabledLabel.append(helmetEnabled, document.createTextNode(" Use as helmet head coverage"));
+  const helmetGrid = document.createElement("div");
+  helmetGrid.classList.add("d35e-pacs-grid");
+  helmetGrid.append(
+    buildLabeledSelect("Helmet family ", `flags.${MODULE_ID}.${FLAGS.helmet}.armorFamily`, helmetFlag.armorFamily ?? helmetFlag.family ?? "", HELMET_FAMILY_OPTIONS),
+    buildLabeledInput("Custom head armor ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.localArmorBonus`, helmetFlag.localArmorBonus ?? "", {
+      placeholder: "blank = family torso AC"
+    }),
+    buildLabeledInput("Helmet coverage slot(s) ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.coverageSlots`, helmetFlag.coverageSlots ?? helmetFlag.coverageSlot ?? DEFAULT_HELMET_COVERAGE, {
+      placeholder: DEFAULT_HELMET_COVERAGE
+    }),
+    buildLabeledInput("Spot penalty ", "number", `flags.${MODULE_ID}.${FLAGS.helmet}.spotPenalty`, helmetFlag.spotPenalty ?? 0),
+    buildLabeledInput("Listen penalty ", "number", `flags.${MODULE_ID}.${FLAGS.helmet}.listenPenalty`, helmetFlag.listenPenalty ?? 0)
+  );
+  fieldset.append(legend, help, enabledLabel, grid, helmetHeading, helmetHelp, helmetEnabledLabel, helmetGrid);
   fieldset.addEventListener("input", (event) => {
     const control = event.target;
-    if (!isPiecemealPanelControl(control) || !["number", "text"].includes(control.type)) return;
+    if (!isPacsPanelControl(control) || !["number", "text"].includes(control.type)) return;
     event.stopPropagation();
     window.clearTimeout(control._d35ePacsInputTimer);
     control._d35ePacsInputTimer = window.setTimeout(() => {
-      persistPiecemealPanelControl(item, root, form, control);
+      persistPacsPanelControl(item, root, form, control);
     }, 250);
   });
   fieldset.addEventListener("change", (event) => {
     const control = event.target;
-    if (!isPiecemealPanelControl(control)) return;
+    if (!isPacsPanelControl(control)) return;
     event.stopPropagation();
     if (control.name === `flags.${MODULE_ID}.${FLAGS.piecemeal}.catalogId`) {
       if (!control.value) {
-        persistPiecemealPanelControl(item, root, form, control);
+        persistPacsPanelControl(item, root, form, control);
         return;
       }
       applyCatalogPiece(item, root, form, control.value);
       return;
     }
-    persistPiecemealPanelControl(item, root, form, control);
+    persistPacsPanelControl(item, root, form, control);
   });
   const detailsHeader = insertTarget.querySelector?.(".form-header");
   if (detailsHeader?.after) detailsHeader.after(fieldset);
@@ -643,7 +689,11 @@ function appendItemSheetControls(app, html) {
   const form = root?.querySelector?.("form");
   if (!form) return;
 
-  if (item.type === "equipment" && !isAggregateArmorItem(item) && isEnabled(SETTINGS.enableArmor, true) && isPiecemealArmorPiece(item)) {
+  const shouldShowPacsPanel = item.type === "equipment" &&
+    !isAggregateArmorItem(item) &&
+    isEnabled(SETTINGS.enableArmor, true) &&
+    (isPiecemealArmorPiece(item) || getHelmetFlag(item).enabled === true || pendingPacsItemPanelItemIds.has(pacsPanelItemKey(item)));
+  if (shouldShowPacsPanel) {
     injectPiecemealItemPanel(item, root, form);
     schedulePiecemealItemPanelRefresh(item, root, form);
     if (root.dataset?.d35ePacsPieceRefresh !== "true") {
@@ -696,11 +746,9 @@ function appendActorSheetControls(app, html) {
       event.preventDefault();
       event.stopPropagation();
       const item = actor.items.get(armorButton.dataset.itemId);
-      if (item && !isPiecemealArmorPiece(item)) {
-        void item.update({ [`flags.${MODULE_ID}.${FLAGS.piecemeal}.enabled`]: true }, { d35ePacsProfile: true }).then(() => item.sheet?.render(true));
-      } else {
-        item?.sheet?.render(true);
-      }
+      const itemKey = pacsPanelItemKey(item);
+      if (itemKey) pendingPacsItemPanelItemIds.add(itemKey);
+      item?.sheet?.render(true);
     }
   }, { capture: true });
 }

@@ -10,6 +10,7 @@ import {
   readArmorPiece
 } from "./armor.js";
 import { ARMOR_PROFILE_STATUS, resolveArmorProfile } from "./armor-profile.js";
+import { findActiveHelmetCoverage, isHeadCoverageTarget, isHelmetHeadCoverageEnabled } from "./helmet.js";
 
 export { normalizeArmorSlot };
 
@@ -242,6 +243,7 @@ export function clearAllStagedCalledShotDamageApplications() {
 export function calculateLocalArmorAdjustment(actor, coverageSlot) {
   const normalizedSlots = parseArmorCoverageSlots(coverageSlot);
   if (!actor || !normalizedSlots.length) return null;
+  const helmetRuleActive = isHelmetHeadCoverageEnabled() && isHeadCoverageTarget(coverageSlot);
 
   let aggregateTotal = null;
   let summary = null;
@@ -257,9 +259,33 @@ export function calculateLocalArmorAdjustment(actor, coverageSlot) {
 
   if (!summary) {
     const aggregate = findAggregateArmorItem(actor);
-    if (!aggregate) return null;
-    aggregateTotal = readAggregateArmorTotal(aggregate);
-    summary = calculatePiecemealArmor(actor);
+    if (aggregate) {
+      aggregateTotal = readAggregateArmorTotal(aggregate);
+      summary = calculatePiecemealArmor(actor);
+    } else if (helmetRuleActive) {
+      aggregateTotal = 0;
+      summary = { armorBonus: 0, enhancementBonus: 0, activePieces: [] };
+    } else {
+      return null;
+    }
+  }
+
+  if (helmetRuleActive) {
+    const helmet = findActiveHelmetCoverage(actor, coverageSlot);
+    if (!helmet) return null;
+    const localTotal = helmet.localArmorBonus;
+    if (aggregateTotal === 0 && localTotal === 0) return null;
+    return {
+      coverageSlot,
+      normalizedSlot: normalizedSlots[0],
+      normalizedSlots,
+      aggregateTotal,
+      localTotal,
+      adjustment: localTotal - aggregateTotal,
+      pieceCount: helmet.id ? 1 : 0,
+      source: "helmet",
+      pieces: helmet.id ? [{ id: helmet.id, name: helmet.name, total: localTotal }] : []
+    };
   }
 
   const pieces = (summary.activePieces?.length ? summary.activePieces : getPiecemealArmorPieces(actor).map(readArmorPiece));

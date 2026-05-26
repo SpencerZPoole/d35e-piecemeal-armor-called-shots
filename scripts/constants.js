@@ -8,6 +8,8 @@ export const SETTINGS = Object.freeze({
   armorWorkflowMode: "armorWorkflowMode",
   enableArmor: "enableArmorAutomation",
   enableCalledShots: "enableCalledShots",
+  enableHelmetHeadCoverage: "enableHelmetHeadCoverage",
+  enableHelmetSkillPenalties: "enableHelmetSkillPenalties",
   calledShotOutcomeMode: "calledShotOutcomeMode",
   calledShotFullAttackMode: "calledShotFullAttackMode",
   calledShotLocalArmorMode: "calledShotLocalArmorMode",
@@ -51,6 +53,7 @@ export const FLAGS = Object.freeze({
   armorProfile: "armorProfile",
   internalArmor: "internalArmor",
   nativeBackup: "nativeBackup",
+  helmet: "helmet",
   calledShotEffect: "calledShotEffect",
   calledShotLedger: "calledShotLedger"
 });

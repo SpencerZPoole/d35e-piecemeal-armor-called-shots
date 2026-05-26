@@ -8,6 +8,7 @@
 | PF1e called shots | RAW-adapted default | Uses Ultimate Combat Table 5-4 penalties, feat-gated full attacks, severity thresholds, saves, DR-negated no-effect behavior, and automatic outcome specs. |
 | D35E armor math | Automated through native inventory slots | Baseline-only armor stays native in D35E's `Armor` slot. Composite profiles use hidden slotless carrier math plus visible `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` inventory slots. |
 | Local armor AC | Automated in Apply Damage | Called-shot locations can replace the active profile's armor contribution with matching piece coverage. Touch called shots are checked against normal AC. |
+| Helmet head coverage | Optional house rule | Disabled by default. Configured D35E `Head` slot helmets can supply local Head/Eye/Ear armor only; they do not change total AC or RAW piecemeal suit math. |
 | Called-shot hit adjudication | Automated after Apply Damage | D35E determines hit/crit and post-DR damage; the module determines severity from that result. |
 | Severe called-shot effects | Configurable with restore ledger | Death, severing/maiming flags, suffocation notes, bleed notes, conditions, and ability damage/drain can be applied automatically, confirmed by the GM first, or kept advisory only, then recoverable by a GM restore control when applied. |
 | Older v1.0 behavior | Migration-only support | Old aggregate and advisory helpers are retained internally for older actors and tests, but the normal settings menu uses the native inventory workflow and the clearer outcome automation setting. |

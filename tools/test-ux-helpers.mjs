@@ -50,6 +50,10 @@ assert.equal(registeredSettings.get(SETTINGS.calledShotLocalArmorMode).config, f
 assert.equal(registeredSettings.get(SETTINGS.showGmOnlyDetails).config, false);
 assert.equal(registeredSettings.get(SETTINGS.enableArmor).name, "Enable piecemeal armor");
 assert.equal(registeredSettings.get(SETTINGS.enableCalledShots).name, "Enable called shots");
+assert.equal(registeredSettings.get(SETTINGS.enableHelmetHeadCoverage).name, "Enable helmet head coverage house rule");
+assert.equal(registeredSettings.get(SETTINGS.enableHelmetHeadCoverage).default, false);
+assert.equal(registeredSettings.get(SETTINGS.enableHelmetSkillPenalties).name, "Apply helmet Spot/Listen penalties");
+assert.equal(registeredSettings.get(SETTINGS.enableHelmetSkillPenalties).default, false);
 assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).name, "Called-shot effect automation");
 assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).default, OUTCOME_MODES.confirmSevere);
 assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).config, true);

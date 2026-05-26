@@ -308,6 +308,24 @@ export function registerSettings() {
     }
   });
 
+  game.settings.register(MODULE_ID, SETTINGS.enableHelmetHeadCoverage, {
+    name: "Enable helmet head coverage house rule",
+    hint: "Optional non-RAW house rule. Equipped, configured helmets in D35E's Head slot protect Head, Eye, and Ear called shots through local armor AC without adding to total AC.",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
+  game.settings.register(MODULE_ID, SETTINGS.enableHelmetSkillPenalties, {
+    name: "Apply helmet Spot/Listen penalties",
+    hint: "Optional non-RAW house rule. Configured helmets in D35E's Head slot can add their table-defined Spot and Listen penalties to native D35E skill rolls.",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
   game.settings.register(MODULE_ID, SETTINGS.calledShotOutcomeMode, {
     name: "Called-shot effect automation",
     hint: "Controls what happens after D35E Apply Damage resolves a called shot. The default applies normal results automatically and asks the GM before critical or debilitating effects change an actor.",
