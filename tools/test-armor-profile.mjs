@@ -258,6 +258,46 @@ assert.equal(carrier.system.equipped, false);
 assert.equal(carrier.system.armor.value, 0);
 assert.equal(carrier.getFlag(MODULE_ID, FLAGS.internalArmor).suspended, true);
 
+const quickClearBaseline = equipment("quick-clear-baseline", "Chainmail", {
+  equipped: true,
+  equipmentSubtype: "mediumArmor",
+  armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+  spellFailure: 30,
+  slot: "armor",
+  weight: 40
+});
+const quickClearTorso = equipment("quick-clear-torso", "Chainmail", {
+  equipped: false,
+  equipmentSubtype: "mediumArmor",
+  armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+  spellFailure: 30,
+  weight: 40
+});
+const quickClearLegs = equipment("quick-clear-legs", "Studded Leather", {
+  equipped: false,
+  armor: { value: 3, enh: 0, dex: 5, acp: 0 },
+  spellFailure: 15,
+  weight: 20
+});
+const quickClearActor = actor([quickClearBaseline, quickClearTorso, quickClearLegs]);
+await setArmorProfileSlot(quickClearActor, "legs", "quick-clear-legs");
+await setArmorProfileSlot(quickClearActor, "torso", "quick-clear-torso");
+assert.equal(resolveArmorProfile(quickClearActor).status, ARMOR_PROFILE_STATUS.compositeProfile);
+assert.equal(quickClearBaseline.system.armor.value, 0);
+await setArmorProfileSlot(quickClearActor, "legs", null);
+await setArmorProfileSlot(quickClearActor, "torso", null);
+resolved = resolveArmorProfile(quickClearActor);
+assert.equal(resolved.status, ARMOR_PROFILE_STATUS.nativeArmor);
+assert.equal(quickClearBaseline.system.equipmentType, "armor");
+assert.equal(quickClearBaseline.system.equipped, true);
+assert.equal(quickClearBaseline.system.slot, "armor");
+assert.equal(quickClearBaseline.system.armor.value, 5);
+assert.equal(quickClearBaseline.system.armor.dex, 2);
+carrier = quickClearActor.items.find((item) => item.name === "PAcS Armor Profile");
+assert.equal(Boolean(carrier), true);
+assert.equal(carrier.system.equipped, false);
+assert.equal(carrier.system.armor.value, 0);
+
 const dragBackChain = equipment("drag-back-chain", "Chainmail", {
   equipped: false,
   equipmentSubtype: "mediumArmor",

@@ -556,12 +556,10 @@ async function restoreBackedUpItems(actor) {
   for (const item of getItems(actor)) {
     const update = buildRestoreUpdate(item);
     if (!update) continue;
+    update[`flags.${MODULE_ID}.${FLAGS.nativeBackup}`] = null;
+    update[`flags.${MODULE_ID}.${FLAGS.armorProfile}`] = null;
     restored.push({ itemId: item.id, itemName: item.name, update });
     if (item.update) await item.update(update, { _slotBypass: true, d35ePacsProfile: true });
-    if (item.unsetFlag) {
-      await item.unsetFlag(MODULE_ID, FLAGS.nativeBackup);
-      await item.unsetFlag(MODULE_ID, FLAGS.armorProfile);
-    }
   }
   return restored;
 }
@@ -679,12 +677,10 @@ async function restoreItemsOutsideProfile(actor, sourceItemIds) {
     if (activeSources.has(item.id ?? item._id)) continue;
     const update = buildRestoreUpdate(item);
     if (!update) continue;
+    update[`flags.${MODULE_ID}.${FLAGS.nativeBackup}`] = null;
+    update[`flags.${MODULE_ID}.${FLAGS.armorProfile}`] = null;
     restored.push({ itemId: item.id, itemName: item.name, update });
     if (item.update) await item.update(update, { _slotBypass: true, d35ePacsProfile: true });
-    if (item.unsetFlag) {
-      await item.unsetFlag(MODULE_ID, FLAGS.nativeBackup);
-      await item.unsetFlag(MODULE_ID, FLAGS.armorProfile);
-    }
   }
   return restored;
 }
