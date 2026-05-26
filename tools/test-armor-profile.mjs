@@ -138,7 +138,7 @@ function armorProfileSourceValue(actor, path) {
 
 assert.equal(registerPacsEquipmentSlots(), true);
 assert.deepEqual(Object.keys(CONFIG.D35E.defaultSlotCapacities).slice(0, 5), ["armor", "pacsTorso", "pacsArms", "pacsLegs", "shield"]);
-assert.equal(CONFIG.D35E.equipmentSlots.misc.pacsTorso, "D35E.EquipSlotPacsTorso");
+assert.equal(CONFIG.D35E.equipmentSlots.misc.pacsTorso, "PAcS: Torso");
 assert.equal(categoryForPacsEquipmentSlot(PACS_EQUIPMENT_SLOTS.arms), "arms");
 
 const studded = equipment("studded", "Studded Leather", {

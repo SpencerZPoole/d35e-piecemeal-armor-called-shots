@@ -43,9 +43,9 @@ const PACS_SLOT_TO_CATEGORY = Object.freeze(Object.fromEntries(
   Object.entries(PACS_EQUIPMENT_SLOTS).map(([category, slot]) => [slot, category])
 ));
 const PACS_SLOT_LABEL_KEYS = Object.freeze({
-  [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.torso]]: "D35E.EquipSlotPacsTorso",
-  [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.arms]]: "D35E.EquipSlotPacsArms",
-  [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.legs]]: "D35E.EquipSlotPacsLegs"
+  [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.torso]]: "PAcS: Torso",
+  [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.arms]]: "PAcS: Arms",
+  [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.legs]]: "PAcS: Legs"
 });
 const AC_SOURCE_DETAIL_PATHS = Object.freeze([
   "system.attributes.ac.normal.total",
