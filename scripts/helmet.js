@@ -1,5 +1,5 @@
 import { FLAGS, MODULE_ID, SETTINGS } from "./constants.js";
-import { armorCoverageOverlaps, parseArmorCoverageSlots, RAW_ARMOR_PIECE_CATALOG } from "./armor.js";
+import { armorCoverageOverlaps, parseArmorCoverageSlots } from "./armor.js";
 
 export const DEFAULT_HELMET_COVERAGE = "head; eyes; ears";
 export const HELMET_SKILLS = Object.freeze({
@@ -13,9 +13,32 @@ export const HELMET_FAMILY_OPTIONS = Object.freeze([
   ["leather", "Leather"],
   ["studded-leather", "Studded leather"],
   ["hide", "Hide"],
-  ["chain", "Chain"],
-  ["plate", "Plate"]
+  ["scale", "Scale mail"],
+  ["chain-shirt", "Chain shirt"],
+  ["chain", "Chainmail"],
+  ["breastplate", "Breastplate"],
+  ["banded", "Banded mail"],
+  ["splint", "Splint mail"],
+  ["plate", "Plate (generic)"],
+  ["half-plate", "Half-plate"],
+  ["full-plate", "Full plate"]
 ]);
+
+export const HELMET_LOCAL_ARMOR_BY_FAMILY = Object.freeze({
+  "padded": 0,
+  "leather": 1,
+  "studded-leather": 1,
+  "hide": 2,
+  "scale": 2,
+  "chain-shirt": 4,
+  "chain": 3,
+  "breastplate": 5,
+  "banded": 4,
+  "splint": 4,
+  "plate": 5,
+  "half-plate": 5,
+  "full-plate": 5
+});
 
 function getFlagData(document, key) {
   return document?.getFlag?.(MODULE_ID, key) ?? document?.flags?.[MODULE_ID]?.[key] ?? null;
@@ -60,17 +83,8 @@ function actorFromUuid(uuid) {
   return actorId ? globalThis.game?.actors?.get?.(actorId) ?? null : null;
 }
 
-function torsoArmorBonusForFamily(family) {
-  const normalized = keyForFamily(family);
-  const torso = RAW_ARMOR_PIECE_CATALOG.find((entry) => entry.pieceCategory === "torso" && entry.armorFamily === normalized);
-  return torso ? numberOr(torso.armorBonus, 0) : 0;
-}
-
-function inheritedHelmetArmor(cap, inheritedArmor) {
-  const capValue = numberOr(cap, 0);
-  const inheritedValue = numberOrNull(inheritedArmor);
-  if (inheritedValue === null) return capValue;
-  return Math.max(0, Math.min(capValue, inheritedValue));
+function localArmorForFamily(family) {
+  return numberOr(HELMET_LOCAL_ARMOR_BY_FAMILY[keyForFamily(family)], 0);
 }
 
 export function getHelmetFlag(item) {
@@ -114,16 +128,15 @@ export function helmetCoversCalledShot(item, coverageSlot) {
 export function calculateHelmetLocalArmor(item, { inheritedArmor = null } = {}) {
   const flag = getHelmetFlag(item);
   const custom = numberOrNull(flag.localArmorBonus);
-  const cap = custom ?? torsoArmorBonusForFamily(flag.armorFamily ?? flag.family);
-  const base = inheritedHelmetArmor(cap, inheritedArmor);
+  const localArmor = custom ?? localArmorForFamily(flag.armorFamily ?? flag.family);
   return {
     id: item?.id ?? item?._id ?? null,
     name: item?.name ?? "Helmet",
     armorFamily: keyForFamily(flag.armorFamily ?? flag.family),
     coverageSlots: readHelmetCoverage(item),
-    localArmorBonus: numberOr(base, 0),
+    localArmorBonus: numberOr(localArmor, 0),
     inheritedArmor: numberOrNull(inheritedArmor),
-    cap: numberOr(cap, 0),
+    cap: numberOr(localArmor, 0),
     custom: custom !== null
   };
 }

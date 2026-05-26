@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { MODULE_ID } from "../scripts/constants.js";
 import { resolveArmorProfile } from "../scripts/armor-profile.js";
-import { applyHelmetSkillPenaltyToHookData, calculateHelmetLocalArmor } from "../scripts/helmet.js";
+import { applyHelmetSkillPenaltyToHookData, calculateHelmetLocalArmor, HELMET_LOCAL_ARMOR_BY_FAMILY } from "../scripts/helmet.js";
 import { applyLocalArmorAdjustment, calculateLocalArmorAdjustment } from "../scripts/local-armor.js";
 
 let helmetCoverageEnabled = false;
@@ -122,6 +122,21 @@ function chainBaselineActor(extraItems = []) {
   };
 }
 
+function unarmoredActor(extraItems = []) {
+  const items = [...extraItems];
+  items.get = (id) => items.find((item) => item.id === id) ?? null;
+  return {
+    id: "unarmored-target",
+    uuid: "Actor.unarmored-target",
+    flags: {},
+    items,
+    getFlag: itemGetFlag
+  };
+}
+
+assert.equal(HELMET_LOCAL_ARMOR_BY_FAMILY["chain-shirt"], 4);
+assert.equal(HELMET_LOCAL_ARMOR_BY_FAMILY["chain"], 3);
+assert.equal(HELMET_LOCAL_ARMOR_BY_FAMILY["full-plate"], 5);
 const plateHelmet = helmet("plate-helm");
 assert.equal(calculateHelmetLocalArmor(plateHelmet).localArmorBonus, 5);
 const customHelmet = helmet("custom-helm", { localArmorBonus: 3 });
@@ -148,14 +163,15 @@ assert.equal(noHelmetHead.pieceCount, 0);
 
 const helmetHead = calculateLocalArmorAdjustment(actorWithHelmet, "head");
 assert.equal(helmetHead.source, "helmet");
-assert.equal(helmetHead.localTotal, 1);
+assert.equal(helmetHead.localTotal, 5);
 assert.equal(helmetHead.inheritedLocalTotal, 1);
 assert.equal(helmetHead.helmetCap, 5);
-assert.equal(helmetHead.adjustment, -1);
+assert.equal(helmetHead.helmetArmorBonus, 5);
+assert.equal(helmetHead.adjustment, 3);
 assert.equal(helmetHead.pieceCount, 1);
 assert.equal(resolveArmorProfile(actorWithHelmet).summary.armorBonus, 2);
-assert.equal(calculateLocalArmorAdjustment(actorWithHelmet, "ear").localTotal, 1);
-assert.equal(calculateLocalArmorAdjustment(actorWithHelmet, "eye").localTotal, 1);
+assert.equal(calculateLocalArmorAdjustment(actorWithHelmet, "ear").localTotal, 5);
+assert.equal(calculateLocalArmorAdjustment(actorWithHelmet, "eye").localTotal, 5);
 assert.equal(calculateLocalArmorAdjustment(actorWithHelmet, "torso").adjustment, -1);
 
 const ignoredHelmet = calculateLocalArmorAdjustment(profileActor([helmet("belt-helm", { slot: "belt" })]), "head");
@@ -163,9 +179,15 @@ assert.equal(ignoredHelmet.localTotal, 0);
 assert.equal(ignoredHelmet.adjustment, -2);
 
 const customActor = profileActor([customHelmet]);
-assert.equal(calculateLocalArmorAdjustment(customActor, "head").localTotal, 1);
+assert.equal(calculateLocalArmorAdjustment(customActor, "head").localTotal, 3);
 assert.equal(calculateLocalArmorAdjustment(customActor, "head").helmetCap, 3);
-assert.equal(calculateLocalArmorAdjustment(customActor, "head").adjustment, -1);
+assert.equal(calculateLocalArmorAdjustment(customActor, "head").adjustment, 1);
+
+const unarmoredPlateHelmet = calculateLocalArmorAdjustment(unarmoredActor([plateHelmet]), "head");
+assert.equal(unarmoredPlateHelmet.aggregateTotal, 0);
+assert.equal(unarmoredPlateHelmet.inheritedLocalTotal, 0);
+assert.equal(unarmoredPlateHelmet.localTotal, 5);
+assert.equal(unarmoredPlateHelmet.adjustment, 5);
 
 const liveCaseNoHelmet = calculateLocalArmorAdjustment(chainBaselineActor(), "head");
 assert.equal(liveCaseNoHelmet.aggregateTotal, 6);
@@ -193,8 +215,8 @@ const plateCapActor = chainBaselineActor([plateHelmet]);
 const liveCasePlateHelmet = calculateLocalArmorAdjustment(plateCapActor, "head");
 assert.equal(liveCasePlateHelmet.inheritedLocalTotal, 3);
 assert.equal(liveCasePlateHelmet.helmetCap, 5);
-assert.equal(liveCasePlateHelmet.localTotal, 3);
-assert.equal(liveCasePlateHelmet.adjustment, -3);
+assert.equal(liveCasePlateHelmet.localTotal, 5);
+assert.equal(liveCasePlateHelmet.adjustment, -1);
 
 const leatherCapActor = chainBaselineActor([helmet("leather-cap", { armorFamily: "leather" })]);
 const liveCaseLeatherHelmet = calculateLocalArmorAdjustment(leatherCapActor, "head");
@@ -217,9 +239,10 @@ console.warn = (message) => {
 };
 const multiHelmet = calculateLocalArmorAdjustment(chainBaselineActor([weakerHelmet, strongerHelmet]), "head");
 console.warn = originalWarn;
-assert.equal(multiHelmet.localTotal, 3);
+assert.equal(multiHelmet.localTotal, 8);
 assert.equal(multiHelmet.helmetCap, 8);
 assert.equal(multiHelmet.inheritedLocalTotal, 3);
+assert.equal(multiHelmet.adjustment, 2);
 assert.equal(multiHelmet.pieces[0].name, "Great Helm");
 assert.match(warningText, /Multiple configured helmets/);
 

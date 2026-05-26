@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added a disabled-by-default helmet head coverage house rule using D35E's native `Head` slot for Head/Eye/Ear called-shot local armor.
+- Changed helmet local armor to use each configured helmet's own value directly instead of inheriting from torso/profile armor.
+- Added a `PAcS Helmets` Item compendium with preconfigured optional helmet records for the D35E-calibrated armor styles.
 - Added optional configured helmet Spot/Listen penalties that appear in native D35E skill roll breakdowns without permanently changing actor skill values.
 - Documented helmet coverage as a non-RAW table option separate from RAW-adapted Torso/Arms/Legs piecemeal armor math.
 

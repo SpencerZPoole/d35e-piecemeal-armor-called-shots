@@ -31,14 +31,15 @@
 <ul>
   <li>Adds <code>PAcS: Torso</code>, <code>PAcS: Arms</code>, and <code>PAcS: Legs</code> slots directly to D35E's normal Armor and Equipment inventory list.</li>
   <li>Uses the native D35E <code>Armor</code> slot as the baseline suit source, with PAcS slots overriding only the categories a table mixes.</li>
-  <li>Provides a starter catalog for common RAW armor pieces such as padded, leather, studded leather, hide, chain, and plate arms/legs/torso.</li>
+  <li>Provides a D35E-calibrated starter catalog for padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate mappings.</li>
   <li>Keeps baseline-only armor native to D35E and uses a hidden zero-weight D35E carrier only when composite profile math is active.</li>
   <li>Marks profile source items as worn in profile while preventing duplicate armor AC and weight.</li>
   <li>Adds a <code>Called Shot</code> dropdown inside D35E's native attack/use dialog.</li>
   <li>Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as <code>Called Shot: Ear -10</code>.</li>
   <li>Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.</li>
+  <li>Offers an optional helmet house rule for Head/Eye/Ear local armor without adding helmet armor to normal AC.</li>
   <li>Enforces Improved/Greater Called Shot full-attack limits by default while offering table-facing warn-only and no-requirement options.</li>
-  <li>Includes a <code>PAcS Called-Shot Feats</code> compendium with convenience feat records that the automation detects by exact name.</li>
+  <li>Includes <code>PAcS Called-Shot Feats</code> and <code>PAcS Helmets</code> compendia with convenience records for optional-rule setup.</li>
   <li>Automatically applies called-shot severity outcomes after D35E Apply Damage and records a GM restore ledger.</li>
   <li>Includes an in-Foundry profile editor for locations, penalties, coverage slot(s), and outcome effects.</li>
 </ul>
@@ -61,9 +62,11 @@
 
 <h3>Configuration</h3>
 
-<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, choose full-attack feat-gate behavior, show location armor overlays, and edit called-shot profiles.</p>
+<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, choose full-attack feat-gate behavior, enable optional helmet head coverage and Spot/Listen penalties, show location armor overlays, and edit called-shot profiles.</p>
 
 <p>The <strong>PAcS Called-Shot Feats</strong> compendium ships small D35E Item records for <code>Improved Called Shot</code> and <code>Greater Called Shot</code>. These are PF1e-derived optional-rule support items for D35E, not D&amp;D 3.5 RAW.</p>
+
+<p>The <strong>PAcS Helmets</strong> compendium ships editable Head-slot helmet records for the optional helmet house rule. Their local armor values apply only to Head, Eye, and Ear called-shot local armor, and they do not add to normal AC.</p>
 
 <p>Profiles control location labels, attack penalties, enabled state, matching armor coverage slot(s), and outcome effects. Effect snippets are JSON because they map directly to the module's declarative effect engine.</p>
 

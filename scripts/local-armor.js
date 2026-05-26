@@ -309,6 +309,7 @@ export function calculateLocalArmorAdjustment(actor, coverageSlot) {
       inheritedLocalTotal: inherited.localTotal,
       inheritedPieces: inherited.pieces.map((piece) => ({ id: piece.id, name: piece.name, total: calculateArmorPieceLocalTotal(summary, piece) })),
       helmetCap: helmet.cap,
+      helmetArmorBonus: helmet.localArmorBonus,
       helmetName: helmet.name,
       pieces: helmet.id ? [{ id: helmet.id, name: helmet.name, total: localTotal }] : []
     };

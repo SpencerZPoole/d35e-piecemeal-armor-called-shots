@@ -26,6 +26,12 @@ assert(featPack.label === "PAcS Called-Shot Feats", "called-shot-feats label mis
 assert(featPack.type === "Item", "called-shot-feats must be an Item pack");
 assert(featPack.system === "D35E", "called-shot-feats must declare D35E system");
 assert(featPack.path === "packs/called-shot-feats", "called-shot-feats path mismatch");
+const helmetPack = manifest.packs?.find((pack) => pack.name === "helmets");
+assert(helmetPack, "manifest needs helmets pack");
+assert(helmetPack.label === "PAcS Helmets", "helmets label mismatch");
+assert(helmetPack.type === "Item", "helmets must be an Item pack");
+assert(helmetPack.system === "D35E", "helmets must declare D35E system");
+assert(helmetPack.path === "packs/helmets", "helmets path mismatch");
 
 for (const file of [
   "README.md",
@@ -41,5 +47,6 @@ for (const file of [
 }
 
 assert(fs.existsSync(path.join(root, featPack.path)), `Missing pack path: ${featPack.path}`);
+assert(fs.existsSync(path.join(root, helmetPack.path)), `Missing pack path: ${helmetPack.path}`);
 
 console.log("validate-module: ok");

@@ -28,6 +28,7 @@ The module has two main workflows:
 | `Called Shot` dropdown | D35E attack/use dialog | Applies a configured called-shot penalty through the native attack workflow. |
 | Full-attack picker | Opens after `Full Attack` when configured | Lets the user choose `None` or a location for each D35E attack label. |
 | `PAcS Called-Shot Feats` pack | Compendium Packs sidebar | Convenience item records for `Improved Called Shot` and `Greater Called Shot`. |
+| `PAcS Helmets` pack | Compendium Packs sidebar | Optional Head-slot helmet records for tables using the helmet local armor house rule. |
 | Called Shot Effects | Actor sheet header after an applied outcome | Lets a GM restore called-shot effects if the wrong damage card or target was used. |
 | Profile editor | Module settings | Edits locations, penalties, coverage slots, and outcome effects. |
 
@@ -42,7 +43,7 @@ Settings:
 - `Edit called shot profiles`: opens the profile editor for locations, attack penalties, severity tiers, coverage slots, and outcome effects.
 - `Enable piecemeal armor`: adds the PAcS inventory slots, item piece fields, piecemeal armor math, hidden D35E carrier, and location armor data. Turning it off suspends piecemeal armor automation without disabling called shots.
 - `Enable called shots`: adds the `Called Shot` selector to D35E's native attack dialog, applies the configured attack penalty to the native roll breakdown, carries context into Apply Damage, and posts outcome cards. Turning it off does not disable piecemeal armor.
-- `Enable helmet head coverage house rule`: optional and disabled by default. Configured helmets in D35E's native `Head` slot cap inherited Head, Eye, and Ear local armor AC without adding to total AC.
+- `Enable helmet head coverage house rule`: optional and disabled by default. Configured helmets in D35E's native `Head` slot provide local Head, Eye, and Ear armor AC without adding to total AC.
 - `Apply helmet Spot/Listen penalties`: optional and disabled by default. Configured helmets in D35E's native `Head` slot add their table-defined Spot and Listen penalties to native D35E skill rolls.
 - `Called-shot effect automation`: controls actor changes after Apply Damage. `GM confirms severe effects` is the default: normal outcomes apply automatically, while critical and debilitating outcomes ask the GM first. `Apply effects automatically` applies all resolved outcomes. `Advisory only` never changes actor data unless the GM clicks a chat-card severity button.
 - `Called shots on full attacks`: controls whether full attacks ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections. See [Full Attacks](#full-attacks).
@@ -76,12 +77,13 @@ Helmet coverage is a non-RAW house rule and is disabled by default. It is meant 
 Workflow:
 
 1. Enable `Enable helmet head coverage house rule` in module settings.
-2. Add or configure an equipment item and equip it in D35E's native `Head` slot.
-3. Click the shield icon on that inventory row, open the item sheet, and check `Use as helmet head coverage`.
-4. Choose a helmet family or enter a custom head armor cap. Blank custom armor uses the selected family's torso armor value as the cap.
-5. Leave coverage as `head; eyes; ears` unless your table wants a narrower or broader helmet.
+2. Open Foundry's Compendium Packs sidebar and drag a helmet from `PAcS Helmets` to the actor, or configure your own equipment item.
+3. Equip the helmet in D35E's native `Head` slot.
+4. For custom items, click the shield icon on that inventory row, open the item sheet, and check `Use as helmet head coverage`.
+5. Enter the helmet's `Head local armor bonus`, or choose a family to use the module's starter value for that helmet type.
+6. Leave coverage as `head; eyes; ears` unless your table wants a narrower or broader helmet.
 
-When the setting is on, Head, Eye, and Ear called shots use the configured helmet instead of the torso fallback. The helmet does not add armor by itself; it inherits the active armor profile's head/torso local protection and caps that value by the helmet family or custom cap. For example, a chain-family helmet on a chain torso can allow up to the chain torso's head protection, while a leather cap can limit that same inherited protection to the leather cap value. If no configured helmet is equipped in the `Head` slot, the local head armor is treated as `0`, so a head called shot against an armored target can lower the Apply Damage AC. Torso, heart, vitals, arms, hands, legs, and feet keep the normal PAcS location armor behavior.
+When the setting is on, Head, Eye, and Ear called shots use the configured helmet instead of the torso fallback. The helmet's local armor value stands on its own: it does not inherit from torso armor, baseline armor, suit pieces, or other equipped armor. For example, a chainmail coif provides its configured head local armor whether the actor is otherwise unarmored, in leather, or in full plate. If no configured helmet is equipped in the `Head` slot, the local head armor is treated as `0`, so a head called shot against an armored target can lower the Apply Damage AC. Torso, heart, vitals, arms, hands, legs, and feet keep the normal PAcS location armor behavior.
 
 The separate `Apply helmet Spot/Listen penalties` setting reads the same configured helmet. Enter Spot and Listen penalty numbers on the item; the module adds a `Helmet (...)` row to native D35E Spot and Listen roll breakdowns. These penalties are table-defined and default to `0`; the module does not hardcode AD&D 2e helmet table values.
 
@@ -119,6 +121,12 @@ Even in `Warn only` or `Do not require feats`, actual feat benefits stay tied to
 Open Foundry's Compendium Packs sidebar and look for `PAcS Called-Shot Feats`. The pack contains `Improved Called Shot` and `Greater Called Shot` as small D35E Item records that can be imported or dragged to an actor like other feats.
 
 These feat items are convenience records for this module. Their descriptions are paraphrased from the optional PF1e called-shot support rules, and they are not D&D 3.5 RAW. PAcS detects the exact names `Improved Called Shot` and `Greater Called Shot`, so avoid renaming the actor's feat items if you want the automation to recognize them.
+
+## Helmet Pack
+
+Open Foundry's Compendium Packs sidebar and look for `PAcS Helmets`. The pack contains preconfigured Head-slot equipment for padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate helmet styles.
+
+These helmets are optional house-rule support items. Their local armor values affect only Head, Eye, and Ear called-shot local armor while the helmet setting is enabled. They do not add normal AC, and their Spot/Listen penalties default to `0` until a GM edits them.
 
 ## Called-Shot Chat Cards
 
@@ -234,7 +242,7 @@ Clear occupied `PAcS:` slots if the actor is already using the native workflow. 
 
 Confirm piecemeal armor and called shots are both enabled. For normal PAcS armor, the target needs an active armor profile and a called-shot location whose coverage slot matches at least one resolved armor piece. No-check damage intentionally skips location armor AC.
 
-For the optional helmet house rule, also confirm the helmet setting is enabled, the helmet item is equipped in D35E's native `Head` slot, and `Use as helmet head coverage` is checked on that item. A magic item or equipment item with "Helmet" in its name will not affect local head armor until that checkbox and family/custom cap are configured.
+For the optional helmet house rule, also confirm the helmet setting is enabled, the helmet item is equipped in D35E's native `Head` slot, and `Use as helmet head coverage` is checked on that item. A magic item or equipment item with "Helmet" in its name will not affect local head armor until that checkbox and a head local armor bonus or family starter value are configured.
 
 ### I want D&D 3.5 RAW only
 

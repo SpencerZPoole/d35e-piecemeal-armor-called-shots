@@ -561,7 +561,7 @@ function injectPiecemealItemPanel(item, root, form) {
   legend.textContent = "PAcS Armor Options";
   const help = document.createElement("p");
   help.classList.add("d35e-pacs-help");
-  help.textContent = "Use piecemeal fields for custom Torso/Arms/Legs armor pieces. Use helmet fields for the optional head-coverage house rule; helmets never add to total AC.";
+  help.textContent = "Use piecemeal fields for custom Torso/Arms/Legs armor pieces. Use helmet fields for the optional head-coverage house rule; helmets affect Head, Eye, and Ear called-shot armor only.";
   const enabledLabel = document.createElement("label");
   enabledLabel.classList.add("d35e-pacs-checkbox");
   const enabled = document.createElement("input");
@@ -632,7 +632,7 @@ function injectPiecemealItemPanel(item, root, form) {
   helmetHeading.textContent = "Helmet head coverage house rule";
   const helmetHelp = document.createElement("p");
   helmetHelp.classList.add("d35e-pacs-help");
-  helmetHelp.textContent = "Configured helmets work from D35E's native Head slot. They inherit the active torso/head armor up to the helmet family or custom cap for Head, Eye, and Ear called shots only.";
+  helmetHelp.textContent = "Configured helmets work from D35E's native Head slot. Their local armor bonus applies to Head, Eye, and Ear called shots only and never adds to total AC.";
   const helmetEnabledLabel = document.createElement("label");
   helmetEnabledLabel.classList.add("d35e-pacs-checkbox");
   const helmetEnabled = document.createElement("input");
@@ -644,8 +644,8 @@ function injectPiecemealItemPanel(item, root, form) {
   helmetGrid.classList.add("d35e-pacs-grid");
   helmetGrid.append(
     buildLabeledSelect("Helmet family ", `flags.${MODULE_ID}.${FLAGS.helmet}.armorFamily`, helmetFlag.armorFamily ?? helmetFlag.family ?? "", HELMET_FAMILY_OPTIONS),
-    buildLabeledInput("Custom head armor cap ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.localArmorBonus`, helmetFlag.localArmorBonus ?? "", {
-      placeholder: "blank = family cap"
+    buildLabeledInput("Head local armor bonus ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.localArmorBonus`, helmetFlag.localArmorBonus ?? "", {
+      placeholder: "blank = selected family value"
     }),
     buildLabeledInput("Helmet coverage slot(s) ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.coverageSlots`, helmetFlag.coverageSlots ?? helmetFlag.coverageSlot ?? DEFAULT_HELMET_COVERAGE, {
       placeholder: DEFAULT_HELMET_COVERAGE
