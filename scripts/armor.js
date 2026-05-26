@@ -39,25 +39,37 @@ const MISC_VISUAL_SLOTS = new Set([
   PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.legs]
 ]);
 
+// The catalog keeps PF1e piecemeal structure, but armor bonuses are D35E-calibrated:
+// complete three-piece suits add their pieces plus the suit +1 to match D&D 3.5 armor AC.
 export const RAW_ARMOR_PIECE_CATALOG = Object.freeze([
   { id: "padded-arms", label: "Padded arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "padded", equipmentSubtype: "lightArmor", armorBonus: 0, maxDex: 8, acp: 0, spellFailure: 5, weight: 2, cost: 1 },
   { id: "leather-arms", label: "Leather arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "leather", equipmentSubtype: "lightArmor", armorBonus: 0, maxDex: 6, acp: 0, spellFailure: 10, weight: 2, cost: 2 },
   { id: "studded-leather-arms", label: "Studded leather arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "studded-leather", equipmentSubtype: "lightArmor", armorBonus: 0, maxDex: 5, acp: 0, spellFailure: 15, weight: 2, cost: 5 },
   { id: "hide-arms", label: "Hide arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "hide", equipmentSubtype: "mediumArmor", armorBonus: 0, maxDex: 4, acp: 2, spellFailure: 20, weight: 3, cost: 2 },
+  { id: "scale-arms", label: "Scale mail arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "scale", equipmentSubtype: "mediumArmor", armorBonus: 1, maxDex: 3, acp: 2, spellFailure: 25, weight: 5, cost: 10 },
   { id: "chain-arms", label: "Chain arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "chain", equipmentSubtype: "mediumArmor", armorBonus: 1, maxDex: 2, acp: 3, spellFailure: 30, weight: 5, cost: 25 },
+  { id: "banded-arms", label: "Banded mail arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "banded", equipmentSubtype: "heavyArmor", armorBonus: 1, maxDex: 1, acp: 3, spellFailure: 35, weight: 5, cost: 50 },
   { id: "plate-arms", label: "Plate arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "plate", equipmentSubtype: "heavyArmor", armorBonus: 1, maxDex: 1, acp: 7, spellFailure: 35, weight: 10, cost: 375 },
+  { id: "splint-arms", label: "Splint mail arm armor", pieceCategory: "arms", coverageSlots: "arms; hands", armorFamily: "splint", equipmentSubtype: "heavyArmor", armorBonus: 1, maxDex: 0, acp: 4, spellFailure: 40, weight: 5, cost: 50 },
   { id: "padded-legs", label: "Padded leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "padded", equipmentSubtype: "lightArmor", armorBonus: 0, maxDex: 8, acp: 0, spellFailure: 0, weight: 3, cost: 1 },
   { id: "leather-legs", label: "Leather leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "leather", equipmentSubtype: "lightArmor", armorBonus: 0, maxDex: 6, acp: 0, spellFailure: 0, weight: 3, cost: 3 },
   { id: "studded-leather-legs", label: "Studded leather leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "studded-leather", equipmentSubtype: "lightArmor", armorBonus: 1, maxDex: 5, acp: 0, spellFailure: 10, weight: 3, cost: 5 },
-  { id: "hide-legs", label: "Hide leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "hide", equipmentSubtype: "mediumArmor", armorBonus: 1, maxDex: 4, acp: 2, spellFailure: 10, weight: 7, cost: 3 },
+  { id: "hide-legs", label: "Hide leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "hide", equipmentSubtype: "mediumArmor", armorBonus: 0, maxDex: 4, acp: 2, spellFailure: 10, weight: 7, cost: 3 },
+  { id: "scale-legs", label: "Scale mail leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "scale", equipmentSubtype: "mediumArmor", armorBonus: 0, maxDex: 3, acp: 2, spellFailure: 15, weight: 10, cost: 10 },
   { id: "chain-legs", label: "Chain leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "chain", equipmentSubtype: "mediumArmor", armorBonus: 0, maxDex: 2, acp: 2, spellFailure: 15, weight: 10, cost: 25 },
+  { id: "banded-legs", label: "Banded mail leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "banded", equipmentSubtype: "heavyArmor", armorBonus: 0, maxDex: 1, acp: 3, spellFailure: 15, weight: 10, cost: 50 },
   { id: "plate-legs", label: "Plate leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "plate", equipmentSubtype: "heavyArmor", armorBonus: 1, maxDex: 1, acp: 3, spellFailure: 20, weight: 10, cost: 925 },
+  { id: "splint-legs", label: "Splint mail leg armor", pieceCategory: "legs", coverageSlots: "legs; feet", armorFamily: "splint", equipmentSubtype: "heavyArmor", armorBonus: 0, maxDex: 0, acp: 4, spellFailure: 20, weight: 15, cost: 50 },
   { id: "padded-torso", label: "Padded torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "padded", equipmentSubtype: "lightArmor", armorBonus: 0, maxDex: 8, acp: 0, spellFailure: 5, weight: 5, cost: 3 },
   { id: "leather-torso", label: "Leather torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "leather", equipmentSubtype: "lightArmor", armorBonus: 1, maxDex: 6, acp: 0, spellFailure: 10, weight: 10, cost: 5 },
   { id: "studded-leather-torso", label: "Studded leather torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "studded-leather", equipmentSubtype: "lightArmor", armorBonus: 1, maxDex: 5, acp: 0, spellFailure: 15, weight: 15, cost: 15 },
   { id: "hide-torso", label: "Hide torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "hide", equipmentSubtype: "mediumArmor", armorBonus: 2, maxDex: 4, acp: 2, spellFailure: 20, weight: 15, cost: 10 },
-  { id: "chain-torso", label: "Chain torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "chain", equipmentSubtype: "mediumArmor", armorBonus: 4, maxDex: 4, acp: 2, spellFailure: 30, weight: 25, cost: 100 },
-  { id: "plate-torso", label: "Plate torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "plate", equipmentSubtype: "heavyArmor", armorBonus: 6, maxDex: 3, acp: 4, spellFailure: 35, weight: 30, cost: 200 }
+  { id: "scale-torso", label: "Scale mail torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "scale", equipmentSubtype: "mediumArmor", armorBonus: 2, maxDex: 3, acp: 2, spellFailure: 25, weight: 15, cost: 30 },
+  { id: "chain-torso", label: "Chainmail torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "chain", equipmentSubtype: "mediumArmor", armorBonus: 3, maxDex: 4, acp: 2, spellFailure: 30, weight: 25, cost: 100 },
+  { id: "chain-shirt-torso", label: "Chain shirt torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "chain-shirt", equipmentSubtype: "lightArmor", armorBonus: 4, maxDex: 4, acp: 2, spellFailure: 30, weight: 25, cost: 100 },
+  { id: "banded-torso", label: "Banded mail torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "banded", equipmentSubtype: "heavyArmor", armorBonus: 4, maxDex: 1, acp: 2, spellFailure: 35, weight: 20, cost: 150 },
+  { id: "plate-torso", label: "Plate torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "plate", equipmentSubtype: "heavyArmor", armorBonus: 5, maxDex: 3, acp: 4, spellFailure: 35, weight: 30, cost: 200 },
+  { id: "splint-torso", label: "Splint mail torso armor", pieceCategory: "torso", coverageSlots: "torso; chest; vitals; heart; head", armorFamily: "splint", equipmentSubtype: "heavyArmor", armorBonus: 4, maxDex: 0, acp: 3, spellFailure: 40, weight: 25, cost: 100 }
 ]);
 
 export const RAW_ARMOR_SUIT_CATALOG = Object.freeze([
@@ -65,9 +77,12 @@ export const RAW_ARMOR_SUIT_CATALOG = Object.freeze([
   { id: "leather", labels: ["leather", "leather armor"], pieceIds: { torso: "leather-torso", legs: "leather-legs", arms: "leather-arms" } },
   { id: "studded-leather", labels: ["studded leather", "studded leather armor"], pieceIds: { torso: "studded-leather-torso", legs: "studded-leather-legs", arms: "studded-leather-arms" } },
   { id: "hide", labels: ["hide", "hide armor"], pieceIds: { torso: "hide-torso", legs: "hide-legs", arms: "hide-arms" } },
+  { id: "scale", labels: ["scale mail", "scale armor"], pieceIds: { torso: "scale-torso", legs: "scale-legs", arms: "scale-arms" } },
   { id: "chain", labels: ["chainmail", "chain mail", "chain armor"], pieceIds: { torso: "chain-torso", legs: "chain-legs", arms: "chain-arms" } },
-  { id: "chain-shirt", labels: ["chain shirt"], pieceIds: { torso: "chain-torso" } },
+  { id: "chain-shirt", labels: ["chain shirt"], pieceIds: { torso: "chain-shirt-torso" } },
   { id: "breastplate", labels: ["breastplate", "agile breastplate"], pieceIds: { torso: "plate-torso" } },
+  { id: "banded", labels: ["banded mail", "banded armor"], pieceIds: { torso: "banded-torso", legs: "banded-legs", arms: "banded-arms" } },
+  { id: "splint", labels: ["splint mail", "splint armor"], pieceIds: { torso: "splint-torso", legs: "splint-legs", arms: "splint-arms" } },
   { id: "half-plate", labels: ["half-plate", "half plate"], pieceIds: { torso: "plate-torso", legs: "chain-legs", arms: "plate-arms" } },
   { id: "full-plate", labels: ["full plate", "full-plate"], pieceIds: { torso: "plate-torso", legs: "plate-legs", arms: "plate-arms" } }
 ]);

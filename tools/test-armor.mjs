@@ -9,6 +9,7 @@ import {
   inferSyncedComponentVisualSlot,
   previewArmorSync,
   RAW_ARMOR_PIECE_CATALOG,
+  RAW_ARMOR_SUIT_CATALOG,
   syncArmorAggregate
 } from "../scripts/armor.js";
 
@@ -61,7 +62,7 @@ const ignored = item("c", "Backpack", { enabled: false });
 
 const plateTorsoCatalog = RAW_ARMOR_PIECE_CATALOG.find((entry) => entry.id === "plate-torso");
 assert.equal(plateTorsoCatalog.pieceCategory, "torso");
-assert.equal(plateTorsoCatalog.armorBonus, 6);
+assert.equal(plateTorsoCatalog.armorBonus, 5);
 assert.equal(plateTorsoCatalog.coverageSlots.includes("heart"), true);
 
 function catalog(id) {
@@ -69,6 +70,37 @@ function catalog(id) {
   assert.ok(entry, `Missing catalog entry: ${id}`);
   return entry;
 }
+
+function catalogSuit(suitId) {
+  const suit = RAW_ARMOR_SUIT_CATALOG.find((entry) => entry.id === suitId);
+  assert.ok(suit, `Missing suit catalog entry: ${suitId}`);
+  return Object.values(suit.pieceIds).map((id) => catalog(id));
+}
+
+const d35eCalibratedSuits = [
+  ["padded", 1],
+  ["leather", 2],
+  ["studded-leather", 3],
+  ["hide", 3],
+  ["scale", 4],
+  ["chain", 5],
+  ["banded", 6],
+  ["splint", 6],
+  ["half-plate", 7],
+  ["full-plate", 8]
+];
+for (const [suitId, targetArmorBonus] of d35eCalibratedSuits) {
+  const suitSummary = calculatePiecemealArmorFromPieces(catalogSuit(suitId));
+  assert.equal(suitSummary.completeSuit, true, `${suitId} should resolve as a full PAcS suit`);
+  assert.equal(suitSummary.suitArmorBonus, 1, `${suitId} should include the full-suit +1`);
+  assert.equal(suitSummary.armorBonus, targetArmorBonus, `${suitId} should match the D&D 3.5 armor bonus`);
+}
+const chainShirtCatalog = calculatePiecemealArmorFromPieces(catalogSuit("chain-shirt"));
+assert.equal(chainShirtCatalog.completeSuit, false);
+assert.equal(chainShirtCatalog.armorBonus, 4);
+const breastplateCatalog = calculatePiecemealArmorFromPieces(catalogSuit("breastplate"));
+assert.equal(breastplateCatalog.completeSuit, false);
+assert.equal(breastplateCatalog.armorBonus, 5);
 
 assert.deepEqual(
   ["studded-leather-arms", "studded-leather-legs", "studded-leather-torso"].map((id) => {
@@ -90,7 +122,7 @@ assert.deepEqual(
   ]
 );
 assert.deepEqual(
-  ["chain-arms", "chain-legs", "chain-torso"].map((id) => {
+  ["chain-arms", "chain-legs", "chain-torso", "chain-shirt-torso"].map((id) => {
     const piece = catalog(id);
     return {
       id,
@@ -105,7 +137,8 @@ assert.deepEqual(
   [
     { id: "chain-arms", armorBonus: 1, maxDex: 2, acp: 3, spellFailure: 30, weight: 5, cost: 25 },
     { id: "chain-legs", armorBonus: 0, maxDex: 2, acp: 2, spellFailure: 15, weight: 10, cost: 25 },
-    { id: "chain-torso", armorBonus: 4, maxDex: 4, acp: 2, spellFailure: 30, weight: 25, cost: 100 }
+    { id: "chain-torso", armorBonus: 3, maxDex: 4, acp: 2, spellFailure: 30, weight: 25, cost: 100 },
+    { id: "chain-shirt-torso", armorBonus: 4, maxDex: 4, acp: 2, spellFailure: 30, weight: 25, cost: 100 }
   ]
 );
 assert.deepEqual(
@@ -124,7 +157,7 @@ assert.deepEqual(
   [
     { id: "plate-arms", armorBonus: 1, maxDex: 1, acp: 7, spellFailure: 35, weight: 10, cost: 375 },
     { id: "plate-legs", armorBonus: 1, maxDex: 1, acp: 3, spellFailure: 20, weight: 10, cost: 925 },
-    { id: "plate-torso", armorBonus: 6, maxDex: 3, acp: 4, spellFailure: 35, weight: 30, cost: 200 }
+    { id: "plate-torso", armorBonus: 5, maxDex: 3, acp: 4, spellFailure: 35, weight: 30, cost: 200 }
   ]
 );
 
@@ -195,7 +228,7 @@ assert.equal(singleArmPiece.cost, 25);
 const partialMixedSuit = calculatePiecemealArmorFromPieces([catalog("chain-torso"), catalog("studded-leather-legs")]);
 assert.equal(partialMixedSuit.completeSuit, false);
 assert.equal(partialMixedSuit.mixedSuit, false);
-assert.equal(partialMixedSuit.armorBonus, 5);
+assert.equal(partialMixedSuit.armorBonus, 4);
 assert.equal(partialMixedSuit.spellFailure, 30);
 assert.equal(partialMixedSuit.mixedSuitSpellFailurePenalty, 0);
 
@@ -220,7 +253,7 @@ const chainSuit = calculatePiecemealArmorFromPieces([
   catalog("chain-legs")
 ]);
 assert.equal(chainSuit.completeSuit, true);
-assert.equal(chainSuit.armorBonus, 6);
+assert.equal(chainSuit.armorBonus, 5);
 assert.equal(chainSuit.maxDex, 2);
 assert.equal(chainSuit.acp, 3);
 assert.equal(chainSuit.spellFailure, 30);

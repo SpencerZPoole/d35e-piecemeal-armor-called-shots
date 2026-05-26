@@ -314,7 +314,7 @@ assert.equal(dragBackCompositeChain.system.armor.dex, null);
 assert.equal(dragBackCompositeLegs.system.equipmentType, "misc");
 assert.equal(dragBackCompositeLegs.system.armor.dex, null);
 carrier = dragBackCompositeActor.items.find((item) => item.name === "PAcS Armor Profile");
-assert.equal(carrier.system.armor.value, 7);
+assert.equal(carrier.system.armor.value, 6);
 assert.equal(carrier.system.armor.dex, 2);
 
 const suspendBaseline = equipment("suspend-studded", "Studded Leather", {
@@ -456,13 +456,13 @@ assert.equal(resolved.status, ARMOR_PROFILE_STATUS.compositeProfile);
 assert.equal(resolved.profile.baselineItemId, "mixed-studded");
 assert.equal(resolved.summary.completeSuit, true);
 assert.equal(resolved.summary.mixedSuit, true);
-assert.equal(resolved.summary.armorBonus, 7);
+assert.equal(resolved.summary.armorBonus, 6);
 assert.equal(resolved.summary.maxDex, 2);
 assert.equal(resolved.summary.acp, 3);
 assert.equal(resolved.summary.spellFailure, 35);
 assert.equal(resolved.summary.weight, 33);
 carrier = mixedOverrideActor.items.find((item) => item.name === "PAcS Armor Profile");
-assert.equal(carrier.system.armor.value, 7);
+assert.equal(carrier.system.armor.value, 6);
 assert.equal(carrier.system.armor.dex, 2);
 assert.equal(carrier.system.armor.acp, -3);
 assert.equal(carrier.system.spellFailure, 35);
@@ -682,7 +682,7 @@ const singlePieceActor = actor([breastplate], {
 });
 resolved = resolveArmorProfile(singlePieceActor);
 assert.equal(resolved.status, ARMOR_PROFILE_STATUS.compositeProfile);
-assert.equal(resolved.summary.armorBonus, 6);
+assert.equal(resolved.summary.armorBonus, 5);
 assert.equal(resolved.summary.completeSuit, false);
 
 const custom = equipment("custom", "Mirror-Bright Weird Armor", { equipped: false });

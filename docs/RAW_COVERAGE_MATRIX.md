@@ -13,6 +13,29 @@
 | Severe called-shot effects | Configurable with restore ledger | Death, severing/maiming flags, suffocation notes, bleed notes, conditions, and ability damage/drain can be applied automatically, confirmed by the GM first, or kept advisory only, then recoverable by a GM restore control when applied. |
 | Older v1.0 behavior | Migration-only support | Old aggregate and advisory helpers are retained internally for older actors and tests, but the normal settings menu uses the native inventory workflow and the clearer outcome automation setting. |
 
+## D35E-Calibrated Armor Catalog
+
+The module uses PF1e piecemeal armor structure, but the starter armor catalog is calibrated for D35E/D&D 3.5e armor bonuses. For a complete three-category suit, the rule is:
+
+`torso armor + arm armor + leg armor + full-suit bonus 1 = normal D&D 3.5e armor bonus`
+
+That means some bundled piece armor values intentionally differ from Ultimate Combat. This keeps a D35E character wearing a complete catalog suit at the same armor AC as the normal 3.5e armor item, while preserving the piecemeal mechanic for swaps, local armor, and mixed suits. This is still optional-rule automation: it is not exact Pathfinder RAW, and it is not official D&D 3.5 RAW.
+
+| Armor | D&D 3.5e target | Torso | Arms | Legs | Suit +1 | Notes |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Padded | 1 | 0 | 0 | 0 | 1 | Complete suit closes to padded armor. |
+| Leather | 2 | 1 | 0 | 0 | 1 | Complete suit closes to leather armor. |
+| Studded leather | 3 | 1 | 0 | 1 | 1 | Complete suit closes to studded leather armor. |
+| Hide | 3 | 2 | 0 | 0 | 1 | Legs are lower than the PF-derived starter value. |
+| Scale mail | 4 | 2 | 1 | 0 | 1 | Added catalog family. |
+| Chain shirt | 4 | 4 | n/a | n/a | n/a | Torso-only item; no suit bonus by itself. |
+| Chainmail | 5 | 3 | 1 | 0 | 1 | Split from chain shirt mapping. |
+| Breastplate | 5 | 5 | n/a | n/a | n/a | Torso-only plate item; no suit bonus by itself. |
+| Banded mail | 6 | 4 | 1 | 0 | 1 | Added catalog family. |
+| Splint mail | 6 | 4 | 1 | 0 | 1 | Added catalog family. |
+| Half-plate | 7 | 5 | 1 | 0 | 1 | Plate torso plus plate arms plus chain legs. |
+| Full plate | 8 | 5 | 1 | 1 | 1 | Plate torso is lower than the PF-derived starter value. |
+
 ## Adaptation Boundaries
 
 - The module still does not claim piecemeal armor or called shots are official D&D 3.5 RAW.

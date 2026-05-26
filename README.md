@@ -28,7 +28,7 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 
 - Adds `PAcS: Torso`, `PAcS: Arms`, and `PAcS: Legs` slots directly to D35E's native Armor and Equipment inventory list.
 - Uses the normal D35E `Armor` slot as the baseline suit or torso piece, then overrides only the categories a table mixes.
-- Provides a starter catalog for common RAW armor pieces such as padded, leather, studded leather, hide, chain, and plate arms/legs/torso.
+- Provides a D35E-calibrated starter catalog for common piecemeal armor mappings such as padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate.
 - Keeps simple baseline-only armor native to D35E while using a hidden slotless D35E armor carrier only for composite piecemeal math.
 - Adds a `Called Shot` dropdown inside D35E's native attack/use dialog.
 - Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as `Called Shot: Ear -10`.

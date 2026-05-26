@@ -164,7 +164,9 @@ RAW-adapted math:
 - Three resolved categories make a suit and gain the extra `+1` armor bonus.
 - Mixed full suits add the RAW `+5%` arcane spell failure adjustment.
 
-Known armor items use the module catalog for padded, leather, studded leather, hide, chain, breastplate/plate torso, half-plate, and full plate mappings. Unknown custom armor is marked `Needs piece values` instead of being guessed. Use the shield icon on an inventory row to open explicit piece fields for unusual published pieces or custom 3.5e adaptations before assigning them.
+The bundled catalog is D35E-calibrated. It keeps the PF1e piecemeal structure, but complete catalog suits are adjusted so `torso + arms + legs + full-suit +1` equals the normal D&D 3.5e armor bonus. For example, chainmail resolves as `3 + 1 + 0 + 1 = 5`, and full plate resolves as `5 + 1 + 1 + 1 = 8`. Chain shirt and breastplate are torso-only entries, so they do not get a suit bonus unless the table deliberately adds other pieces.
+
+Known armor items use the module catalog for padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate/plate torso, banded mail, splint mail, half-plate, and full plate mappings. Unknown custom armor is marked `Needs piece values` instead of being guessed. Use the shield icon on an inventory row to open explicit piece fields for unusual published pieces or custom 3.5e adaptations before assigning them.
 
 When a composite profile is active, the module creates a hidden zero-weight, slotless D35E carrier so D35E still owns the final AC, max Dex, ACP, ASF, and speed math without occupying the visible Armor slot. Source items remain visible in inventory with a `worn in profile` chip, and their native armor math is backed up and neutralized to prevent double-counting. If Dex to AC looks lower than expected, also check D35E encumbrance because it can apply its own max Dex cap after armor. The old visible `Piecemeal Armor Aggregate` workflow is retained only as internal migration/recovery support for older worlds.
 
