@@ -30,7 +30,7 @@ globalThis.game = {
 };
 
 const { getDefaultCalledShotProfiles } = await import("../scripts/profiles.js");
-const { OUTCOME_MODES, SETTINGS } = await import("../scripts/constants.js");
+const { FULL_ATTACK_FEAT_RULE_MODES, OUTCOME_MODES, SETTINGS } = await import("../scripts/constants.js");
 const { buildProfileManagerContext, registerSettings, updateProfilesFromProfileManager } = await import("../scripts/settings.js");
 const {
   CALLED_SHOT_QUEUE_NAME,
@@ -57,6 +57,10 @@ assert.equal(registeredSettings.get(SETTINGS.enableHelmetSkillPenalties).default
 assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).name, "Called-shot effect automation");
 assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).default, OUTCOME_MODES.confirmSevere);
 assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).config, true);
+assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).name, "Called-shot full-attack feat rules");
+assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).default, FULL_ATTACK_FEAT_RULE_MODES.require);
+assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).choices[FULL_ATTACK_FEAT_RULE_MODES.warnOnly], "Warn only");
+assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).config, true);
 assert.equal(registeredMenus.has("calledShotProfileEditor"), true);
 const context = buildProfileManagerContext(profiles);
 assert.equal(context.activeProfileId, "pf1e-uc-raw-adapted");

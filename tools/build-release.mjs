@@ -26,6 +26,7 @@ const releaseEntries = [
   "CHANGELOG.md",
   "SECURITY.md",
   "lang",
+  "packs",
   "scripts",
   "styles",
   "templates",
@@ -64,12 +65,22 @@ function copyEntry(relativePath) {
   }
 
   const extension = path.extname(source).toLowerCase();
-  if (blockedExtensions.has(extension)) {
+  if (blockedExtensions.has(extension) && !isPackDatabaseArtifact(relativePath, extension)) {
     fail(`refusing to package blocked file type: ${path.relative(root, source)}`);
   }
 
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.copyFileSync(source, target);
+}
+
+function isPackDatabaseArtifact(relativePath, extension = path.extname(relativePath).toLowerCase()) {
+  const normalized = relativePath.replace(/\\/g, "/");
+  if (!normalized.startsWith("packs/")) return false;
+  const basename = path.basename(normalized);
+  return extension === ".ldb" ||
+    extension === ".log" ||
+    ["CURRENT", "LOCK", "LOG", "LOG.old"].includes(basename) ||
+    /^MANIFEST-\d+$/i.test(basename);
 }
 
 function psQuote(value) {

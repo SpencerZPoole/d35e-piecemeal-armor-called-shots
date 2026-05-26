@@ -37,7 +37,8 @@
   <li>Adds a <code>Called Shot</code> dropdown inside D35E's native attack/use dialog.</li>
   <li>Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as <code>Called Shot: Ear -10</code>.</li>
   <li>Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.</li>
-  <li>Enforces Improved/Greater Called Shot full-attack limits while still offering table-facing full-attack handling choices.</li>
+  <li>Enforces Improved/Greater Called Shot full-attack limits by default while offering table-facing warn-only and no-requirement options.</li>
+  <li>Includes a <code>PAcS Called-Shot Feats</code> compendium with convenience feat records that the automation detects by exact name.</li>
   <li>Automatically applies called-shot severity outcomes after D35E Apply Damage and records a GM restore ledger.</li>
   <li>Includes an in-Foundry profile editor for locations, penalties, coverage slot(s), and outcome effects.</li>
 </ul>
@@ -52,7 +53,7 @@
 
 <p>Players use the normal D35E attack or item controls. The native attack dialog gains a <strong>Called Shot</strong> selector. Choosing a location applies the configured attack penalty through D35E's existing roll breakdown and posts a GM-facing outcome card after the roll.</p>
 
-<p>Full attacks honor Improved Called Shot and Greater Called Shot. Module settings can ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections on full attacks.</p>
+<p>Full attacks honor Improved Called Shot and Greater Called Shot by default. Module settings can ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections on full attacks. A separate full-attack feat-rule setting can keep the RAW-adapted gate, allow the workflow with warnings, or allow it without warnings. Feat bonuses still require the actor to actually have the feat.</p>
 
 <h3>Automatic Outcomes And Restore</h3>
 
@@ -60,7 +61,9 @@
 
 <h3>Configuration</h3>
 
-<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, show location armor overlays, and edit called-shot profiles.</p>
+<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, choose full-attack feat-gate behavior, show location armor overlays, and edit called-shot profiles.</p>
+
+<p>The <strong>PAcS Called-Shot Feats</strong> compendium ships small D35E Item records for <code>Improved Called Shot</code> and <code>Greater Called Shot</code>. These are PF1e-derived optional-rule support items for D35E, not D&amp;D 3.5 RAW.</p>
 
 <p>Profiles control location labels, attack penalties, enabled state, matching armor coverage slot(s), and outcome effects. Effect snippets are JSON because they map directly to the module's declarative effect engine.</p>
 

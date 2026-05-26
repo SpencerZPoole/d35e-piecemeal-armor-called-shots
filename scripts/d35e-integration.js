@@ -1,4 +1,4 @@
-import { FULL_ATTACK_MODES, MODULE_ID, RULES_MODES, SETTINGS } from "./constants.js";
+import { FULL_ATTACK_FEAT_RULE_MODES, FULL_ATTACK_MODES, MODULE_ID, RULES_MODES, SETTINGS } from "./constants.js";
 import { getCurrentRulesMode } from "./armor.js";
 import {
   applyAutomaticCalledShotOutcome,
@@ -6,6 +6,7 @@ import {
   buildCalledShotCardPayload,
   clearCalledShot,
   consumeCalledShot,
+  getCalledShotFullAttackFeatRuleMode,
   getCalledShotFeatState,
   getCalledShotOptions,
   noteCalledShotAttackSequence,
@@ -97,12 +98,66 @@ function getExpectedFullAttackRows(actor, item, form) {
   }));
 }
 
+export function resolveFullAttackFeatRuleDecision({
+  rulesMode = RULES_MODES.rawAdapted,
+  featRuleMode = FULL_ATTACK_FEAT_RULE_MODES.require,
+  feats = {},
+  mode = FULL_ATTACK_MODES.perAttack,
+  calledShotCount = 1
+} = {}) {
+  if (mode === FULL_ATTACK_MODES.disabled) return { allow: false, repeatPenaltyAfterFirst: false, warnings: [], info: null, forceFirst: false };
+
+  const rawAdapted = rulesMode === RULES_MODES.rawAdapted;
+  const normalizedRule = Object.values(FULL_ATTACK_FEAT_RULE_MODES).includes(featRuleMode)
+    ? featRuleMode
+    : FULL_ATTACK_FEAT_RULE_MODES.require;
+  const multipleCalledShots = mode === FULL_ATTACK_MODES.all || Number(calledShotCount) > 1;
+  const repeatPenaltyAfterFirst = rawAdapted && multipleCalledShots;
+  const warnings = [];
+
+  if (!rawAdapted || normalizedRule === FULL_ATTACK_FEAT_RULE_MODES.ignore) {
+    return { allow: true, repeatPenaltyAfterFirst, warnings, info: null, forceFirst: false };
+  }
+
+  if (normalizedRule === FULL_ATTACK_FEAT_RULE_MODES.require) {
+    if (!feats.improved) {
+      return {
+        allow: false,
+        repeatPenaltyAfterFirst,
+        warnings: ["RAW-adapted called shots cannot be combined with D35E Full Attack unless the attacker has Improved Called Shot."],
+        info: null,
+        forceFirst: false
+      };
+    }
+    if (multipleCalledShots && !feats.greater) {
+      return {
+        allow: true,
+        repeatPenaltyAfterFirst: false,
+        warnings,
+        info: "Improved Called Shot allows one called shot during a full attack; applying it to the first attack only.",
+        forceFirst: true
+      };
+    }
+    return { allow: true, repeatPenaltyAfterFirst, warnings, info: null, forceFirst: false };
+  }
+
+  if (!feats.improved) warnings.push("This full-attack called shot would normally require Improved Called Shot.");
+  if (multipleCalledShots && !feats.greater) warnings.push("Multiple called shots in one full attack would normally require Greater Called Shot.");
+  return { allow: true, repeatPenaltyAfterFirst, warnings, info: null, forceFirst: false };
+}
+
+function showFullAttackFeatRuleDecision(decision) {
+  for (const warning of decision.warnings ?? []) ui.notifications?.warn(warning);
+  if (decision.info) ui.notifications?.info(decision.info);
+}
+
 async function prepareCalledShotForRoll({ fullAttack, form, actor, item }) {
   if (!settingEnabled(SETTINGS.enableCalledShots, true) || !form) return false;
   const locationId = readCalledShotSelection(form);
   if (!locationId) return false;
   const rulesMode = getCurrentRulesMode();
   const feats = getCalledShotFeatState(actor);
+  const featRuleMode = getCalledShotFullAttackFeatRuleMode();
 
   const options = {
     targetUuid: getSingleTargetUuid(),
@@ -118,35 +173,68 @@ async function prepareCalledShotForRoll({ fullAttack, form, actor, item }) {
 
   const mode = getCalledShotFullAttackMode();
   if (mode === FULL_ATTACK_MODES.disabled) return false;
-  if (rulesMode === RULES_MODES.rawAdapted && !feats.improved) {
-    ui.notifications?.warn("RAW-adapted called shots cannot be combined with D35E Full Attack unless the attacker has Improved Called Shot.");
+  const expectedAttackCount = getExpectedFullAttackRows(actor, item, form).length;
+  const initialDecision = resolveFullAttackFeatRuleDecision({
+    rulesMode,
+    featRuleMode,
+    feats,
+    mode,
+    calledShotCount: mode === FULL_ATTACK_MODES.all ? expectedAttackCount : 1
+  });
+  if (!initialDecision.allow) {
+    showFullAttackFeatRuleDecision(initialDecision);
     return false;
   }
-  if (rulesMode === RULES_MODES.rawAdapted && feats.improved && !feats.greater) {
-    ui.notifications?.info("Improved Called Shot allows one called shot during a full attack; applying it to the first attack only.");
+  if (initialDecision.forceFirst) {
+    showFullAttackFeatRuleDecision(initialDecision);
     stageCalledShot(actor, item, locationId, options);
     return true;
   }
   if (mode === FULL_ATTACK_MODES.first) {
+    showFullAttackFeatRuleDecision(initialDecision);
     stageCalledShot(actor, item, locationId, options);
     return true;
   }
   if (mode === FULL_ATTACK_MODES.all) {
-    stageCalledShotForEveryAttack(actor, item, locationId, options);
+    showFullAttackFeatRuleDecision(initialDecision);
+    stageCalledShotForEveryAttack(actor, item, locationId, {
+      ...options,
+      repeatPenaltyAfterFirst: initialDecision.repeatPenaltyAfterFirst
+    });
     return true;
   }
 
   let queue = readCalledShotQueue(form);
   if (!queue.some(Boolean)) {
-    const attacks = getExpectedFullAttackRows(actor, item, form);
     queue = await openCalledShotPerAttackDialog({
-      attacks,
+      attacks: getExpectedFullAttackRows(actor, item, form),
       options: getCalledShotOptions(),
       defaultLocationId: locationId
     });
   }
   if (!queue.some(Boolean)) return false;
-  stageCalledShotQueue(actor, item, queue, options);
+  const selectedCount = queue.filter(Boolean).length;
+  const queueDecision = resolveFullAttackFeatRuleDecision({
+    rulesMode,
+    featRuleMode,
+    feats,
+    mode,
+    calledShotCount: selectedCount
+  });
+  if (!queueDecision.allow) {
+    showFullAttackFeatRuleDecision(queueDecision);
+    return false;
+  }
+  if (queueDecision.forceFirst) {
+    showFullAttackFeatRuleDecision(queueDecision);
+    stageCalledShot(actor, item, queue.find(Boolean) || locationId, options);
+    return true;
+  }
+  showFullAttackFeatRuleDecision(queueDecision);
+  stageCalledShotQueue(actor, item, queue, {
+    ...options,
+    repeatPenaltyAfterFirst: queueDecision.repeatPenaltyAfterFirst
+  });
   return true;
 }
 

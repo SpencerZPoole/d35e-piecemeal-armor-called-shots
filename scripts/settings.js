@@ -1,5 +1,6 @@
 import {
   ARMOR_WORKFLOW_MODES,
+  FULL_ATTACK_FEAT_RULE_MODES,
   FULL_ATTACK_MODES,
   LOCAL_ARMOR_MODES,
   MODULE_ID,
@@ -353,6 +354,20 @@ export function registerSettings() {
       [FULL_ATTACK_MODES.disabled]: "Disable on full attacks"
     },
     default: FULL_ATTACK_MODES.perAttack
+  });
+
+  game.settings.register(MODULE_ID, SETTINGS.calledShotFullAttackFeatRules, {
+    name: "Called-shot full-attack feat rules",
+    hint: "Controls whether Improved Called Shot and Greater Called Shot are required for called shots during D35E Full Attack. Feat bonuses still require the actor to actually have the feat.",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      [FULL_ATTACK_FEAT_RULE_MODES.require]: "Require feats (RAW-adapted)",
+      [FULL_ATTACK_FEAT_RULE_MODES.warnOnly]: "Warn only",
+      [FULL_ATTACK_FEAT_RULE_MODES.ignore]: "Do not require feats"
+    },
+    default: FULL_ATTACK_FEAT_RULE_MODES.require
   });
 
   game.settings.register(MODULE_ID, SETTINGS.calledShotLocalArmorMode, {

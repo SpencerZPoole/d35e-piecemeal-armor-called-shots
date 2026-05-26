@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { OUTCOME_MODES } from "../scripts/constants.js";
+import { FULL_ATTACK_FEAT_RULE_MODES, FULL_ATTACK_MODES, OUTCOME_MODES, RULES_MODES, SETTINGS } from "../scripts/constants.js";
 import {
   applyAutomaticCalledShotOutcome,
   buildAttackExtraPart,
@@ -8,6 +8,7 @@ import {
   clearCalledShot,
   consumeCalledShot,
   determineCalledShotSeverity,
+  getCalledShotFullAttackFeatRuleMode,
   getCalledShotFeatState,
   getCalledShotOutcomeMode,
   getPendingCalledShot,
@@ -16,6 +17,7 @@ import {
   stageCalledShotForEveryAttack,
   stageCalledShotQueue
 } from "../scripts/called-shots.js";
+import { resolveFullAttackFeatRuleDecision } from "../scripts/d35e-integration.js";
 import {
   getActiveProfile,
   getDefaultCalledShotProfiles,
@@ -93,6 +95,61 @@ assert.equal(greaterQueue[1].repeatPenalty, -5);
 assert.equal(greaterQueue[1].penalty, -13);
 assert.equal(greaterQueue[1].debilitatingMinimum, 40);
 
+const noFeatRepeatQueue = stageCalledShotQueue(actor, item, ["ear", "eye"], { profiles, userId: "user-repeat", repeatPenaltyAfterFirst: true });
+assert.equal(noFeatRepeatQueue[0].penalty, -10);
+assert.equal(noFeatRepeatQueue[1].repeatPenalty, -5);
+assert.equal(noFeatRepeatQueue[1].penalty, -15);
+const noFeatEvery = stageCalledShotForEveryAttack(actor, item, "ear", { profiles, userId: "user-every-repeat", repeatPenaltyAfterFirst: true });
+assert.equal(noFeatEvery.repeatPenaltyAfterFirst, true);
+assert.equal(consumeCalledShot(actor, item, "user-every-repeat").penalty, -10);
+assert.equal(consumeCalledShot(actor, item, "user-every-repeat").penalty, -15);
+clearCalledShot(actor, item, "user-every-repeat");
+
+assert.deepEqual(resolveFullAttackFeatRuleDecision({
+  rulesMode: RULES_MODES.rawAdapted,
+  featRuleMode: FULL_ATTACK_FEAT_RULE_MODES.require,
+  feats: {},
+  mode: FULL_ATTACK_MODES.all,
+  calledShotCount: 2
+}), {
+  allow: false,
+  repeatPenaltyAfterFirst: true,
+  warnings: ["RAW-adapted called shots cannot be combined with D35E Full Attack unless the attacker has Improved Called Shot."],
+  info: null,
+  forceFirst: false
+});
+assert.equal(resolveFullAttackFeatRuleDecision({
+  rulesMode: RULES_MODES.rawAdapted,
+  featRuleMode: FULL_ATTACK_FEAT_RULE_MODES.require,
+  feats: { improved: true, greater: false },
+  mode: FULL_ATTACK_MODES.all,
+  calledShotCount: 2
+}).forceFirst, true);
+assert.equal(resolveFullAttackFeatRuleDecision({
+  rulesMode: RULES_MODES.rawAdapted,
+  featRuleMode: FULL_ATTACK_FEAT_RULE_MODES.require,
+  feats: { improved: true, greater: true },
+  mode: FULL_ATTACK_MODES.all,
+  calledShotCount: 2
+}).repeatPenaltyAfterFirst, true);
+assert.deepEqual(resolveFullAttackFeatRuleDecision({
+  rulesMode: RULES_MODES.rawAdapted,
+  featRuleMode: FULL_ATTACK_FEAT_RULE_MODES.warnOnly,
+  feats: {},
+  mode: FULL_ATTACK_MODES.all,
+  calledShotCount: 2
+}).warnings, [
+  "This full-attack called shot would normally require Improved Called Shot.",
+  "Multiple called shots in one full attack would normally require Greater Called Shot."
+]);
+assert.equal(resolveFullAttackFeatRuleDecision({
+  rulesMode: RULES_MODES.rawAdapted,
+  featRuleMode: FULL_ATTACK_FEAT_RULE_MODES.ignore,
+  feats: {},
+  mode: FULL_ATTACK_MODES.all,
+  calledShotCount: 2
+}).warnings.length, 0);
+
 const targetToken = {
   document: { uuid: "Scene.test.Token.target" },
   x: 900,
@@ -113,11 +170,13 @@ globalThis.game = {
     get(_moduleId, key) {
       if (key === "calledShotProfiles") return profiles;
       if (key === "calledShotOutcomeMode") return currentOutcomeMode;
+      if (key === SETTINGS.calledShotFullAttackFeatRules) return currentFeatRuleMode;
       return true;
     }
   }
 };
 let currentOutcomeMode = OUTCOME_MODES.confirmSevere;
+let currentFeatRuleMode = FULL_ATTACK_FEAT_RULE_MODES.require;
 const rangedActor = {
   id: "ranged",
   getActiveTokens() {
@@ -133,6 +192,9 @@ assert.equal(determineCalledShotSeverity({ damage: 10, crit: false }), "normal")
 assert.equal(determineCalledShotSeverity({ damage: 10, crit: true }), "critical");
 assert.equal(determineCalledShotSeverity({ damage: 40, crit: false, debilitatingMinimum: 40, targetActor: { system: { attributes: { hp: { max: 70 } } } } }), "debilitating");
 assert.equal(getCalledShotOutcomeMode(), OUTCOME_MODES.confirmSevere);
+assert.equal(getCalledShotFullAttackFeatRuleMode(), FULL_ATTACK_FEAT_RULE_MODES.require);
+currentFeatRuleMode = FULL_ATTACK_FEAT_RULE_MODES.ignore;
+assert.equal(getCalledShotFullAttackFeatRuleMode(), FULL_ATTACK_FEAT_RULE_MODES.ignore);
 assert.equal(calledShotOutcomeNeedsConfirmation("normal"), false);
 assert.equal(calledShotOutcomeNeedsConfirmation("critical"), true);
 assert.equal(calledShotOutcomeNeedsConfirmation("debilitating"), true);

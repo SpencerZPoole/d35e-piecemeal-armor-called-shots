@@ -12,6 +12,7 @@ export const SETTINGS = Object.freeze({
   enableHelmetSkillPenalties: "enableHelmetSkillPenalties",
   calledShotOutcomeMode: "calledShotOutcomeMode",
   calledShotFullAttackMode: "calledShotFullAttackMode",
+  calledShotFullAttackFeatRules: "calledShotFullAttackFeatRules",
   calledShotLocalArmorMode: "calledShotLocalArmorMode",
   calledShotProfiles: "calledShotProfiles",
   locationArmorOverlay: "locationArmorOverlay",
@@ -33,6 +34,12 @@ export const FULL_ATTACK_MODES = Object.freeze({
   first: "first",
   all: "all",
   disabled: "disabled"
+});
+
+export const FULL_ATTACK_FEAT_RULE_MODES = Object.freeze({
+  require: "require",
+  warnOnly: "warnOnly",
+  ignore: "ignore"
 });
 
 export const OUTCOME_MODES = Object.freeze({

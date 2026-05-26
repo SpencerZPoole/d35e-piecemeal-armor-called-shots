@@ -20,6 +20,12 @@ assert(pkg.version === manifest.version, "package and manifest versions must mat
 assert(Array.isArray(manifest.esmodules) && manifest.esmodules.length === 1, "manifest needs exactly one esmodule entry");
 assert(Array.isArray(manifest.styles) && manifest.styles.length > 0, "manifest needs styles");
 assert(manifest.relationships?.systems?.some((system) => system.id === "D35E"), "manifest needs D35E system relationship");
+const featPack = manifest.packs?.find((pack) => pack.name === "called-shot-feats");
+assert(featPack, "manifest needs called-shot-feats pack");
+assert(featPack.label === "PAcS Called-Shot Feats", "called-shot-feats label mismatch");
+assert(featPack.type === "Item", "called-shot-feats must be an Item pack");
+assert(featPack.system === "D35E", "called-shot-feats must declare D35E system");
+assert(featPack.path === "packs/called-shot-feats", "called-shot-feats path mismatch");
 
 for (const file of [
   "README.md",
@@ -33,5 +39,7 @@ for (const file of [
 ]) {
   assert(fs.existsSync(path.join(root, file)), `Missing required file: ${file}`);
 }
+
+assert(fs.existsSync(path.join(root, featPack.path)), `Missing pack path: ${featPack.path}`);
 
 console.log("validate-module: ok");

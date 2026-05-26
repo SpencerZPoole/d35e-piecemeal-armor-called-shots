@@ -1,0 +1,82 @@
+[
+  {
+    "_id": "IcsPAcSFeat0001A",
+    "name": "Improved Called Shot",
+    "type": "feat",
+    "img": "systems/D35E/icons/feats/feat-generic.png",
+    "system": {
+      "description": {
+        "value": "<p>Optional called-shot support feat for PAcS. The module detects this exact feat name on an actor. In RAW-adapted mode it grants a +2 bonus on called-shot attack rolls and allows one called shot when a standard or full-round action produces multiple attacks.</p><p>This is PF1e-derived optional-rule scaffolding adapted for D35E, not D&D 3.5 rules as written.</p>",
+        "chat": "",
+        "unidentified": ""
+      },
+      "featType": "feat",
+      "requirements": "Int 13, Combat Expertise",
+      "bookSource": "PF1e Ultimate Combat, called shot optional rules (adapted for D35E)"
+    },
+    "effects": [],
+    "folder": null,
+    "sort": 100000,
+    "ownership": {
+      "default": 0
+    },
+    "flags": {
+      "d35e-piecemeal-armor-called-shots": {
+        "calledShotFeat": true,
+        "source": "pf1e-ultimate-combat-called-shots",
+        "detectsByName": true
+      }
+    },
+    "_stats": {
+      "compendiumSource": null,
+      "coreVersion": "14.362",
+      "createdTime": null,
+      "duplicateSource": null,
+      "exportSource": null,
+      "lastModifiedBy": null,
+      "modifiedTime": null,
+      "systemId": "D35E",
+      "systemVersion": "3.0.2"
+    }
+  },
+  {
+    "_id": "GcsPAcSFeat0001B",
+    "name": "Greater Called Shot",
+    "type": "feat",
+    "img": "systems/D35E/icons/feats/feat-generic.png",
+    "system": {
+      "description": {
+        "value": "<p>Optional called-shot support feat for PAcS. The module detects this exact feat name on an actor. In RAW-adapted mode it allows multiple called shots in the same round, applies an additional -5 penalty to each called shot after the first, and treats 40 damage as the minimum for a debilitating blow.</p><p>This is PF1e-derived optional-rule scaffolding adapted for D35E, not D&D 3.5 rules as written.</p>",
+        "chat": "",
+        "unidentified": ""
+      },
+      "featType": "feat",
+      "requirements": "Int 13, Combat Expertise, Improved Called Shot, base attack bonus +6",
+      "bookSource": "PF1e Ultimate Combat, called shot optional rules (adapted for D35E)"
+    },
+    "effects": [],
+    "folder": null,
+    "sort": 200000,
+    "ownership": {
+      "default": 0
+    },
+    "flags": {
+      "d35e-piecemeal-armor-called-shots": {
+        "calledShotFeat": true,
+        "source": "pf1e-ultimate-combat-called-shots",
+        "detectsByName": true
+      }
+    },
+    "_stats": {
+      "compendiumSource": null,
+      "coreVersion": "14.362",
+      "createdTime": null,
+      "duplicateSource": null,
+      "exportSource": null,
+      "lastModifiedBy": null,
+      "modifiedTime": null,
+      "systemId": "D35E",
+      "systemVersion": "3.0.2"
+    }
+  }
+]

@@ -39,6 +39,20 @@
       "path": "lang/en.json"
     }
   ],
+  "packs": [
+    {
+      "name": "called-shot-feats",
+      "label": "PAcS Called-Shot Feats",
+      "path": "packs/called-shot-feats",
+      "type": "Item",
+      "system": "D35E",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "TRUSTED": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      }
+    }
+  ],
   "esmodules": [
     "scripts/module.js"
   ],

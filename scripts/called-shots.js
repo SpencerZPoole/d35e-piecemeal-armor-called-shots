@@ -1,4 +1,4 @@
-import { MODULE_ID, OUTCOME_MODES, RULES_MODES, SETTINGS } from "./constants.js";
+import { FULL_ATTACK_FEAT_RULE_MODES, MODULE_ID, OUTCOME_MODES, RULES_MODES, SETTINGS } from "./constants.js";
 import { getCurrentRulesMode } from "./armor.js";
 import { applyOutcome } from "./effects.js";
 import { getActiveProfile, getDefaultCalledShotProfiles, getEnabledLocations, getLocation, normalizeCalledShotProfiles } from "./profiles.js";
@@ -50,6 +50,17 @@ export function getCalledShotFeatState(actor) {
   const greater = hasFeat(actor, "Greater Called Shot");
   const improved = greater || hasFeat(actor, "Improved Called Shot");
   return { improved, greater };
+}
+
+export function getCalledShotFullAttackFeatRuleMode() {
+  try {
+    const configured = game.settings.get(MODULE_ID, SETTINGS.calledShotFullAttackFeatRules);
+    return Object.values(FULL_ATTACK_FEAT_RULE_MODES).includes(configured)
+      ? configured
+      : FULL_ATTACK_FEAT_RULE_MODES.require;
+  } catch (_error) {
+    return FULL_ATTACK_FEAT_RULE_MODES.require;
+  }
 }
 
 function tokenCenter(token) {
@@ -124,7 +135,8 @@ function buildPayloadAdjustments(actor, item, options = {}) {
   const rulesMode = getCurrentRulesMode(options);
   const calledShotFeats = getCalledShotFeatState(actor);
   const featBonus = rulesMode === RULES_MODES.rawAdapted && calledShotFeats.improved ? 2 : 0;
-  const repeatPenalty = rulesMode === RULES_MODES.rawAdapted && calledShotFeats.greater && options.additionalCalledShot === true ? -5 : 0;
+  const repeatPenaltyAfterFirst = rulesMode === RULES_MODES.rawAdapted && (calledShotFeats.greater || options.repeatPenaltyAfterFirst === true);
+  const repeatPenalty = repeatPenaltyAfterFirst && options.additionalCalledShot === true ? -5 : 0;
   const range = rulesMode === RULES_MODES.rawAdapted
     ? calculateCalledShotSituationalPenalty(actor, item, options.targetUuid)
     : { penalty: 0, parts: [], distance: null };
@@ -134,6 +146,7 @@ function buildPayloadAdjustments(actor, item, options = {}) {
     calledShotFeats,
     featBonus,
     repeatPenalty,
+    repeatPenaltyAfterFirst,
     rangePenalty: range.penalty,
     rangeParts: range.parts,
     distance: range.distance
@@ -162,6 +175,7 @@ function buildCalledShotPayload(actor, item, locationId, options = {}) {
     penalty,
     featBonus: adjustments.featBonus,
     repeatPenalty: adjustments.repeatPenalty,
+    repeatPenaltyAfterFirst: adjustments.repeatPenaltyAfterFirst,
     rangePenalty: adjustments.rangePenalty,
     rangeParts: adjustments.rangeParts,
     distance: adjustments.distance,
@@ -239,7 +253,7 @@ export function consumeCalledShot(actor, item, userId = getUserId()) {
     return payload;
   }
   if (entry.mode === "all") {
-    const repeatPenalty = entry.nextAttackIndex > 0 && entry.payload.calledShotFeats?.greater ? -5 : 0;
+    const repeatPenalty = entry.nextAttackIndex > 0 && entry.payload.repeatPenaltyAfterFirst ? -5 : 0;
     const payload = {
       ...entry.payload,
       repeatPenalty,

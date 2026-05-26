@@ -34,7 +34,15 @@ The native workflow has three integration points:
 2. The module wraps `ItemUse.prototype.rollAttack` so the selected form value is parsed before D35E starts the roll.
 3. The module wraps `ChatAttack.addAttack` so the selected penalty is added to D35E's native attack modifiers for the next relevant attack.
 
-For full attacks, `D35E.ItemUse.preRollAllAttacks` is used to observe the real attack labels. D35E Full Attack called shots are gated by `Improved Called Shot` and `Greater Called Shot`, then follow the configured policy choice: ask per attack, first generated attack, every generated attack, or none.
+For full attacks, `D35E.ItemUse.preRollAllAttacks` is used to observe the real attack labels. The `Called-shot full-attack feat rules` setting controls only the permission gate for using called shots during D35E Full Attack:
+
+- `Require feats (RAW-adapted)` blocks no-feat full-attack called shots and limits Improved Called Shot users to one called shot.
+- `Warn only` allows the configured full-attack mode but warns when the actor lacks the optional feats.
+- `Do not require feats` allows the configured full-attack mode without warnings.
+
+Feat benefits still come from actual actor feats. Name-based detection looks for `Improved Called Shot` or `Greater Called Shot` on feat items. Improved supplies the attack bonus, Greater supplies the lower debilitating threshold, and repeated called shots after the first use the same extra penalty path even when a table disables the permission gate.
+
+The module ships the `PAcS Called-Shot Feats` Item compendium as a convenience pack. It exists so GMs do not have to create those feat records by hand in D35E; it is not a separate rules engine and does not make the PF1e-derived optional feats into D&D 3.5 RAW.
 
 Fast-forward attacks keep D35E's no-dialog behavior and do not show called-shot UI.
 

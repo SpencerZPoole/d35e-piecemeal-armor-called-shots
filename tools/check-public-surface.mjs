@@ -24,12 +24,24 @@ function walk(dir) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) files.push(...walk(fullPath));
     else {
+      const rel = path.relative(root, fullPath).replace(/\\/g, "/");
+      if (isPackDatabaseArtifact(rel)) continue;
       const extension = path.extname(entry.name).toLowerCase();
       if (blockedFileExtensions.has(extension)) files.push(fullPath);
       else if (allowedExtensions.has(extension)) files.push(fullPath);
     }
   }
   return files;
+}
+
+function isPackDatabaseArtifact(relativePath) {
+  if (!relativePath.startsWith("packs/")) return false;
+  const extension = path.extname(relativePath).toLowerCase();
+  const basename = path.basename(relativePath);
+  return extension === ".ldb" ||
+    extension === ".log" ||
+    ["CURRENT", "LOCK", "LOG", "LOG.old"].includes(basename) ||
+    /^MANIFEST-\d+$/i.test(basename);
 }
 
 const findings = [];

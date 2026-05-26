@@ -27,6 +27,7 @@ The module has two main workflows:
 | `Worn in profile` chip | Actor inventory rows | Marks source items whose native D35E armor math is temporarily neutralized to prevent double-counting. |
 | `Called Shot` dropdown | D35E attack/use dialog | Applies a configured called-shot penalty through the native attack workflow. |
 | Full-attack picker | Opens after `Full Attack` when configured | Lets the user choose `None` or a location for each D35E attack label. |
+| `PAcS Called-Shot Feats` pack | Compendium Packs sidebar | Convenience item records for `Improved Called Shot` and `Greater Called Shot`. |
 | Called Shot Effects | Actor sheet header after an applied outcome | Lets a GM restore called-shot effects if the wrong damage card or target was used. |
 | Profile editor | Module settings | Edits locations, penalties, coverage slots, and outcome effects. |
 
@@ -45,6 +46,7 @@ Settings:
 - `Apply helmet Spot/Listen penalties`: optional and disabled by default. Configured helmets in D35E's native `Head` slot add their table-defined Spot and Listen penalties to native D35E skill rolls.
 - `Called-shot effect automation`: controls actor changes after Apply Damage. `GM confirms severe effects` is the default: normal outcomes apply automatically, while critical and debilitating outcomes ask the GM first. `Apply effects automatically` applies all resolved outcomes. `Advisory only` never changes actor data unless the GM clicks a chat-card severity button.
 - `Called shots on full attacks`: controls whether full attacks ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections. See [Full Attacks](#full-attacks).
+- `Called-shot full-attack feat rules`: controls only whether the module blocks full-attack called shots when the attacker lacks the optional feats. `Require feats (RAW-adapted)` is the default. `Warn only` allows the full attack but warns about missing Improved or Greater Called Shot. `Do not require feats` allows the full attack without warnings. Feat bonuses still require the actor to actually have the feat.
 - Location armor for called shots is automatic when both piecemeal armor and called shots are enabled. See [Location Armor AC](#location-armor-ac).
 - `Show location armor overlay`: adds the matching piecemeal armor coverage slot to called-shot chat cards as advisory information only.
 - GM-only source/profile metadata appears automatically to GM users; players still see the useful called-shot result information.
@@ -85,7 +87,7 @@ The separate `Apply helmet Spot/Listen penalties` setting reads the same configu
 
 ## Full Attacks
 
-The `Called shots on full attacks` setting controls what happens when a location is selected and the native D35E `Full Attack` button is used. Those choices are still gated by the attacker feats.
+The `Called shots on full attacks` setting controls what happens when a location is selected and the native D35E `Full Attack` button is used. By default, those choices are still gated by the attacker feats. A GM can loosen only the permission check with `Called-shot full-attack feat rules`.
 
 ![Full attack called-shot picker](assets/full-attack-picker.png)
 
@@ -103,6 +105,20 @@ Feat behavior:
 - No feat: a called shot is treated as a single full-round attack; the module blocks selected called shots from D35E Full Attack.
 - `Improved Called Shot`: adds `+2` to called-shot attacks and allows one called shot during a multiattack or full attack.
 - `Greater Called Shot`: allows multiple called shots in the same round, applies `-5` to each additional called shot after the first, and lowers the debilitating minimum damage from `50` to `40`.
+
+The full-attack feat setting has three modes:
+
+- `Require feats (RAW-adapted)`: preserves the RAW-adapted default above.
+- `Warn only`: allows the selected full-attack mode but warns when the attacker lacks Improved or Greater Called Shot.
+- `Do not require feats`: allows the selected full-attack mode without warnings.
+
+Even in `Warn only` or `Do not require feats`, actual feat benefits stay tied to actor feats. Improved still supplies the `+2` only when the actor has `Improved Called Shot`, and Greater still supplies the `40` debilitating threshold only when the actor has `Greater Called Shot`. When multiple called shots happen in one full attack, each additional called shot after the first still takes the repeated-called-shot `-5` penalty so the relaxed modes do not become stronger than the Greater Called Shot workflow.
+
+## Called-Shot Feat Pack
+
+Open Foundry's Compendium Packs sidebar and look for `PAcS Called-Shot Feats`. The pack contains `Improved Called Shot` and `Greater Called Shot` as small D35E Item records that can be imported or dragged to an actor like other feats.
+
+These feat items are convenience records for this module. Their descriptions are paraphrased from the optional PF1e called-shot support rules, and they are not D&D 3.5 RAW. PAcS detects the exact names `Improved Called Shot` and `Greater Called Shot`, so avoid renaming the actor's feat items if you want the automation to recognize them.
 
 ## Called-Shot Chat Cards
 
@@ -185,6 +201,8 @@ Confirm the attack was rolled from the same native dialog where the location was
 ### The full-attack picker did not open
 
 Check the `Called shots on full attacks` setting. The picker opens only in `Ask for each attack` mode and only when a called-shot location was selected in the native dialog. The attacker also needs `Improved Called Shot` for one called shot during a full attack or `Greater Called Shot` for multiple called shots.
+
+If your table wants to allow the workflow without those feats, change `Called-shot full-attack feat rules` to `Warn only` or `Do not require feats`. The imported feats still control the `+2` bonus and Greater Called Shot's lower debilitating threshold.
 
 ### A called shot killed or maimed the target
 
