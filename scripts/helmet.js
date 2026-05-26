@@ -25,19 +25,19 @@ export const HELMET_FAMILY_OPTIONS = Object.freeze([
 ]);
 
 export const HELMET_LOCAL_ARMOR_BY_FAMILY = Object.freeze({
-  "padded": 0,
-  "leather": 1,
-  "studded-leather": 1,
-  "hide": 2,
-  "scale": 2,
+  "padded": 1,
+  "leather": 2,
+  "studded-leather": 3,
+  "hide": 3,
+  "scale": 4,
   "chain-shirt": 4,
-  "chain": 3,
+  "chain": 5,
   "breastplate": 5,
-  "banded": 4,
-  "splint": 4,
-  "plate": 5,
-  "half-plate": 5,
-  "full-plate": 5
+  "banded": 6,
+  "splint": 6,
+  "plate": 8,
+  "half-plate": 7,
+  "full-plate": 8
 });
 
 function getFlagData(document, key) {

@@ -55,18 +55,18 @@ for (const entry of featSource) {
 }
 
 const expectedHelmets = new Map([
-  ["Padded Helmet", ["padded", 0]],
-  ["Leather Helmet", ["leather", 1]],
-  ["Studded Leather Helmet", ["studded-leather", 1]],
-  ["Hide Helmet", ["hide", 2]],
-  ["Scale Mail Helmet", ["scale", 2]],
+  ["Padded Helmet", ["padded", 1]],
+  ["Leather Helmet", ["leather", 2]],
+  ["Studded Leather Helmet", ["studded-leather", 3]],
+  ["Hide Helmet", ["hide", 3]],
+  ["Scale Mail Helmet", ["scale", 4]],
   ["Chain Shirt Coif", ["chain-shirt", 4]],
-  ["Chainmail Coif", ["chain", 3]],
+  ["Chainmail Coif", ["chain", 5]],
   ["Breastplate Helm", ["breastplate", 5]],
-  ["Banded Mail Helm", ["banded", 4]],
-  ["Splint Mail Helm", ["splint", 4]],
-  ["Half-Plate Helm", ["half-plate", 5]],
-  ["Full Plate Helm", ["full-plate", 5]]
+  ["Banded Mail Helm", ["banded", 6]],
+  ["Splint Mail Helm", ["splint", 6]],
+  ["Half-Plate Helm", ["half-plate", 7]],
+  ["Full Plate Helm", ["full-plate", 8]]
 ]);
 assert.deepEqual(helmetSource.map((entry) => entry.name).sort(), [...expectedHelmets.keys()].sort());
 for (const entry of helmetSource) {

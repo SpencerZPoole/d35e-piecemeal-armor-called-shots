@@ -645,7 +645,7 @@ function injectPiecemealItemPanel(item, root, form) {
   helmetGrid.append(
     buildLabeledSelect("Helmet family ", `flags.${MODULE_ID}.${FLAGS.helmet}.armorFamily`, helmetFlag.armorFamily ?? helmetFlag.family ?? "", HELMET_FAMILY_OPTIONS),
     buildLabeledInput("Head local armor bonus ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.localArmorBonus`, helmetFlag.localArmorBonus ?? "", {
-      placeholder: "blank = selected family value"
+      placeholder: "blank = D35E full armor bonus"
     }),
     buildLabeledInput("Helmet coverage slot(s) ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.coverageSlots`, helmetFlag.coverageSlots ?? helmetFlag.coverageSlot ?? DEFAULT_HELMET_COVERAGE, {
       placeholder: DEFAULT_HELMET_COVERAGE

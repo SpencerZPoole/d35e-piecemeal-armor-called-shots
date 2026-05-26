@@ -6,7 +6,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -30,7 +30,7 @@
         "helmet": {
           "enabled": true,
           "armorFamily": "padded",
-          "localArmorBonus": 0,
+          "localArmorBonus": 1,
           "coverageSlots": "head; eyes; ears",
           "spotPenalty": 0,
           "listenPenalty": 0
@@ -56,7 +56,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -80,7 +80,7 @@
         "helmet": {
           "enabled": true,
           "armorFamily": "leather",
-          "localArmorBonus": 1,
+          "localArmorBonus": 2,
           "coverageSlots": "head; eyes; ears",
           "spotPenalty": 0,
           "listenPenalty": 0
@@ -106,7 +106,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -130,7 +130,7 @@
         "helmet": {
           "enabled": true,
           "armorFamily": "studded-leather",
-          "localArmorBonus": 1,
+          "localArmorBonus": 3,
           "coverageSlots": "head; eyes; ears",
           "spotPenalty": 0,
           "listenPenalty": 0
@@ -156,7 +156,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -180,7 +180,7 @@
         "helmet": {
           "enabled": true,
           "armorFamily": "hide",
-          "localArmorBonus": 2,
+          "localArmorBonus": 3,
           "coverageSlots": "head; eyes; ears",
           "spotPenalty": 0,
           "listenPenalty": 0
@@ -206,7 +206,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -230,7 +230,7 @@
         "helmet": {
           "enabled": true,
           "armorFamily": "scale",
-          "localArmorBonus": 2,
+          "localArmorBonus": 4,
           "coverageSlots": "head; eyes; ears",
           "spotPenalty": 0,
           "listenPenalty": 0
@@ -256,7 +256,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -306,7 +306,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -330,7 +330,7 @@
         "helmet": {
           "enabled": true,
           "armorFamily": "chain",
-          "localArmorBonus": 3,
+          "localArmorBonus": 5,
           "coverageSlots": "head; eyes; ears",
           "spotPenalty": 0,
           "listenPenalty": 0
@@ -356,7 +356,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -406,7 +406,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -430,7 +430,7 @@
         "helmet": {
           "enabled": true,
           "armorFamily": "banded",
-          "localArmorBonus": 4,
+          "localArmorBonus": 6,
           "coverageSlots": "head; eyes; ears",
           "spotPenalty": 0,
           "listenPenalty": 0
@@ -456,7 +456,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -480,7 +480,7 @@
         "helmet": {
           "enabled": true,
           "armorFamily": "splint",
-          "localArmorBonus": 4,
+          "localArmorBonus": 6,
           "coverageSlots": "head; eyes; ears",
           "spotPenalty": 0,
           "listenPenalty": 0
@@ -506,7 +506,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -530,7 +530,7 @@
         "helmet": {
           "enabled": true,
           "armorFamily": "half-plate",
-          "localArmorBonus": 5,
+          "localArmorBonus": 7,
           "coverageSlots": "head; eyes; ears",
           "spotPenalty": 0,
           "listenPenalty": 0
@@ -556,7 +556,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -580,7 +580,7 @@
         "helmet": {
           "enabled": true,
           "armorFamily": "full-plate",
-          "localArmorBonus": 5,
+          "localArmorBonus": 8,
           "coverageSlots": "head; eyes; ears",
           "spotPenalty": 0,
           "listenPenalty": 0
