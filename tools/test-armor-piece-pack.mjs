@@ -5,7 +5,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { calculatePiecemealArmorFromPieces, readArmorPiece } from "../scripts/armor.js";
 import { resolveArmorProfile, setArmorProfileSlot } from "../scripts/armor-profile.js";
-import { FLAGS, MODULE_ID, PACS_EQUIPMENT_SLOTS } from "../scripts/constants.js";
+import { FLAGS, INTERNAL_ARMOR_PROFILE_NAME, MODULE_ID, PACS_EQUIPMENT_SLOTS } from "../scripts/constants.js";
 import { buildArmorPiecePackDocuments, expectedArmorPieceNames } from "./armor-piece-pack-documents.mjs";
 
 const root = process.cwd();
@@ -118,6 +118,16 @@ function byName(documents, name) {
   return document;
 }
 
+function d35eInventoryValue(items) {
+  return items.reduce((total, item) => {
+    const quantity = item.system?.quantity ?? 1;
+    const price = item.system?.identified === false
+      ? item.system?.unidentified?.price ?? item.system?.price ?? 0
+      : item.system?.price ?? 0;
+    return total + price * quantity;
+  }, 0);
+}
+
 assert.equal(pack?.label, "PAcS Armor Pieces");
 assert.equal(pack?.type, "Item");
 assert.equal(pack?.system, "D35E");
@@ -194,6 +204,25 @@ await setArmorProfileSlot(profileActor, "arms", "chainmail-arms");
 resolved = resolveArmorProfile(profileActor);
 assert.equal(resolved.summary.armorBonus, 4);
 assert.equal(resolved.summary.activePieces.map((piece) => piece.name).join("|"), "[PAcS] Chainmail, Torso|[PAcS] Chainmail, Arms");
+
+const scaleArms = itemFromDocument(byName(documents, "[PAcS] Scale Mail, Arms"), "scale-arms");
+const scaleLegs = itemFromDocument(byName(documents, "[PAcS] Scale Mail, Legs"), "scale-legs");
+const scaleTorso = itemFromDocument(byName(documents, "[PAcS] Scale Mail, Torso"), "scale-torso");
+const scaleActor = actor([scaleArms, scaleLegs]);
+await setArmorProfileSlot(scaleActor, "arms", "scale-arms");
+await setArmorProfileSlot(scaleActor, "legs", "scale-legs");
+const scaleValueBeforeTorso = d35eInventoryValue(scaleActor.items);
+scaleActor.items.push(scaleTorso);
+await setArmorProfileSlot(scaleActor, "torso", "scale-torso");
+const scaleCarrier = scaleActor.items.find((item) => item.name === INTERNAL_ARMOR_PROFILE_NAME);
+assert.equal(Boolean(scaleCarrier), true);
+assert.equal(scaleArms.system.price, 10);
+assert.equal(scaleLegs.system.price, 10);
+assert.equal(scaleTorso.system.price, 30);
+assert.equal(scaleCarrier.system.price, 0);
+assert.equal(scaleCarrier.getFlag(MODULE_ID, FLAGS.aggregate).summary.cost, 50);
+assert.equal(d35eInventoryValue(scaleActor.items), 50);
+assert.equal(d35eInventoryValue(scaleActor.items) - scaleValueBeforeTorso, 30);
 
 async function packedNamesFor(packEntry) {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "pacs-armor-pieces-"));

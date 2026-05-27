@@ -587,6 +587,7 @@ async function zeroArmorProfileCarriers(actor) {
       "system.armor.spellFailure": 0,
       "system.spellFailure": 0,
       "system.weight": 0,
+      "system.price": 0,
       [`flags.${MODULE_ID}.${FLAGS.internalArmor}.suspended`]: true
     };
     zeroed.push({ itemId: item.id, itemName: item.name, update });

@@ -560,7 +560,7 @@ export function buildAggregateItemData(summary, { internal = false } = {}) {
       spellFailure: summary.spellFailure,
       slot: internal ? "slotless" : "armor",
       weight: 0,
-      price: summary.cost ?? 0,
+      price: 0,
       description: {
         value: "Module-generated aggregate item for equipped piecemeal armor pieces."
       }

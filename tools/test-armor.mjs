@@ -214,7 +214,18 @@ assert.equal(aggregate.system.armor.enh, 1);
 assert.equal(aggregate.system.armor.dex, 4);
 assert.equal(aggregate.system.armor.acp, -1);
 assert.equal(aggregate.system.weight, 0);
+assert.equal(aggregate.system.price, 0);
 assert.equal(aggregate.flags[MODULE_ID].aggregate.summary.weight, 15);
+assert.equal(aggregate.flags[MODULE_ID].aggregate.summary.cost, summary.cost);
+const costSummary = calculatePiecemealArmorFromPieces(catalogSuit("scale"));
+const costAggregate = buildAggregateItemData(costSummary);
+assert.equal(costSummary.cost, 50);
+assert.equal(costAggregate.system.price, 0);
+assert.equal(costAggregate.flags[MODULE_ID].aggregate.summary.cost, 50);
+const internalAggregate = buildAggregateItemData(costSummary, { internal: true });
+assert.equal(internalAggregate.system.weight, 0);
+assert.equal(internalAggregate.system.price, 0);
+assert.equal(internalAggregate.flags[MODULE_ID].aggregate.summary.cost, 50);
 
 const singleArmPiece = calculatePiecemealArmorFromPieces([catalog("chain-arms")]);
 assert.equal(singleArmPiece.completeSuit, false);
