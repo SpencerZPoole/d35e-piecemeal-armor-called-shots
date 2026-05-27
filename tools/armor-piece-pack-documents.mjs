@@ -54,6 +54,17 @@ function pieceDescription(name, piece, categoryLabel) {
   ].join("");
 }
 
+function physicalItemDefaults(name) {
+  return {
+    quantity: 1,
+    hardness: 0,
+    hp: { max: 10, value: 10 },
+    identified: true,
+    unidentified: { price: 0, name: "" },
+    identifiedName: name
+  };
+}
+
 export function armorPiecePackSpecs() {
   return RAW_ARMOR_SUIT_CATALOG
     .filter((suit) => PACK_SUIT_LABELS[suit.id])
@@ -76,6 +87,7 @@ export function buildArmorPiecePackDocuments() {
       type: "equipment",
       img: CATEGORY_ICONS[spec.category] ?? "icons/equipment/chest/breastplate-layered-steel.webp",
       system: {
+        ...physicalItemDefaults(name),
         description: {
           value: pieceDescription(name, piece, categoryLabel),
           chat: "",

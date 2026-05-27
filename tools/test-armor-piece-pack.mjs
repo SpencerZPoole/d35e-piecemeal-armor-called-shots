@@ -118,6 +118,21 @@ function byName(documents, name) {
   return document;
 }
 
+function assertShippedEquipmentMetadata(entry) {
+  assert.match(entry.name, /^\[PAcS\] /);
+  assert.equal(entry.type, "equipment");
+  assert.equal(typeof entry.system?.description?.value, "string");
+  assert.ok(entry.system.description.value.length > 0);
+  assert.equal(Number.isFinite(entry.system?.weight), true);
+  assert.equal(Number.isFinite(entry.system?.price), true);
+  assert.equal(entry.system?.hp?.max, 10);
+  assert.equal(entry.system?.hp?.value, 10);
+  assert.equal(entry.system?.hardness, 0);
+  assert.equal(entry.system?.quantity, 1);
+  assert.equal(entry.system?.identified, true);
+  assert.equal(entry.system?.identifiedName, entry.name);
+}
+
 function d35eInventoryValue(items) {
   return items.reduce((total, item) => {
     const quantity = item.system?.quantity ?? 1;
@@ -136,6 +151,8 @@ assert.equal(fs.existsSync(path.join(root, pack.path, "CURRENT")), true);
 
 const documents = buildArmorPiecePackDocuments();
 assert.deepEqual(documents.map((entry) => entry.name).sort(), expectedArmorPieceNames().sort());
+
+for (const entry of documents) assertShippedEquipmentMetadata(entry);
 
 for (const expectedName of [
   "[PAcS] Studded Leather, Torso",
@@ -224,20 +241,20 @@ assert.equal(scaleCarrier.getFlag(MODULE_ID, FLAGS.aggregate).summary.cost, 50);
 assert.equal(d35eInventoryValue(scaleActor.items), 50);
 assert.equal(d35eInventoryValue(scaleActor.items) - scaleValueBeforeTorso, 30);
 
-async function packedNamesFor(packEntry) {
+async function packedDocumentsFor(packEntry) {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "pacs-armor-pieces-"));
   const tempPackPath = path.join(tempRoot, packEntry.name);
   try {
     fs.cpSync(path.join(root, packEntry.path), tempPackPath, { recursive: true });
     const { ClassicLevel } = await loadClassicLevel();
     const db = new ClassicLevel(tempPackPath, { valueEncoding: "utf8" });
-    const packedNames = [];
+    const packedDocuments = [];
     try {
       await db.open();
       for await (const [_key, value] of db.iterator({ gt: "!items!", lt: "!items!~" })) {
-        packedNames.push(JSON.parse(value).name);
+        packedDocuments.push(JSON.parse(value));
       }
-      return packedNames.sort();
+      return packedDocuments.sort((a, b) => a.name.localeCompare(b.name));
     } finally {
       if (db.status === "open") await db.close();
     }
@@ -247,7 +264,9 @@ async function packedNamesFor(packEntry) {
 }
 
 try {
-  assert.deepEqual(await packedNamesFor(pack), expectedArmorPieceNames().sort());
+  const packedDocuments = await packedDocumentsFor(pack);
+  assert.deepEqual(packedDocuments.map((entry) => entry.name).sort(), expectedArmorPieceNames().sort());
+  for (const entry of packedDocuments) assertShippedEquipmentMetadata(entry);
 } catch (error) {
   if (!["LEVEL_LOCKED", "EPIPE", "EBUSY", "EPERM"].includes(error?.cause?.code) && !["LEVEL_LOCKED", "EPIPE", "EBUSY", "EPERM"].includes(error?.code)) throw error;
   console.warn("test-armor-piece-pack: pack database is locked by live Foundry; generated document and manifest checks still passed");

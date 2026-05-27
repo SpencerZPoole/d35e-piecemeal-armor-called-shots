@@ -104,13 +104,13 @@ Helmet coverage is a non-RAW house rule and is disabled by default. It is meant 
 Workflow:
 
 1. Enable `Enable helmet head coverage house rule` in module settings.
-2. Open Foundry's Compendium Packs sidebar and drag a helmet from `PAcS Helmets` to the actor, or configure your own equipment item.
+2. Open Foundry's Compendium Packs sidebar and drag a `[PAcS]` helmet from `PAcS Helmets` to the actor, or configure your own equipment item.
 3. Equip the helmet in D35E's native `Head` slot.
 4. For custom items, click the shield icon on that inventory row, open the item sheet, and check `Use as helmet head coverage`.
 5. Enter the helmet's `Head local armor bonus`, or choose a family to use the module's D35E full-armor-bonus starter value for that helmet type.
 6. Leave coverage as `head; eyes; ears` unless your table wants a narrower or broader helmet.
 
-When the setting is on, Head, Eye, and Ear called shots use the configured helmet instead of the torso fallback. The helmet's local armor value stands on its own: it does not inherit from torso armor, baseline armor, suit pieces, or other equipped armor. The bundled helmets use the matching D35E armor's full armor bonus as a starter value, so a chainmail coif starts at `5` and a full plate helm starts at `8` for Head/Eye/Ear local armor only. GMs who want the grittier family-cap interpretation can edit the item and lower `Head local armor bonus`. If no configured helmet is equipped in the `Head` slot, the local head armor is treated as `0`, so a head called shot against an armored target can lower the Apply Damage AC. Torso, heart, vitals, arms, hands, legs, and feet keep the normal PAcS location armor behavior.
+When the setting is on, Head, Eye, and Ear called shots use the configured helmet instead of the torso fallback. The helmet's local armor value stands on its own: it does not inherit from torso armor, baseline armor, suit pieces, or other equipped armor. The bundled `[PAcS]` helmets use the matching D35E armor's full armor bonus as a starter value, so a chainmail coif starts at `5` and a full plate helm starts at `8` for Head/Eye/Ear local armor only. They also include editable house-rule weight, price, and HP fields so they behave like normal inventory items. GMs who want the grittier family-cap interpretation can edit the item and lower `Head local armor bonus`. If no configured helmet is equipped in the `Head` slot, the local head armor is treated as `0`, so a head called shot against an armored target can lower the Apply Damage AC. Torso, heart, vitals, arms, hands, legs, and feet keep the normal PAcS location armor behavior.
 
 The separate `Apply helmet Spot/Listen penalties` setting reads the same configured helmet. Enter Spot and Listen penalty numbers on the item; the module adds a `Helmet (...)` row to native D35E Spot and Listen roll breakdowns. These penalties are table-defined and default to `0`; the module does not hardcode AD&D 2e helmet table values.
 
@@ -157,9 +157,9 @@ These feat items are convenience records for this module. Their descriptions are
 
 ## Helmet Pack
 
-Open Foundry's Compendium Packs sidebar and look for `PAcS Helmets`. The pack contains preconfigured Head-slot equipment for padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate helmet styles.
+Open Foundry's Compendium Packs sidebar and look for `PAcS Helmets`. The pack contains preconfigured Head-slot equipment with `[PAcS]` names for padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate helmet styles.
 
-These helmets are optional house-rule support items. Their starter local armor values use the matching D35E full armor bonus and affect only Head, Eye, and Ear called-shot local armor while the helmet setting is enabled. They do not add normal AC, and their Spot/Listen penalties default to `0` until a GM edits them.
+These helmets are optional house-rule support items. Their starter local armor values use the matching D35E full armor bonus and affect only Head, Eye, and Ear called-shot local armor while the helmet setting is enabled. Their weight and price are editable starter values derived from the same armor family; they do not add normal AC, and their Spot/Listen penalties default to `0` until a GM edits them.
 
 Starter helmet local armor values:
 

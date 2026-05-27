@@ -1,12 +1,12 @@
 [
   {
     "_id": "PacsHelm000001AA",
-    "name": "Padded Helmet",
+    "name": "[PAcS] Padded Helmet",
     "type": "equipment",
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Padded Helmet is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +1, weight 1 lb., price 1 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -16,15 +16,34 @@
       "equipped": false,
       "carried": true,
       "melded": false,
-      "armor": { "value": 0, "enh": 0, "dex": null, "acp": 0 },
+      "armor": {
+        "value": 0,
+        "enh": 0,
+        "dex": null,
+        "acp": 0
+      },
       "spellFailure": 0,
-      "weight": 0,
-      "price": 0
+      "weight": 1,
+      "price": 1,
+      "quantity": 1,
+      "hardness": 0,
+      "hp": {
+        "max": 10,
+        "value": 10
+      },
+      "identified": true,
+      "unidentified": {
+        "price": 0,
+        "name": ""
+      },
+      "identifiedName": "[PAcS] Padded Helmet"
     },
     "effects": [],
     "folder": null,
     "sort": 100000,
-    "ownership": { "default": 0 },
+    "ownership": {
+      "default": 0
+    },
     "flags": {
       "d35e-piecemeal-armor-called-shots": {
         "helmet": {
@@ -39,7 +58,7 @@
     },
     "_stats": {
       "compendiumSource": null,
-      "coreVersion": "14.362",
+      "coreVersion": "14.363",
       "createdTime": null,
       "duplicateSource": null,
       "exportSource": null,
@@ -51,12 +70,12 @@
   },
   {
     "_id": "PacsHelm000002AA",
-    "name": "Leather Helmet",
+    "name": "[PAcS] Leather Helmet",
     "type": "equipment",
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Leather Helmet is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +2, weight 2 lb., price 1 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -66,15 +85,34 @@
       "equipped": false,
       "carried": true,
       "melded": false,
-      "armor": { "value": 0, "enh": 0, "dex": null, "acp": 0 },
+      "armor": {
+        "value": 0,
+        "enh": 0,
+        "dex": null,
+        "acp": 0
+      },
       "spellFailure": 0,
-      "weight": 0,
-      "price": 0
+      "weight": 2,
+      "price": 1,
+      "quantity": 1,
+      "hardness": 0,
+      "hp": {
+        "max": 10,
+        "value": 10
+      },
+      "identified": true,
+      "unidentified": {
+        "price": 0,
+        "name": ""
+      },
+      "identifiedName": "[PAcS] Leather Helmet"
     },
     "effects": [],
     "folder": null,
     "sort": 200000,
-    "ownership": { "default": 0 },
+    "ownership": {
+      "default": 0
+    },
     "flags": {
       "d35e-piecemeal-armor-called-shots": {
         "helmet": {
@@ -89,7 +127,7 @@
     },
     "_stats": {
       "compendiumSource": null,
-      "coreVersion": "14.362",
+      "coreVersion": "14.363",
       "createdTime": null,
       "duplicateSource": null,
       "exportSource": null,
@@ -101,12 +139,12 @@
   },
   {
     "_id": "PacsHelm000003AA",
-    "name": "Studded Leather Helmet",
+    "name": "[PAcS] Studded Leather Helmet",
     "type": "equipment",
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Studded Leather Helmet is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +3, weight 2 lb., price 3 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -116,15 +154,34 @@
       "equipped": false,
       "carried": true,
       "melded": false,
-      "armor": { "value": 0, "enh": 0, "dex": null, "acp": 0 },
+      "armor": {
+        "value": 0,
+        "enh": 0,
+        "dex": null,
+        "acp": 0
+      },
       "spellFailure": 0,
-      "weight": 0,
-      "price": 0
+      "weight": 2,
+      "price": 3,
+      "quantity": 1,
+      "hardness": 0,
+      "hp": {
+        "max": 10,
+        "value": 10
+      },
+      "identified": true,
+      "unidentified": {
+        "price": 0,
+        "name": ""
+      },
+      "identifiedName": "[PAcS] Studded Leather Helmet"
     },
     "effects": [],
     "folder": null,
     "sort": 300000,
-    "ownership": { "default": 0 },
+    "ownership": {
+      "default": 0
+    },
     "flags": {
       "d35e-piecemeal-armor-called-shots": {
         "helmet": {
@@ -139,7 +196,7 @@
     },
     "_stats": {
       "compendiumSource": null,
-      "coreVersion": "14.362",
+      "coreVersion": "14.363",
       "createdTime": null,
       "duplicateSource": null,
       "exportSource": null,
@@ -151,12 +208,12 @@
   },
   {
     "_id": "PacsHelm000004AA",
-    "name": "Hide Helmet",
+    "name": "[PAcS] Hide Helmet",
     "type": "equipment",
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Hide Helmet is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +3, weight 3 lb., price 2 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -166,15 +223,34 @@
       "equipped": false,
       "carried": true,
       "melded": false,
-      "armor": { "value": 0, "enh": 0, "dex": null, "acp": 0 },
+      "armor": {
+        "value": 0,
+        "enh": 0,
+        "dex": null,
+        "acp": 0
+      },
       "spellFailure": 0,
-      "weight": 0,
-      "price": 0
+      "weight": 3,
+      "price": 2,
+      "quantity": 1,
+      "hardness": 0,
+      "hp": {
+        "max": 10,
+        "value": 10
+      },
+      "identified": true,
+      "unidentified": {
+        "price": 0,
+        "name": ""
+      },
+      "identifiedName": "[PAcS] Hide Helmet"
     },
     "effects": [],
     "folder": null,
     "sort": 400000,
-    "ownership": { "default": 0 },
+    "ownership": {
+      "default": 0
+    },
     "flags": {
       "d35e-piecemeal-armor-called-shots": {
         "helmet": {
@@ -189,7 +265,7 @@
     },
     "_stats": {
       "compendiumSource": null,
-      "coreVersion": "14.362",
+      "coreVersion": "14.363",
       "createdTime": null,
       "duplicateSource": null,
       "exportSource": null,
@@ -201,12 +277,12 @@
   },
   {
     "_id": "PacsHelm000005AA",
-    "name": "Scale Mail Helmet",
+    "name": "[PAcS] Scale Mail Helmet",
     "type": "equipment",
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Scale Mail Helmet is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +4, weight 3 lb., price 5 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -216,15 +292,34 @@
       "equipped": false,
       "carried": true,
       "melded": false,
-      "armor": { "value": 0, "enh": 0, "dex": null, "acp": 0 },
+      "armor": {
+        "value": 0,
+        "enh": 0,
+        "dex": null,
+        "acp": 0
+      },
       "spellFailure": 0,
-      "weight": 0,
-      "price": 0
+      "weight": 3,
+      "price": 5,
+      "quantity": 1,
+      "hardness": 0,
+      "hp": {
+        "max": 10,
+        "value": 10
+      },
+      "identified": true,
+      "unidentified": {
+        "price": 0,
+        "name": ""
+      },
+      "identifiedName": "[PAcS] Scale Mail Helmet"
     },
     "effects": [],
     "folder": null,
     "sort": 500000,
-    "ownership": { "default": 0 },
+    "ownership": {
+      "default": 0
+    },
     "flags": {
       "d35e-piecemeal-armor-called-shots": {
         "helmet": {
@@ -239,7 +334,7 @@
     },
     "_stats": {
       "compendiumSource": null,
-      "coreVersion": "14.362",
+      "coreVersion": "14.363",
       "createdTime": null,
       "duplicateSource": null,
       "exportSource": null,
@@ -251,12 +346,12 @@
   },
   {
     "_id": "PacsHelm000006AA",
-    "name": "Chain Shirt Coif",
+    "name": "[PAcS] Chain Shirt Coif",
     "type": "equipment",
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Chain Shirt Coif is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +4, weight 3 lb., price 10 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -266,15 +361,34 @@
       "equipped": false,
       "carried": true,
       "melded": false,
-      "armor": { "value": 0, "enh": 0, "dex": null, "acp": 0 },
+      "armor": {
+        "value": 0,
+        "enh": 0,
+        "dex": null,
+        "acp": 0
+      },
       "spellFailure": 0,
-      "weight": 0,
-      "price": 0
+      "weight": 3,
+      "price": 10,
+      "quantity": 1,
+      "hardness": 0,
+      "hp": {
+        "max": 10,
+        "value": 10
+      },
+      "identified": true,
+      "unidentified": {
+        "price": 0,
+        "name": ""
+      },
+      "identifiedName": "[PAcS] Chain Shirt Coif"
     },
     "effects": [],
     "folder": null,
     "sort": 600000,
-    "ownership": { "default": 0 },
+    "ownership": {
+      "default": 0
+    },
     "flags": {
       "d35e-piecemeal-armor-called-shots": {
         "helmet": {
@@ -289,7 +403,7 @@
     },
     "_stats": {
       "compendiumSource": null,
-      "coreVersion": "14.362",
+      "coreVersion": "14.363",
       "createdTime": null,
       "duplicateSource": null,
       "exportSource": null,
@@ -301,12 +415,12 @@
   },
   {
     "_id": "PacsHelm000007AA",
-    "name": "Chainmail Coif",
+    "name": "[PAcS] Chainmail Coif",
     "type": "equipment",
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Chainmail Coif is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +5, weight 4 lb., price 15 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -316,15 +430,34 @@
       "equipped": false,
       "carried": true,
       "melded": false,
-      "armor": { "value": 0, "enh": 0, "dex": null, "acp": 0 },
+      "armor": {
+        "value": 0,
+        "enh": 0,
+        "dex": null,
+        "acp": 0
+      },
       "spellFailure": 0,
-      "weight": 0,
-      "price": 0
+      "weight": 4,
+      "price": 15,
+      "quantity": 1,
+      "hardness": 0,
+      "hp": {
+        "max": 10,
+        "value": 10
+      },
+      "identified": true,
+      "unidentified": {
+        "price": 0,
+        "name": ""
+      },
+      "identifiedName": "[PAcS] Chainmail Coif"
     },
     "effects": [],
     "folder": null,
     "sort": 700000,
-    "ownership": { "default": 0 },
+    "ownership": {
+      "default": 0
+    },
     "flags": {
       "d35e-piecemeal-armor-called-shots": {
         "helmet": {
@@ -339,7 +472,7 @@
     },
     "_stats": {
       "compendiumSource": null,
-      "coreVersion": "14.362",
+      "coreVersion": "14.363",
       "createdTime": null,
       "duplicateSource": null,
       "exportSource": null,
@@ -351,12 +484,12 @@
   },
   {
     "_id": "PacsHelm000008AA",
-    "name": "Breastplate Helm",
+    "name": "[PAcS] Breastplate Helm",
     "type": "equipment",
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Breastplate Helm is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +5, weight 3 lb., price 20 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -366,15 +499,34 @@
       "equipped": false,
       "carried": true,
       "melded": false,
-      "armor": { "value": 0, "enh": 0, "dex": null, "acp": 0 },
+      "armor": {
+        "value": 0,
+        "enh": 0,
+        "dex": null,
+        "acp": 0
+      },
       "spellFailure": 0,
-      "weight": 0,
-      "price": 0
+      "weight": 3,
+      "price": 20,
+      "quantity": 1,
+      "hardness": 0,
+      "hp": {
+        "max": 10,
+        "value": 10
+      },
+      "identified": true,
+      "unidentified": {
+        "price": 0,
+        "name": ""
+      },
+      "identifiedName": "[PAcS] Breastplate Helm"
     },
     "effects": [],
     "folder": null,
     "sort": 800000,
-    "ownership": { "default": 0 },
+    "ownership": {
+      "default": 0
+    },
     "flags": {
       "d35e-piecemeal-armor-called-shots": {
         "helmet": {
@@ -389,7 +541,7 @@
     },
     "_stats": {
       "compendiumSource": null,
-      "coreVersion": "14.362",
+      "coreVersion": "14.363",
       "createdTime": null,
       "duplicateSource": null,
       "exportSource": null,
@@ -401,12 +553,12 @@
   },
   {
     "_id": "PacsHelm000009AA",
-    "name": "Banded Mail Helm",
+    "name": "[PAcS] Banded Mail Helm",
     "type": "equipment",
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Banded Mail Helm is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +6, weight 4 lb., price 25 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -416,15 +568,34 @@
       "equipped": false,
       "carried": true,
       "melded": false,
-      "armor": { "value": 0, "enh": 0, "dex": null, "acp": 0 },
+      "armor": {
+        "value": 0,
+        "enh": 0,
+        "dex": null,
+        "acp": 0
+      },
       "spellFailure": 0,
-      "weight": 0,
-      "price": 0
+      "weight": 4,
+      "price": 25,
+      "quantity": 1,
+      "hardness": 0,
+      "hp": {
+        "max": 10,
+        "value": 10
+      },
+      "identified": true,
+      "unidentified": {
+        "price": 0,
+        "name": ""
+      },
+      "identifiedName": "[PAcS] Banded Mail Helm"
     },
     "effects": [],
     "folder": null,
     "sort": 900000,
-    "ownership": { "default": 0 },
+    "ownership": {
+      "default": 0
+    },
     "flags": {
       "d35e-piecemeal-armor-called-shots": {
         "helmet": {
@@ -439,7 +610,7 @@
     },
     "_stats": {
       "compendiumSource": null,
-      "coreVersion": "14.362",
+      "coreVersion": "14.363",
       "createdTime": null,
       "duplicateSource": null,
       "exportSource": null,
@@ -451,12 +622,12 @@
   },
   {
     "_id": "PacsHelm000010AA",
-    "name": "Splint Mail Helm",
+    "name": "[PAcS] Splint Mail Helm",
     "type": "equipment",
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Splint Mail Helm is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +6, weight 5 lb., price 20 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -466,15 +637,34 @@
       "equipped": false,
       "carried": true,
       "melded": false,
-      "armor": { "value": 0, "enh": 0, "dex": null, "acp": 0 },
+      "armor": {
+        "value": 0,
+        "enh": 0,
+        "dex": null,
+        "acp": 0
+      },
       "spellFailure": 0,
-      "weight": 0,
-      "price": 0
+      "weight": 5,
+      "price": 20,
+      "quantity": 1,
+      "hardness": 0,
+      "hp": {
+        "max": 10,
+        "value": 10
+      },
+      "identified": true,
+      "unidentified": {
+        "price": 0,
+        "name": ""
+      },
+      "identifiedName": "[PAcS] Splint Mail Helm"
     },
     "effects": [],
     "folder": null,
     "sort": 1000000,
-    "ownership": { "default": 0 },
+    "ownership": {
+      "default": 0
+    },
     "flags": {
       "d35e-piecemeal-armor-called-shots": {
         "helmet": {
@@ -489,7 +679,7 @@
     },
     "_stats": {
       "compendiumSource": null,
-      "coreVersion": "14.362",
+      "coreVersion": "14.363",
       "createdTime": null,
       "duplicateSource": null,
       "exportSource": null,
@@ -501,12 +691,12 @@
   },
   {
     "_id": "PacsHelm000011AA",
-    "name": "Half-Plate Helm",
+    "name": "[PAcS] Half-Plate Helm",
     "type": "equipment",
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Half-Plate Helm is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +7, weight 5 lb., price 60 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -516,15 +706,34 @@
       "equipped": false,
       "carried": true,
       "melded": false,
-      "armor": { "value": 0, "enh": 0, "dex": null, "acp": 0 },
+      "armor": {
+        "value": 0,
+        "enh": 0,
+        "dex": null,
+        "acp": 0
+      },
       "spellFailure": 0,
-      "weight": 0,
-      "price": 0
+      "weight": 5,
+      "price": 60,
+      "quantity": 1,
+      "hardness": 0,
+      "hp": {
+        "max": 10,
+        "value": 10
+      },
+      "identified": true,
+      "unidentified": {
+        "price": 0,
+        "name": ""
+      },
+      "identifiedName": "[PAcS] Half-Plate Helm"
     },
     "effects": [],
     "folder": null,
     "sort": 1100000,
-    "ownership": { "default": 0 },
+    "ownership": {
+      "default": 0
+    },
     "flags": {
       "d35e-piecemeal-armor-called-shots": {
         "helmet": {
@@ -539,7 +748,7 @@
     },
     "_stats": {
       "compendiumSource": null,
-      "coreVersion": "14.362",
+      "coreVersion": "14.363",
       "createdTime": null,
       "duplicateSource": null,
       "exportSource": null,
@@ -551,12 +760,12 @@
   },
   {
     "_id": "PacsHelm000012AA",
-    "name": "Full Plate Helm",
+    "name": "[PAcS] Full Plate Helm",
     "type": "equipment",
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>Optional PAcS helmet house-rule item. When the helmet head coverage setting is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>The starter local armor value uses the matching D35E full armor bonus. It does not add to normal AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Full Plate Helm is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +8, weight 5 lb., price 150 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -566,15 +775,34 @@
       "equipped": false,
       "carried": true,
       "melded": false,
-      "armor": { "value": 0, "enh": 0, "dex": null, "acp": 0 },
+      "armor": {
+        "value": 0,
+        "enh": 0,
+        "dex": null,
+        "acp": 0
+      },
       "spellFailure": 0,
-      "weight": 0,
-      "price": 0
+      "weight": 5,
+      "price": 150,
+      "quantity": 1,
+      "hardness": 0,
+      "hp": {
+        "max": 10,
+        "value": 10
+      },
+      "identified": true,
+      "unidentified": {
+        "price": 0,
+        "name": ""
+      },
+      "identifiedName": "[PAcS] Full Plate Helm"
     },
     "effects": [],
     "folder": null,
     "sort": 1200000,
-    "ownership": { "default": 0 },
+    "ownership": {
+      "default": 0
+    },
     "flags": {
       "d35e-piecemeal-armor-called-shots": {
         "helmet": {
@@ -589,7 +817,7 @@
     },
     "_stats": {
       "compendiumSource": null,
-      "coreVersion": "14.362",
+      "coreVersion": "14.363",
       "createdTime": null,
       "duplicateSource": null,
       "exportSource": null,

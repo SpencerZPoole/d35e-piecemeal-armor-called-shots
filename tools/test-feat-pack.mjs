@@ -55,51 +55,61 @@ for (const entry of featSource) {
 }
 
 const expectedHelmets = new Map([
-  ["Padded Helmet", ["padded", 1]],
-  ["Leather Helmet", ["leather", 2]],
-  ["Studded Leather Helmet", ["studded-leather", 3]],
-  ["Hide Helmet", ["hide", 3]],
-  ["Scale Mail Helmet", ["scale", 4]],
-  ["Chain Shirt Coif", ["chain-shirt", 4]],
-  ["Chainmail Coif", ["chain", 5]],
-  ["Breastplate Helm", ["breastplate", 5]],
-  ["Banded Mail Helm", ["banded", 6]],
-  ["Splint Mail Helm", ["splint", 6]],
-  ["Half-Plate Helm", ["half-plate", 7]],
-  ["Full Plate Helm", ["full-plate", 8]]
+  ["[PAcS] Padded Helmet", ["padded", 1, 1, 1]],
+  ["[PAcS] Leather Helmet", ["leather", 2, 2, 1]],
+  ["[PAcS] Studded Leather Helmet", ["studded-leather", 3, 2, 3]],
+  ["[PAcS] Hide Helmet", ["hide", 3, 3, 2]],
+  ["[PAcS] Scale Mail Helmet", ["scale", 4, 3, 5]],
+  ["[PAcS] Chain Shirt Coif", ["chain-shirt", 4, 3, 10]],
+  ["[PAcS] Chainmail Coif", ["chain", 5, 4, 15]],
+  ["[PAcS] Breastplate Helm", ["breastplate", 5, 3, 20]],
+  ["[PAcS] Banded Mail Helm", ["banded", 6, 4, 25]],
+  ["[PAcS] Splint Mail Helm", ["splint", 6, 5, 20]],
+  ["[PAcS] Half-Plate Helm", ["half-plate", 7, 5, 60]],
+  ["[PAcS] Full Plate Helm", ["full-plate", 8, 5, 150]]
 ]);
 assert.deepEqual(helmetSource.map((entry) => entry.name).sort(), [...expectedHelmets.keys()].sort());
-for (const entry of helmetSource) {
-  const [family, localArmor] = expectedHelmets.get(entry.name) ?? [];
+function assertHelmetMetadata(entry) {
+  const [family, localArmor, weight, price] = expectedHelmets.get(entry.name) ?? [];
   const helmetFlag = entry.flags?.[moduleId]?.helmet;
+  assert.match(entry.name, /^\[PAcS\] /);
   assert.equal(entry.type, "equipment");
   assert.equal(entry.system?.equipmentType, "misc");
   assert.equal(entry.system?.slot, "head");
   assert.equal(entry.system?.armor?.value, 0);
   assert.equal(entry.system?.armor?.enh, 0);
-  assert.equal(entry.system?.weight, 0);
+  assert.equal(entry.system?.weight, weight);
+  assert.equal(entry.system?.price, price);
+  assert.equal(entry.system?.hp?.max, 10);
+  assert.equal(entry.system?.hp?.value, 10);
+  assert.equal(entry.system?.hardness, 0);
+  assert.equal(entry.system?.quantity, 1);
+  assert.equal(entry.system?.identified, true);
+  assert.equal(entry.system?.identifiedName, entry.name);
   assert.equal(helmetFlag?.enabled, true);
   assert.equal(helmetFlag?.armorFamily, family);
   assert.equal(helmetFlag?.localArmorBonus, localArmor);
   assert.equal(helmetFlag?.coverageSlots, "head; eyes; ears");
   assert.equal(helmetFlag?.spotPenalty, 0);
   assert.equal(helmetFlag?.listenPenalty, 0);
+  assert.match(entry.system?.description?.value ?? "", /editable house-rule inventory values/);
   assert.match(entry.system?.description?.value ?? "", /does not add to normal AC/);
 }
+for (const entry of helmetSource) assertHelmetMetadata(entry);
 
-async function packedNamesFor(pack) {
+async function packedDocumentsFor(pack) {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), `pacs-${pack.name}-`));
   const tempPackPath = path.join(tempRoot, pack.name);
   try {
     fs.cpSync(path.join(root, pack.path), tempPackPath, { recursive: true });
     const db = new ClassicLevel(tempPackPath, { valueEncoding: "utf8" });
-    const packedNames = [];
+    const packedDocuments = [];
     try {
       await db.open();
       for await (const [_key, value] of db.iterator({ gt: "!items!", lt: "!items!~" })) {
-        packedNames.push(JSON.parse(value).name);
+        packedDocuments.push(JSON.parse(value));
       }
-      return packedNames.sort();
+      return packedDocuments.sort((a, b) => a.name.localeCompare(b.name));
     } finally {
       if (db.status === "open") await db.close();
     }
@@ -110,8 +120,10 @@ async function packedNamesFor(pack) {
 
 const { ClassicLevel } = await loadClassicLevel();
 try {
-  assert.deepEqual(await packedNamesFor(featPack), ["Greater Called Shot", "Improved Called Shot"]);
-  assert.deepEqual(await packedNamesFor(helmetPack), [...expectedHelmets.keys()].sort());
+  assert.deepEqual((await packedDocumentsFor(featPack)).map((entry) => entry.name).sort(), ["Greater Called Shot", "Improved Called Shot"]);
+  const packedHelmets = await packedDocumentsFor(helmetPack);
+  assert.deepEqual(packedHelmets.map((entry) => entry.name).sort(), [...expectedHelmets.keys()].sort());
+  for (const entry of packedHelmets) assertHelmetMetadata(entry);
 } catch (error) {
   if (!["LEVEL_LOCKED", "EPIPE", "EBUSY", "EPERM"].includes(error?.cause?.code) && !["LEVEL_LOCKED", "EPIPE", "EBUSY", "EPERM"].includes(error?.code)) throw error;
   console.warn("test-feat-pack: pack database is locked by live Foundry; source and manifest checks still passed");
