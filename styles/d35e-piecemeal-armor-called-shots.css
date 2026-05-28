@@ -252,8 +252,16 @@
   box-sizing: border-box;
   display: grid;
   gap: 6px;
-  margin: 0 0 8px 24px;
+  margin: 0 0 8px;
   padding: 8px 10px;
+}
+
+.d35e-pacs-settings-child-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
 }
 
 .d35e-pacs-settings-child-block h4,
@@ -261,10 +269,38 @@
   margin: 0;
 }
 
+.d35e-pacs-settings-master-toggle {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.d35e-pacs-settings-master-toggle label {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.d35e-pacs-settings-master-toggle .form-fields {
+  flex: 0 0 auto;
+}
+
+.d35e-pacs-settings-master-toggle .notes {
+  display: none;
+}
+
 .d35e-pacs-settings-child-grid {
   display: grid;
   gap: 6px;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+.d35e-pacs-settings-child-block-inactive .d35e-pacs-settings-child-grid {
+  filter: grayscale(0.35);
+  opacity: 0.48;
 }
 
 .d35e-pacs-settings-child-toggle {
@@ -278,6 +314,10 @@
   display: grid;
   gap: 2px;
   min-width: 0;
+}
+
+.d35e-pacs-settings-child-toggle small {
+  line-height: 1.2;
 }
 
 .d35e-pacs-chat-card h3 {

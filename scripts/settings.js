@@ -185,22 +185,43 @@ function setName(element, name) {
   element.name = name;
 }
 
-function appendText(parent, text, documentRef = globalThis.document) {
-  parent.append?.(documentRef?.createTextNode?.(text) ?? String(text));
+function setLocalArmorLocationVisualState(section, enabled) {
+  section.dataset.localArmorEnabled = enabled ? "true" : "false";
+  if (enabled) section.classList?.remove?.("d35e-pacs-settings-child-block-inactive");
+  else section.classList?.add?.("d35e-pacs-settings-child-block-inactive");
 }
 
-export function createLocalArmorLocationSettingsElement(context, documentRef = globalThis.document) {
+function prepareLocalArmorMasterRow(row) {
+  if (!row) return null;
+  row.classList?.add?.("d35e-pacs-settings-master-toggle");
+  row.dataset.d35ePacsSettingsMaster = "called-shot-local-armor";
+  const label = row.querySelector?.("label");
+  if (label) label.textContent = "Enable for called shots";
+  const note = row.querySelector?.(".notes");
+  if (note) note.hidden = true;
+  return row;
+}
+
+export function createLocalArmorLocationSettingsElement(context, documentRef = globalThis.document, options = {}) {
   const section = documentRef.createElement("section");
   section.classList.add("d35e-pacs-settings-child-block");
   section.dataset.d35ePacsSettingsChild = "called-shot-local-armor";
+  setLocalArmorLocationVisualState(section, options.masterEnabled === true);
+
+  const header = documentRef.createElement("div");
+  header.classList.add("d35e-pacs-settings-child-header");
+  section.appendChild(header);
 
   const title = documentRef.createElement("h4");
-  title.textContent = "Local armor piece AC locations";
-  section.appendChild(title);
+  title.textContent = "Local armor piece AC";
+  header.appendChild(title);
+
+  const masterRow = prepareLocalArmorMasterRow(options.masterRow);
+  if (masterRow) header.appendChild(masterRow);
 
   const note = documentRef.createElement("p");
   note.classList.add("notes");
-  note.textContent = `These child toggles only matter when Called shots use local armor piece AC is enabled. Active profile: ${context.profileLabel}. Missing or newly added locations default to enabled.`;
+  note.textContent = `Choose which called-shot locations use local armor piece AC when this house rule is enabled. Active profile: ${context.profileLabel}. New locations default to enabled.`;
   section.appendChild(note);
 
   const grid = documentRef.createElement("div");
@@ -222,12 +243,10 @@ export function createLocalArmorLocationSettingsElement(context, documentRef = g
     const strong = documentRef.createElement("strong");
     strong.textContent = location.label;
     text.appendChild(strong);
-    appendText(text, " ", documentRef);
-    const code = documentRef.createElement("code");
-    code.textContent = location.id;
-    text.appendChild(code);
+    const slot = documentRef.createElement("small");
+    slot.textContent = `Armor/equipment slot: ${location.id}`;
+    text.appendChild(slot);
     if (location.coverageSlot) {
-      appendText(text, " ", documentRef);
       const small = documentRef.createElement("small");
       small.textContent = `Coverage: ${location.coverageSlot}`;
       text.appendChild(small);
@@ -270,24 +289,38 @@ async function saveInlineLocalArmorLocationSettings(section) {
 export function injectLocalArmorLocationSettings(root) {
   const element = rootElement(root);
   if (!element?.querySelector) return false;
-  element.querySelector?.("[data-d35e-pacs-settings-child='called-shot-local-armor']")?.remove?.();
 
+  const existing = element.querySelector?.("[data-d35e-pacs-settings-child='called-shot-local-armor']");
   const row = findSettingRow(element, SETTINGS.enableCalledShotLocalArmor);
-  if (!row?.parentElement) return false;
+  if (!row) return false;
+  const parent = existing?.parentElement ?? row.parentElement;
+  if (!parent) return false;
+  const anchor = existing?.nextSibling ?? row.nextSibling;
+  const input = row.querySelector?.(`[name="${MODULE_ID}.${SETTINGS.enableCalledShotLocalArmor}"]`) ??
+    row.querySelector?.(`[name="${SETTINGS.enableCalledShotLocalArmor}"]`);
+  existing?.remove?.();
 
   const section = createLocalArmorLocationSettingsElement(buildLocalArmorLocationSettingsContext(
     game.settings.get(MODULE_ID, SETTINGS.calledShotProfiles),
     game.settings.get(MODULE_ID, SETTINGS.calledShotLocalArmorLocations)
-  ));
+  ), globalThis.document, {
+    masterEnabled: input?.checked === true,
+    masterRow: row
+  });
+  input?.addEventListener?.("change", () => {
+    setLocalArmorLocationVisualState(section, input.checked === true);
+  });
   section.addEventListener?.("change", (event) => {
     if (!event.target?.matches?.("input[type='checkbox']")) return;
+    if (event.target === input) return;
     void saveInlineLocalArmorLocationSettings(section).catch((error) => {
       console.error(`${MODULE_ID} | Failed to save called-shot local armor locations.`, error);
       globalThis.ui?.notifications?.error?.("Could not save called-shot local armor locations. Check the console for details.");
     });
   });
 
-  row.insertAdjacentElement?.("afterend", section) ?? row.parentElement.insertBefore(section, row.nextSibling);
+  if (anchor) parent.insertBefore?.(section, anchor);
+  else parent.appendChild?.(section);
   return true;
 }
 

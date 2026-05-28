@@ -160,6 +160,10 @@ class FakeClassList {
     for (const className of classNames) this.values.add(className);
   }
 
+  remove(...classNames) {
+    for (const className of classNames) this.values.delete(className);
+  }
+
   contains(className) {
     return this.values.has(className);
   }
@@ -305,10 +309,33 @@ const fakeDoc = {
     return { textContent: String(text) };
   }
 };
-const localArmorElement = createLocalArmorLocationSettingsElement(localArmorContext, fakeDoc);
+const masterRow = new FakeElement("div");
+const masterLabel = new FakeElement("label");
+masterLabel.textContent = "Called shots use local armor piece AC";
+const masterNotes = new FakeElement("p");
+masterNotes.classList.add("notes");
+masterNotes.textContent = "Long native setting hint.";
+const masterInput = new FakeElement("input");
+masterInput.type = "checkbox";
+masterInput.checked = false;
+masterInput.name = `${MODULE_ID}.${SETTINGS.enableCalledShotLocalArmor}`;
+masterRow.append(masterLabel, masterNotes, masterInput);
+const localArmorElement = createLocalArmorLocationSettingsElement(localArmorContext, fakeDoc, {
+  masterEnabled: false,
+  masterRow
+});
 assert.ok(localArmorElement.classList.contains("d35e-pacs-settings-child-block"));
+assert.ok(localArmorElement.classList.contains("d35e-pacs-settings-child-block-inactive"));
 assert.equal(localArmorElement.dataset.d35ePacsSettingsChild, "called-shot-local-armor");
-assert.ok(localArmorElement.textContent.includes("Local armor piece AC locations"));
+assert.equal(localArmorElement.dataset.localArmorEnabled, "false");
+assert.ok(localArmorElement.querySelector(".d35e-pacs-settings-child-header"));
+assert.ok(localArmorElement.querySelector(".d35e-pacs-settings-master-toggle"));
+assert.ok(localArmorElement.querySelector(`[name="${MODULE_ID}.${SETTINGS.enableCalledShotLocalArmor}"]`));
+assert.ok(localArmorElement.textContent.includes("Local armor piece AC"));
+assert.ok(localArmorElement.textContent.includes("Enable for called shots"));
+assert.equal(masterNotes.hidden, true);
+assert.ok(localArmorElement.textContent.includes("Armor/equipment slot: arm"));
+assert.ok(localArmorElement.textContent.includes("Coverage: arms"));
 assert.ok(localArmorElement.querySelector(`[name="location.arm.enabled"]`));
 assert.ok(localArmorElement.querySelector(`[name="location.hand.enabled"]`));
 assert.equal(updateLocalArmorLocationSettings({ hand: false }, {
