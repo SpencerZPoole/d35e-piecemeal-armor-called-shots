@@ -34,6 +34,7 @@ const { FLAGS, FULL_ATTACK_FEAT_RULE_MODES, FULL_ATTACK_MODES, MODULE_ID, OUTCOM
 const {
   buildLocalArmorLocationSettingsContext,
   buildProfileManagerContext,
+  createLocalArmorLocationSettingsElement,
   registerSettings,
   updateLocalArmorLocationSettings,
   updateProfilesFromProfileManager
@@ -68,6 +69,10 @@ assert.equal(registeredSettings.get(SETTINGS.enableHelmetHeadCoverage).config, f
 assert.equal(registeredSettings.get(SETTINGS.enableHelmetHeadCoverage).default, false);
 assert.equal(registeredSettings.get(SETTINGS.enableHelmetSkillPenalties).name, "Apply helmet Spot/Listen penalties");
 assert.equal(registeredSettings.get(SETTINGS.enableHelmetSkillPenalties).default, false);
+assert.equal(registeredSettings.get(SETTINGS.defaultHelmetSpotPenalty).name, "Default helmet Spot penalty");
+assert.equal(registeredSettings.get(SETTINGS.defaultHelmetSpotPenalty).default, -2);
+assert.equal(registeredSettings.get(SETTINGS.defaultHelmetListenPenalty).name, "Default helmet Listen penalty");
+assert.equal(registeredSettings.get(SETTINGS.defaultHelmetListenPenalty).default, -2);
 assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).name, "Called-shot effect automation");
 assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).default, OUTCOME_MODES.confirmSevere);
 assert.equal(registeredSettings.get(SETTINGS.calledShotOutcomeMode).config, true);
@@ -93,7 +98,7 @@ assert.equal(registeredSettings.get(SETTINGS.locationArmorOverlay).default, fals
 assert.equal(registeredSettings.get(SETTINGS.calledShotLocalArmorLocations).config, false);
 assert.deepEqual(registeredSettings.get(SETTINGS.calledShotLocalArmorLocations).default, {});
 assert.equal(registeredMenus.has("calledShotProfileEditor"), true);
-assert.equal(registeredMenus.has("calledShotLocalArmorLocations"), true);
+assert.equal(registeredMenus.has("calledShotLocalArmorLocations"), false);
 assert.match(registeredSettings.get(SETTINGS.enableArmor).hint, /hides the PAcS slots/);
 
 function fakeRow(dataset) {
@@ -290,6 +295,20 @@ const localArmorContext = buildLocalArmorLocationSettingsContext(profiles, { han
 assert.equal(localArmorContext.profileLabel, "PF1e Ultimate Combat RAW-adapted defaults");
 assert.equal(localArmorContext.locations.find((location) => location.id === "arm").enabled, true);
 assert.equal(localArmorContext.locations.find((location) => location.id === "hand").enabled, false);
+const fakeDoc = {
+  createElement(tagName) {
+    return new FakeElement(tagName);
+  },
+  createTextNode(text) {
+    return { textContent: String(text) };
+  }
+};
+const localArmorElement = createLocalArmorLocationSettingsElement(localArmorContext, fakeDoc);
+assert.ok(localArmorElement.classList.contains("d35e-pacs-settings-child-block"));
+assert.equal(localArmorElement.dataset.d35ePacsSettingsChild, "called-shot-local-armor");
+assert.ok(localArmorElement.textContent.includes("Local armor piece AC locations"));
+assert.ok(localArmorElement.querySelector(`[name="location.arm.enabled"]`));
+assert.ok(localArmorElement.querySelector(`[name="location.hand.enabled"]`));
 assert.equal(updateLocalArmorLocationSettings({ hand: false }, {
   "location.arm.enabled": "on",
   "location.hand.enabled": false

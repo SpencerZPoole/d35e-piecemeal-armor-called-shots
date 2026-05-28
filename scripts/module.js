@@ -3,7 +3,7 @@ import { exposeApi } from "./api.js";
 import { registerArmorProfileHooks, syncPacsEquipmentSlots } from "./armor-profile.js";
 import { patchD35EAttackRolls } from "./d35e-integration.js";
 import { registerHelmetSkillPenaltyHook } from "./helmet.js";
-import { registerSettings } from "./settings.js";
+import { registerSettings, registerSettingsConfigHooks } from "./settings.js";
 import { registerUiHooks } from "./ui.js";
 
 Hooks.once("init", () => {
@@ -24,5 +24,6 @@ Hooks.once("ready", async () => {
   registerHelmetSkillPenaltyHook();
   registerArmorProfileHooks();
   registerUiHooks();
+  registerSettingsConfigHooks();
   console.info(`${MODULE_TITLE} | Ready.`);
 });

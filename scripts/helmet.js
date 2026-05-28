@@ -57,6 +57,10 @@ function numberOrNull(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+function explicitNumberOrNull(value) {
+  return numberOrNull(value);
+}
+
 function numberOr(value, fallback = 0) {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
@@ -87,6 +91,19 @@ function localArmorForFamily(family) {
   return numberOr(HELMET_LOCAL_ARMOR_BY_FAMILY[keyForFamily(family)], 0);
 }
 
+function configuredPenaltyFromRaw(value) {
+  const number = explicitNumberOrNull(value);
+  if (number === null) return null;
+  return number > 0 ? -number : number;
+}
+
+function defaultPenaltyForSkill(skillId) {
+  const settingKey = skillId === HELMET_SKILLS.listen
+    ? SETTINGS.defaultHelmetListenPenalty
+    : SETTINGS.defaultHelmetSpotPenalty;
+  return numberOr(settingEnabled(settingKey, -2), -2);
+}
+
 export function getHelmetFlag(item) {
   return getFlagData(item, FLAGS.helmet) ?? {};
 }
@@ -110,6 +127,14 @@ export function isConfiguredHelmet(item) {
 
 export function isActiveHelmet(item) {
   return isConfiguredHelmet(item) &&
+    item.system?.equipped === true &&
+    item.system?.carried !== false &&
+    item.system?.melded !== true &&
+    item.system?.slot === "head";
+}
+
+export function isActiveHeadSlotItem(item) {
+  return item?.type === "equipment" &&
     item.system?.equipped === true &&
     item.system?.carried !== false &&
     item.system?.melded !== true &&
@@ -166,15 +191,17 @@ export function getActiveHelmetSkillPenalty(actor, skillId) {
   if (!isHelmetSkillPenaltyEnabled()) return null;
   if (![HELMET_SKILLS.listen, HELMET_SKILLS.spot].includes(skillId)) return null;
   const helmets = getItems(actor)
-    .filter(isActiveHelmet)
+    .filter(isActiveHeadSlotItem)
     .map((item) => {
       const flag = getHelmetFlag(item);
       const raw = skillId === HELMET_SKILLS.listen ? flag.listenPenalty : flag.spotPenalty;
-      const penalty = -Math.abs(numberOr(raw, 0));
+      const explicitPenalty = isConfiguredHelmet(item) ? configuredPenaltyFromRaw(raw) : null;
+      const penalty = explicitPenalty ?? defaultPenaltyForSkill(skillId);
       return {
         id: item?.id ?? item?._id ?? null,
         name: item?.name ?? "Helmet",
-        penalty
+        penalty,
+        source: explicitPenalty === null ? "default" : "item"
       };
     })
     .filter((entry) => entry.penalty !== 0)

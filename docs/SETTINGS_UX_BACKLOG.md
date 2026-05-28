@@ -7,7 +7,7 @@ These notes track the settings cleanup decisions from the native PAcS armor work
 - The normal settings menu now focuses on table-facing controls: `Enable piecemeal armor`, `Enable called shots`, optional local armor piece AC, optional exposed head/hand house rules, optional helmet Spot/Listen penalties, `Called-shot effect automation`, full-attack behavior, location overlay, and the called-shot profile editor.
 - The old rules-mode setting is hidden from the normal UI. RAW-adapted armor and called-shot workflow behavior is the normal runtime path.
 - The old piecemeal workflow setting is hidden from the normal UI. The native D35E inventory workflow is the normal workflow; old aggregate behavior remains internal migration/recovery support.
-- The old local armor mode setting remains hidden compatibility. The visible replacement is the advanced `Called shots use local armor piece AC` master toggle plus `Configure called-shot local armor locations`; both keep the RAW-adapted full-AC baseline unless the GM explicitly opts into the house rule.
+- The old local armor mode setting remains hidden compatibility. The visible replacement is the advanced `Called shots use local armor piece AC` master toggle plus inline child location toggles; both keep the RAW-adapted full-AC baseline unless the GM explicitly opts into the house rule.
 - GM-only profile/source metadata is fixed behavior. Players see useful called-shot results; GMs always see the extra adjudication context.
 
 ## Follow-Up Watchlist

@@ -180,6 +180,131 @@ export function updateLocalArmorLocationSettings(currentSettings, formData, prof
   return current;
 }
 
+function setName(element, name) {
+  element.setAttribute?.("name", name);
+  element.name = name;
+}
+
+function appendText(parent, text, documentRef = globalThis.document) {
+  parent.append?.(documentRef?.createTextNode?.(text) ?? String(text));
+}
+
+export function createLocalArmorLocationSettingsElement(context, documentRef = globalThis.document) {
+  const section = documentRef.createElement("section");
+  section.classList.add("d35e-pacs-settings-child-block");
+  section.dataset.d35ePacsSettingsChild = "called-shot-local-armor";
+
+  const title = documentRef.createElement("h4");
+  title.textContent = "Local armor piece AC locations";
+  section.appendChild(title);
+
+  const note = documentRef.createElement("p");
+  note.classList.add("notes");
+  note.textContent = `These child toggles only matter when Called shots use local armor piece AC is enabled. Active profile: ${context.profileLabel}. Missing or newly added locations default to enabled.`;
+  section.appendChild(note);
+
+  const grid = documentRef.createElement("div");
+  grid.classList.add("d35e-pacs-settings-child-grid");
+  section.appendChild(grid);
+
+  for (const location of context.locations ?? []) {
+    const label = documentRef.createElement("label");
+    label.classList.add("d35e-pacs-settings-child-toggle");
+
+    const input = documentRef.createElement("input");
+    input.type = "checkbox";
+    input.checked = location.enabled !== false;
+    input.dataset.locationId = location.id;
+    setName(input, `location.${location.id}.enabled`);
+    label.appendChild(input);
+
+    const text = documentRef.createElement("span");
+    const strong = documentRef.createElement("strong");
+    strong.textContent = location.label;
+    text.appendChild(strong);
+    appendText(text, " ", documentRef);
+    const code = documentRef.createElement("code");
+    code.textContent = location.id;
+    text.appendChild(code);
+    if (location.coverageSlot) {
+      appendText(text, " ", documentRef);
+      const small = documentRef.createElement("small");
+      small.textContent = `Coverage: ${location.coverageSlot}`;
+      text.appendChild(small);
+    }
+    label.appendChild(text);
+    grid.appendChild(label);
+  }
+
+  return section;
+}
+
+function rootElement(html) {
+  return html?.[0] ?? html;
+}
+
+function findSettingRow(root, settingKey) {
+  const input = root?.querySelector?.(`[name="${MODULE_ID}.${settingKey}"]`) ??
+    root?.querySelector?.(`[name="${settingKey}"]`);
+  if (!input) return null;
+  return input.closest?.(".form-group") ?? input.parentElement?.closest?.(".form-group") ?? input.parentElement ?? null;
+}
+
+function readLocalArmorSettingsFromElement(section) {
+  const data = {};
+  for (const input of section?.querySelectorAll?.("input[type='checkbox'][name]") ?? []) {
+    data[input.name] = input.checked ? "on" : false;
+  }
+  return data;
+}
+
+async function saveInlineLocalArmorLocationSettings(section) {
+  const settings = updateLocalArmorLocationSettings(
+    game.settings.get(MODULE_ID, SETTINGS.calledShotLocalArmorLocations),
+    readLocalArmorSettingsFromElement(section),
+    game.settings.get(MODULE_ID, SETTINGS.calledShotProfiles)
+  );
+  await game.settings.set(MODULE_ID, SETTINGS.calledShotLocalArmorLocations, settings);
+}
+
+export function injectLocalArmorLocationSettings(root) {
+  const element = rootElement(root);
+  if (!element?.querySelector) return false;
+  element.querySelector?.("[data-d35e-pacs-settings-child='called-shot-local-armor']")?.remove?.();
+
+  const row = findSettingRow(element, SETTINGS.enableCalledShotLocalArmor);
+  if (!row?.parentElement) return false;
+
+  const section = createLocalArmorLocationSettingsElement(buildLocalArmorLocationSettingsContext(
+    game.settings.get(MODULE_ID, SETTINGS.calledShotProfiles),
+    game.settings.get(MODULE_ID, SETTINGS.calledShotLocalArmorLocations)
+  ));
+  section.addEventListener?.("change", (event) => {
+    if (!event.target?.matches?.("input[type='checkbox']")) return;
+    void saveInlineLocalArmorLocationSettings(section).catch((error) => {
+      console.error(`${MODULE_ID} | Failed to save called-shot local armor locations.`, error);
+      globalThis.ui?.notifications?.error?.("Could not save called-shot local armor locations. Check the console for details.");
+    });
+  });
+
+  row.insertAdjacentElement?.("afterend", section) ?? row.parentElement.insertBefore(section, row.nextSibling);
+  return true;
+}
+
+let settingsConfigHookRegistered = false;
+
+export function registerSettingsConfigHooks() {
+  if (settingsConfigHookRegistered || !globalThis.Hooks?.on) return false;
+  Hooks.on("renderSettingsConfig", (_app, html) => {
+    if (injectLocalArmorLocationSettings(html)) return;
+    globalThis.setTimeout?.(() => {
+      injectLocalArmorLocationSettings(globalThis.document);
+    }, 0);
+  });
+  settingsConfigHookRegistered = true;
+  return true;
+}
+
 export function updateProfilesFromProfileManager(profiles, formData, activeProfileId) {
   const normalized = normalizeCalledShotProfiles(profiles);
   const profile = normalized.profiles.find((entry) => entry.id === activeProfileId) ?? normalized.profiles[0];
@@ -205,64 +330,6 @@ export function updateProfilesFromProfileManager(profiles, formData, activeProfi
   }
   normalized.activeProfileId = profile.id;
   return normalizeCalledShotProfiles(normalized);
-}
-
-export class LocalArmorLocationSettings extends HandlebarsApplication {
-  static DEFAULT_OPTIONS = {
-    id: `${MODULE_ID}-local-armor-locations`,
-    tag: "form",
-    classes: ["standard-form", "d35e-pacs", "called-shot-local-armor-settings"],
-    window: {
-      title: `${MODULE_TITLE}: Called-Shot Local Armor`,
-      icon: "fa-solid fa-shield-halved",
-      resizable: true
-    },
-    position: {
-      width: 680,
-      height: 620
-    }
-  };
-
-  static PARTS = {
-    body: {
-      template: `modules/${MODULE_ID}/templates/local-armor-location-settings.hbs`,
-      scrollable: [".d35e-pacs-local-armor-locations"]
-    }
-  };
-
-  async _prepareContext(options = {}) {
-    return {
-      ...(await super._prepareContext(options)),
-      ...buildLocalArmorLocationSettingsContext(
-        game.settings.get(MODULE_ID, SETTINGS.calledShotProfiles),
-        game.settings.get(MODULE_ID, SETTINGS.calledShotLocalArmorLocations)
-      )
-    };
-  }
-
-  async _onRender(context, options) {
-    await super._onRender(context, options);
-    this.element?.addEventListener("submit", (event) => {
-      event.preventDefault();
-      this.saveLocalArmorLocations().catch((error) => {
-        console.error(`${MODULE_ID} | Failed to save called-shot local armor locations.`, error);
-        ui.notifications.error(error.message ?? String(error));
-      });
-    });
-  }
-
-  async saveLocalArmorLocations() {
-    const formData = new FormData(this.element);
-    const data = Object.fromEntries(formData.entries());
-    const settings = updateLocalArmorLocationSettings(
-      game.settings.get(MODULE_ID, SETTINGS.calledShotLocalArmorLocations),
-      data,
-      game.settings.get(MODULE_ID, SETTINGS.calledShotProfiles)
-    );
-    await game.settings.set(MODULE_ID, SETTINGS.calledShotLocalArmorLocations, settings);
-    ui.notifications.info("Called-shot local armor locations saved.");
-    this.render({ force: true });
-  }
 }
 
 export class CalledShotProfileEditor extends HandlebarsApplication {
@@ -459,11 +526,29 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.enableHelmetSkillPenalties, {
     name: "Apply helmet Spot/Listen penalties",
-    hint: "Optional non-RAW house rule. Configured PAcS helmets in D35E's Head slot can add their table-defined Spot and Listen penalties to native D35E skill rolls.",
+    hint: "Optional non-RAW house rule. Configured PAcS helmets can use per-item values, and ordinary equipped D35E Head-slot items can use the default Spot and Listen penalties below.",
     scope: "world",
     config: true,
     type: Boolean,
     default: false
+  });
+
+  game.settings.register(MODULE_ID, SETTINGS.defaultHelmetSpotPenalty, {
+    name: "Default helmet Spot penalty",
+    hint: "Used when helmet Spot/Listen penalties are enabled and an equipped Head-slot item has no explicit PAcS Spot value. Set to 0 to disable the default Spot penalty.",
+    scope: "world",
+    config: true,
+    type: Number,
+    default: -2
+  });
+
+  game.settings.register(MODULE_ID, SETTINGS.defaultHelmetListenPenalty, {
+    name: "Default helmet Listen penalty",
+    hint: "Used when helmet Spot/Listen penalties are enabled and an equipped Head-slot item has no explicit PAcS Listen value. Set to 0 to disable the default Listen penalty.",
+    scope: "world",
+    config: true,
+    type: Number,
+    default: -2
   });
 
   game.settings.register(MODULE_ID, SETTINGS.calledShotOutcomeMode, {
@@ -563,15 +648,6 @@ export function registerSettings() {
     hint: "Edit locations, penalties, severity tiers, coverage mapping, and outcome effects as JSON.",
     icon: "fas fa-crosshairs",
     type: CalledShotProfileEditor,
-    restricted: true
-  });
-
-  game.settings.registerMenu(MODULE_ID, "calledShotLocalArmorLocations", {
-    name: "Configure called-shot local armor locations",
-    label: "Configure Locations",
-    hint: "Choose which called-shot locations use local armor piece AC when the advanced house rule is enabled.",
-    icon: "fas fa-shield-alt",
-    type: LocalArmorLocationSettings,
     restricted: true
   });
 }

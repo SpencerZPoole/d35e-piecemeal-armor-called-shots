@@ -13,6 +13,8 @@ export const SETTINGS = Object.freeze({
   enableCalledShotLocalArmor: "enableCalledShotLocalArmor",
   enableHelmetHeadCoverage: "enableHelmetHeadCoverage",
   enableHelmetSkillPenalties: "enableHelmetSkillPenalties",
+  defaultHelmetSpotPenalty: "defaultHelmetSpotPenalty",
+  defaultHelmetListenPenalty: "defaultHelmetListenPenalty",
   calledShotOutcomeMode: "calledShotOutcomeMode",
   calledShotFullAttackMode: "calledShotFullAttackMode",
   calledShotFullAttackFeatRules: "calledShotFullAttackFeatRules",

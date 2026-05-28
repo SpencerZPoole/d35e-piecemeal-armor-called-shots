@@ -7,6 +7,8 @@ import { applyLocalArmorAdjustment, calculateLocalArmorAdjustment } from "../scr
 let legacyHelmetCoverageEnabled = false;
 let exposedHeadshotsEnabled = false;
 let helmetSkillPenaltiesEnabled = false;
+let defaultSpotPenalty = -2;
+let defaultListenPenalty = -2;
 
 globalThis.game = {
   settings: {
@@ -18,6 +20,8 @@ globalThis.game = {
       if (key === "enableCalledShotLocalArmor") return false;
       if (key === "calledShotLocalArmorLocations") return {};
       if (key === "enableHelmetSkillPenalties") return helmetSkillPenaltiesEnabled;
+      if (key === "defaultHelmetSpotPenalty") return defaultSpotPenalty;
+      if (key === "defaultHelmetListenPenalty") return defaultListenPenalty;
       if (key === "enableArmorAutomation") return true;
       if (key === "armorWorkflowMode") return "nativeProfile";
       if (key === "rulesMode") return "rawAdapted";
@@ -78,6 +82,26 @@ function helmet(id, options = {}) {
         }
       }
     },
+    getFlag: itemGetFlag
+  };
+}
+
+function headgear(id, options = {}) {
+  return {
+    id,
+    name: options.name ?? "Ordinary Hat",
+    type: "equipment",
+    system: {
+      carried: true,
+      equipped: options.equipped ?? true,
+      equipmentType: "misc",
+      slot: options.slot ?? "head",
+      armor: { value: 0, enh: 0 },
+      spellFailure: 0,
+      weight: 1,
+      melded: false
+    },
+    flags: {},
     getFlag: itemGetFlag
   };
 }
@@ -165,6 +189,40 @@ hookData = { skillSourceDetails: [] };
 const listenPenalty = applyHelmetSkillPenaltyToHookData(actorWithHelmet, "lis", hookData);
 assert.equal(listenPenalty.penalty, -4);
 assert.deepEqual(hookData.skillSourceDetails, [{ name: "Helmet (Test Helmet)", value: -4 }]);
+
+hookData = { skillSourceDetails: [] };
+const defaultSpot = applyHelmetSkillPenaltyToHookData(profileActor([headgear("hat")]), "spt", hookData);
+assert.equal(defaultSpot.penalty, -2);
+assert.equal(defaultSpot.source, "default");
+assert.deepEqual(hookData.skillSourceDetails, [{ name: "Helmet (Ordinary Hat)", value: -2 }]);
+
+hookData = { skillSourceDetails: [] };
+const defaultListen = applyHelmetSkillPenaltyToHookData(profileActor([headgear("hat")]), "lis", hookData);
+assert.equal(defaultListen.penalty, -2);
+assert.deepEqual(hookData.skillSourceDetails, [{ name: "Helmet (Ordinary Hat)", value: -2 }]);
+
+hookData = { skillSourceDetails: [] };
+const blankConfigured = applyHelmetSkillPenaltyToHookData(profileActor([
+  helmet("blank-helm", { name: "Blank Helm", spotPenalty: "", listenPenalty: "" })
+]), "spt", hookData);
+assert.equal(blankConfigured.penalty, -2);
+assert.equal(blankConfigured.source, "default");
+
+hookData = { skillSourceDetails: [] };
+assert.equal(applyHelmetSkillPenaltyToHookData(profileActor([
+  helmet("zero-helm", { name: "Zero Helm", spotPenalty: 0, listenPenalty: 0 })
+]), "spt", hookData), null);
+assert.deepEqual(hookData.skillSourceDetails, []);
+
+hookData = { skillSourceDetails: [] };
+assert.equal(applyHelmetSkillPenaltyToHookData(profileActor([headgear("belt-hat", { slot: "belt" })]), "spt", hookData), null);
+assert.deepEqual(hookData.skillSourceDetails, []);
+
+defaultSpotPenalty = 0;
+hookData = { skillSourceDetails: [] };
+assert.equal(applyHelmetSkillPenaltyToHookData(profileActor([headgear("no-default-hat")]), "spt", hookData), null);
+assert.deepEqual(hookData.skillSourceDetails, []);
+defaultSpotPenalty = -2;
 
 hookData = { skillSourceDetails: [] };
 assert.equal(applyHelmetSkillPenaltyToHookData(actorWithHelmet, "jmp", hookData), null);

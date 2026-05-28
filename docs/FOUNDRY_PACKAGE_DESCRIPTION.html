@@ -76,13 +76,13 @@
 
 <h3>Configuration</h3>
 
-<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, choose full-attack feat-gate behavior, enable optional local armor piece AC, configure which locations use that local armor rule, enable optional exposed headshots, enable optional exposed hand shots, enable optional helmet Spot/Listen penalties, show called-shot coverage overlays, and edit called-shot profiles. Turning off <strong>Enable piecemeal armor</strong> hides the PAcS inventory slots and is the intended called-shots-only mode.</p>
+<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, choose full-attack feat-gate behavior, enable optional local armor piece AC, choose local-armor locations from inline child toggles under that setting, enable optional exposed headshots, enable optional exposed hand shots, enable optional helmet Spot/Listen penalties, show called-shot coverage overlays, and edit called-shot profiles. Turning off <strong>Enable piecemeal armor</strong> hides the PAcS inventory slots and is the intended called-shots-only mode.</p>
 
 <p>The <strong>PAcS Armor Pieces</strong> compendium ships the recommended override pieces for the native PAcS slots. The items are generated from the D35E-calibrated catalog, so their display names match the armor a user searched for while their flags preserve the correct piece category and armor-family math.</p>
 
 <p>The <strong>PAcS Called-Shot Feats</strong> compendium ships small D35E Item records for <code>Improved Called Shot</code> and <code>Greater Called Shot</code>. These are PF1e-derived optional-rule support items for D35E, not D&amp;D 3.5 RAW.</p>
 
-<p>The <strong>PAcS Helmets</strong> compendium ships editable <code>[PAcS]</code> Head-slot helmet records. They can prevent exposed headshots because they occupy D35E's native Head slot, and they can carry optional table-defined Spot/Listen penalties. They do not add normal AC or supply local armor AC.</p>
+<p>The <strong>PAcS Helmets</strong> compendium ships editable <code>[PAcS]</code> Head-slot helmet records. They can prevent exposed headshots because they occupy D35E's native Head slot, and they can carry optional table-defined Spot/Listen penalties. Ordinary equipped Head-slot items can use the module's default Spot/Listen penalties when no per-item PAcS value is present. Helmets do not add normal AC or supply local armor AC.</p>
 
 <p>Profiles control location labels, attack penalties, enabled state, matching armor coverage slot(s), and outcome effects. Effect snippets are JSON because they map directly to the module's declarative effect engine.</p>
 
