@@ -1,5 +1,7 @@
 import { FLAGS, LOCAL_ARMOR_MODES, MODULE_ID, SETTINGS } from "./constants.js";
 import {
+  armorCoverageOverlaps,
+  calculateArmorPieceLocalTotal,
   isAggregateArmorItem,
   isInternalArmorProfileItem,
   isPiecemealArmorPiece,
@@ -43,6 +45,15 @@ function settingEnabled(key, fallback = false) {
     return globalThis.game?.settings?.get?.(MODULE_ID, key) ?? fallback;
   } catch (_error) {
     return fallback;
+  }
+}
+
+function settingObject(key) {
+  try {
+    const value = globalThis.game?.settings?.get?.(MODULE_ID, key);
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  } catch (_error) {
+    return {};
   }
 }
 
@@ -107,6 +118,14 @@ function exposedSlotForCoverage(coverageSlot) {
     return { key: "hands", label: "Hands" };
   }
   return null;
+}
+
+function localArmorLocationEnabled(payload) {
+  if (!settingEnabled(SETTINGS.enableCalledShotLocalArmor, false)) return false;
+  const locationId = String(payload?.locationId ?? "").trim();
+  if (!locationId) return true;
+  const locations = settingObject(SETTINGS.calledShotLocalArmorLocations);
+  return locations[locationId] !== false;
 }
 
 function isEquippedInNativeSlot(item, slotKey) {
@@ -185,6 +204,13 @@ function exposedArmorSourceName(exposed, payload, mode) {
   const label = payload?.locationLabel ?? payload?.coverageSlot ?? exposed.coverageSlot;
   const suffix = mode === LOCAL_ARMOR_MODES.display ? " (advisory)" : "";
   return `Called Shot Exposed ${label}: no ${exposed.nativeSlotLabel}-slot item (armor ${exposed.aggregateTotal} -> 0)${suffix}`;
+}
+
+function localArmorSourceName(localArmor, payload, mode) {
+  const label = payload?.locationLabel ?? payload?.coverageSlot ?? localArmor.coverageSlot;
+  const sourceLabel = localArmor.profileSourceLabel ?? "profile";
+  const suffix = mode === LOCAL_ARMOR_MODES.display ? " (advisory)" : "";
+  return `Called Shot Local Armor: ${label} (${sourceLabel} ${localArmor.aggregateTotal} -> local piece ${localArmor.localTotal})${suffix}`;
 }
 
 function localArmorMode() {
@@ -325,7 +351,66 @@ export function clearAllStagedCalledShotDamageApplications() {
   return count;
 }
 
-export function calculateLocalArmorAdjustment(actor, coverageSlot) {
+function payloadFromCoverage(coverageSlotOrPayload, extra = {}) {
+  if (coverageSlotOrPayload && typeof coverageSlotOrPayload === "object") {
+    return {
+      ...coverageSlotOrPayload,
+      ...extra,
+      coverageSlot: coverageSlotOrPayload.coverageSlot ?? extra.coverageSlot ?? null
+    };
+  }
+  return { ...extra, coverageSlot: coverageSlotOrPayload };
+}
+
+function profileSourceLabel(resolution) {
+  return resolution?.status === ARMOR_PROFILE_STATUS.nativeArmor ? "full armor" : "profile";
+}
+
+function calculateLocalArmorPieceAdjustment(actor, payload) {
+  const coverageSlot = payload?.coverageSlot;
+  const normalizedSlots = parseArmorCoverageSlots(coverageSlot);
+  if (!actor || !normalizedSlots.length || !localArmorLocationEnabled(payload)) return null;
+
+  let resolution;
+  try {
+    resolution = resolveArmorProfile(actor);
+  } catch (_error) {
+    return null;
+  }
+  if (!resolution?.pieces?.length || resolution.status === ARMOR_PROFILE_STATUS.needsPieceValues) return null;
+
+  const summary = resolution.summary ?? {};
+  const aggregateTotal = numberOr(summary.armorBonus) + numberOr(summary.enhancementBonus);
+  if (!aggregateTotal) return null;
+
+  const activePieces = Array.isArray(summary.activePieces) && summary.activePieces.length
+    ? summary.activePieces
+    : resolution.pieces;
+  const matchingPieces = activePieces.filter((piece) => armorCoverageOverlaps(piece.coverageSlots, coverageSlot));
+  const localTotal = matchingPieces.reduce((total, piece) => total + calculateArmorPieceLocalTotal(summary, piece), 0);
+  const adjustment = localTotal - aggregateTotal;
+  return {
+    coverageSlot,
+    normalizedSlot: normalizedSlots[0],
+    normalizedSlots,
+    aggregateTotal,
+    localTotal,
+    adjustment,
+    pieceCount: matchingPieces.length,
+    source: "localArmor",
+    profileSourceLabel: profileSourceLabel(resolution),
+    armorContribution: {
+      total: aggregateTotal,
+      source: resolution.status,
+      armorBonus: numberOr(summary.armorBonus),
+      enhancementBonus: numberOr(summary.enhancementBonus)
+    },
+    pieces: matchingPieces
+  };
+}
+
+function calculateExposedArmorAdjustment(actor, payload) {
+  const coverageSlot = payload?.coverageSlot;
   const normalizedSlots = parseArmorCoverageSlots(coverageSlot);
   if (!actor || !normalizedSlots.length) return null;
   const exposedSlot = exposedSlotForCoverage(coverageSlot);
@@ -350,17 +435,24 @@ export function calculateLocalArmorAdjustment(actor, coverageSlot) {
   };
 }
 
+export function calculateLocalArmorAdjustment(actor, coverageSlotOrPayload, extra = {}) {
+  const payload = payloadFromCoverage(coverageSlotOrPayload, extra);
+  return calculateLocalArmorPieceAdjustment(actor, payload) ?? calculateExposedArmorAdjustment(actor, payload);
+}
+
 export function applyLocalArmorAdjustment(actor, finalAc, payload, { mode = LOCAL_ARMOR_MODES.adjust, touch = false } = {}) {
   if (!finalAc || finalAc.noCheck) return null;
   const coverAdjustment = applyCalledShotCoverAdjustment(finalAc);
   const touchAdjustment = applyCalledShotNormalAcForTouch(actor, finalAc, { touch });
   if (mode === LOCAL_ARMOR_MODES.disabled) return null;
 
-  const localArmor = calculateLocalArmorAdjustment(actor, payload?.coverageSlot);
+  const localArmor = calculateLocalArmorAdjustment(actor, payload);
   if (!localArmor) return touchAdjustment ?? coverAdjustment;
 
   finalAc.acModifiers = Array.isArray(finalAc.acModifiers) ? finalAc.acModifiers : [];
-  const sourceName = exposedArmorSourceName(localArmor, payload, mode);
+  const sourceName = localArmor.source === "localArmor"
+    ? localArmorSourceName(localArmor, payload, mode)
+    : exposedArmorSourceName(localArmor, payload, mode);
   finalAc.acModifiers.push({
     sourceName,
     value: formatSigned(localArmor.adjustment)

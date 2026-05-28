@@ -31,7 +31,13 @@ globalThis.game = {
 
 const { getDefaultCalledShotProfiles } = await import("../scripts/profiles.js");
 const { FLAGS, FULL_ATTACK_FEAT_RULE_MODES, FULL_ATTACK_MODES, MODULE_ID, OUTCOME_MODES, SETTINGS } = await import("../scripts/constants.js");
-const { buildProfileManagerContext, registerSettings, updateProfilesFromProfileManager } = await import("../scripts/settings.js");
+const {
+  buildLocalArmorLocationSettingsContext,
+  buildProfileManagerContext,
+  registerSettings,
+  updateLocalArmorLocationSettings,
+  updateProfilesFromProfileManager
+} = await import("../scripts/settings.js");
 const { createPiecemealItemPanel, hideDisabledArmorAutomationRows } = await import("../scripts/ui.js");
 const {
   CALLED_SHOT_QUEUE_NAME,
@@ -55,6 +61,9 @@ assert.equal(registeredSettings.get(SETTINGS.enableExposedHeadshots).name, "Enab
 assert.equal(registeredSettings.get(SETTINGS.enableExposedHeadshots).default, false);
 assert.equal(registeredSettings.get(SETTINGS.enableExposedHandShots).name, "Enable exposed hand shots");
 assert.equal(registeredSettings.get(SETTINGS.enableExposedHandShots).default, false);
+assert.equal(registeredSettings.get(SETTINGS.enableCalledShotLocalArmor).name, "Called shots use local armor piece AC");
+assert.equal(registeredSettings.get(SETTINGS.enableCalledShotLocalArmor).default, false);
+assert.match(registeredSettings.get(SETTINGS.enableCalledShotLocalArmor).hint, /almost always makes called shots easier/);
 assert.equal(registeredSettings.get(SETTINGS.enableHelmetHeadCoverage).config, false);
 assert.equal(registeredSettings.get(SETTINGS.enableHelmetHeadCoverage).default, false);
 assert.equal(registeredSettings.get(SETTINGS.enableHelmetSkillPenalties).name, "Apply helmet Spot/Listen penalties");
@@ -81,7 +90,10 @@ assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).choi
 assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).config, true);
 assert.equal(registeredSettings.get(SETTINGS.locationArmorOverlay).name, "Show called-shot coverage overlay");
 assert.equal(registeredSettings.get(SETTINGS.locationArmorOverlay).default, false);
+assert.equal(registeredSettings.get(SETTINGS.calledShotLocalArmorLocations).config, false);
+assert.deepEqual(registeredSettings.get(SETTINGS.calledShotLocalArmorLocations).default, {});
 assert.equal(registeredMenus.has("calledShotProfileEditor"), true);
+assert.equal(registeredMenus.has("calledShotLocalArmorLocations"), true);
 assert.match(registeredSettings.get(SETTINGS.enableArmor).hint, /hides the PAcS slots/);
 
 function fakeRow(dataset) {
@@ -273,6 +285,15 @@ const context = buildProfileManagerContext(profiles);
 assert.equal(context.activeProfileId, "pf1e-uc-raw-adapted");
 assert.ok(context.locations.length >= 10);
 assert.ok(context.locations[0].normalJson.includes("["));
+
+const localArmorContext = buildLocalArmorLocationSettingsContext(profiles, { hand: false });
+assert.equal(localArmorContext.profileLabel, "PF1e Ultimate Combat RAW-adapted defaults");
+assert.equal(localArmorContext.locations.find((location) => location.id === "arm").enabled, true);
+assert.equal(localArmorContext.locations.find((location) => location.id === "hand").enabled, false);
+assert.equal(updateLocalArmorLocationSettings({ hand: false }, {
+  "location.arm.enabled": "on",
+  "location.hand.enabled": false
+}, profiles).hand, false);
 
 const updated = updateProfilesFromProfileManager(profiles, {
   profileLabel: "Table Defaults",

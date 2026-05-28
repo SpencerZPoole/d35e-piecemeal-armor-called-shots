@@ -20,6 +20,8 @@ const MODULE_ID = "d35e-piecemeal-armor-called-shots";
 
 let exposedHeadshots = false;
 let exposedHandShots = false;
+let localArmorEnabled = false;
+let localArmorLocations = {};
 
 globalThis.game = {
   user: { id: "gm-1" },
@@ -33,6 +35,8 @@ globalThis.game = {
       if (key === "enableHelmetSkillPenalties") return false;
       if (key === "enableExposedHeadshots") return exposedHeadshots;
       if (key === "enableExposedHandShots") return exposedHandShots;
+      if (key === "enableCalledShotLocalArmor") return localArmorEnabled;
+      if (key === "calledShotLocalArmorLocations") return localArmorLocations;
       return true;
     }
   }
@@ -142,6 +146,13 @@ const nativeArmorActor = {
   getFlag: itemGetFlag
 };
 
+const customNativeArmorActor = {
+  id: "custom-native-target",
+  uuid: "Actor.custom-native-target",
+  items: [nativeArmor("mystery", "Mystery Armor", true, 5, 0)],
+  getFlag: itemGetFlag
+};
+
 assert.equal(normalizeArmorSlot("Leg"), "legs");
 assert.equal(normalizeArmorSlot("Feet"), "legs");
 assert.equal(normalizeArmorSlot("Eye"), "head");
@@ -155,6 +166,28 @@ assert.equal(calculateLocalArmorAdjustment(aggregateActor, "hands"), null);
 assert.equal(calculateLocalArmorAdjustment(profileActor, "head"), null);
 assert.equal(calculateActiveArmorContribution(aggregateActor).total, 5);
 assert.equal(calculateActiveArmorContribution(nativeArmorActor).total, 6);
+
+localArmorEnabled = true;
+localArmorLocations = {};
+const profileHeadLocal = calculateLocalArmorAdjustment(profileActor, { locationId: "head", locationLabel: "Head", coverageSlot: "head" });
+assert.equal(profileHeadLocal.source, "localArmor");
+assert.equal(profileHeadLocal.aggregateTotal, 2);
+assert.equal(profileHeadLocal.localTotal, 1);
+assert.equal(profileHeadLocal.adjustment, -1);
+assert.equal(profileHeadLocal.profileSourceLabel, "profile");
+
+const nativeHeadLocal = calculateLocalArmorAdjustment(nativeArmorActor, { locationId: "head", locationLabel: "Head", coverageSlot: "head" });
+assert.equal(nativeHeadLocal.source, "localArmor");
+assert.equal(nativeHeadLocal.aggregateTotal, 6);
+assert.equal(nativeHeadLocal.localTotal, 4);
+assert.equal(nativeHeadLocal.adjustment, -2);
+assert.equal(nativeHeadLocal.profileSourceLabel, "full armor");
+
+localArmorLocations = { head: false };
+assert.equal(calculateLocalArmorAdjustment(nativeArmorActor, { locationId: "head", locationLabel: "Head", coverageSlot: "head" }), null);
+localArmorLocations = {};
+assert.equal(calculateLocalArmorAdjustment(customNativeArmorActor, { locationId: "head", locationLabel: "Head", coverageSlot: "head" }), null);
+localArmorEnabled = false;
 
 exposedHeadshots = true;
 const exposedHead = calculateLocalArmorAdjustment(aggregateActor, "head");
@@ -179,6 +212,14 @@ assert.equal(nativeHead.adjustment, -6);
 
 exposedHeadshots = false;
 exposedHandShots = true;
+localArmorEnabled = true;
+localArmorLocations = {};
+const localHand = calculateLocalArmorAdjustment(profileActor, { locationId: "hand", locationLabel: "Hand", coverageSlot: "hands" });
+assert.equal(localHand.source, "localArmor");
+assert.equal(localHand.aggregateTotal, 2);
+assert.equal(localHand.localTotal, 0);
+assert.equal(localHand.adjustment, -2);
+localArmorLocations = { hand: false };
 const exposedHand = calculateLocalArmorAdjustment(aggregateActor, "hands");
 assert.equal(exposedHand.aggregateTotal, 5);
 assert.equal(exposedHand.nativeSlot, "hands");
@@ -187,6 +228,8 @@ assert.equal(calculateLocalArmorAdjustment({
   ...aggregateActor,
   items: [aggregate(4, 1), nativeSlotItem("gloves", "hands")]
 }, "hand"), null);
+localArmorEnabled = false;
+localArmorLocations = {};
 
 const payload = sanitizeCalledShotDamagePayload({
   userId: "gm-1",
@@ -228,10 +271,20 @@ assert.equal(handAc.acModifiers.at(-1).sourceName, "Called Shot Exposed Hand: no
 assert.equal(handAc.acModifiers.at(-1).value, "-5");
 
 exposedHandShots = false;
+localArmorEnabled = true;
+localArmorLocations = {};
+const localHandAc = { ac: 21, acModifiers: [{ sourceName: "AC", value: 21 }] };
+const localHandApplied = applyLocalArmorAdjustment(profileActor, localHandAc, handPayload);
+assert.equal(localHandApplied.source, "localArmor");
+assert.equal(localHandAc.ac, 19);
+assert.equal(localHandAc.acModifiers.at(-1).sourceName, "Called Shot Local Armor: Hand (profile 2 -> local piece 0)");
+localArmorLocations = { hand: false };
 const normalAc = { ac: 21, acModifiers: [{ sourceName: "AC", value: 21 }] };
 assert.equal(applyLocalArmorAdjustment(aggregateActor, normalAc, handPayload), null);
 assert.equal(normalAc.ac, 21);
 assert.equal(normalAc.acModifiers.length, 1);
+localArmorEnabled = false;
+localArmorLocations = {};
 
 const coverAc = { ac: 25, acModifiers: [{ sourceName: "Cover", value: "+4" }] };
 applyLocalArmorAdjustment(aggregateActor, coverAc, payload, { mode: LOCAL_ARMOR_MODES.display });

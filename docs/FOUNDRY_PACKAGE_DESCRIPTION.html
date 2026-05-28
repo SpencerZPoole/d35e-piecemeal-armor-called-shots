@@ -40,6 +40,7 @@
   <li>Adds a <code>Called Shot</code> dropdown inside D35E's native attack/use dialog.</li>
   <li>Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as <code>Called Shot: Ear -10</code> or <code>Called Shot Range/Reach: not adjacent -2</code>.</li>
   <li>Keeps called-shot hit checks on normal applicable AC by default, while preserving RAW-adapted touch, cover, concealment, range/reach, DR, and outcome handling.</li>
+  <li>Offers an advanced disabled-by-default local armor piece AC house rule with per-location toggles.</li>
   <li>Offers optional exposed headshot and exposed hand-shot house rules based on D35E's native Head and Hands slots.</li>
   <li>Enforces Improved/Greater Called Shot full-attack limits by default while offering table-facing warn-only and no-requirement options.</li>
   <li>Includes <code>PAcS Armor Pieces</code>, <code>PAcS Called-Shot Feats</code>, and <code>PAcS Helmets</code> compendia with convenience records for optional-rule setup.</li>
@@ -71,11 +72,11 @@
 
 <h3>Automatic Outcomes And Restore</h3>
 
-<p>Called shots use the defender's normal applicable AC by default. D35E Apply Damage determines hit, crit, and post-DR damage; the module then determines normal, critical, or debilitating severity and applies, confirms, or leaves advisory outcomes based on the table setting. Severe outcomes such as death or permanent maiming are recorded in a called-shot ledger so a GM can restore them from the target actor sheet if needed. Optional exposed headshot and exposed hand-shot settings can subtract only the active armor contribution when the relevant native Head or Hands slot is empty.</p>
+<p>Called shots use the defender's normal applicable AC by default. D35E Apply Damage determines hit, crit, and post-DR damage; the module then determines normal, critical, or debilitating severity and applies, confirms, or leaves advisory outcomes based on the table setting. Severe outcomes such as death or permanent maiming are recorded in a called-shot ledger so a GM can restore them from the target actor sheet if needed. The advanced local armor piece AC setting can replace only the active armor/profile armor contribution with a matching local armor piece contribution for selected locations. Optional exposed headshot and exposed hand-shot settings can subtract only the active armor contribution when the relevant native Head or Hands slot is empty, but they do not stack on top of local armor for the same hit check.</p>
 
 <h3>Configuration</h3>
 
-<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, choose full-attack feat-gate behavior, enable optional exposed headshots, enable optional exposed hand shots, enable optional helmet Spot/Listen penalties, show called-shot coverage overlays, and edit called-shot profiles. Turning off <strong>Enable piecemeal armor</strong> hides the PAcS inventory slots and is the intended called-shots-only mode.</p>
+<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, choose full-attack feat-gate behavior, enable optional local armor piece AC, configure which locations use that local armor rule, enable optional exposed headshots, enable optional exposed hand shots, enable optional helmet Spot/Listen penalties, show called-shot coverage overlays, and edit called-shot profiles. Turning off <strong>Enable piecemeal armor</strong> hides the PAcS inventory slots and is the intended called-shots-only mode.</p>
 
 <p>The <strong>PAcS Armor Pieces</strong> compendium ships the recommended override pieces for the native PAcS slots. The items are generated from the D35E-calibrated catalog, so their display names match the armor a user searched for while their flags preserve the correct piece category and armor-family math.</p>
 

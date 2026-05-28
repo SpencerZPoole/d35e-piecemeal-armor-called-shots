@@ -20,9 +20,11 @@ Aggregate armor math follows the supplied Ultimate Combat reference as closely a
 
 Clearing PAcS slots reverses backed-up fields and removes the hidden carrier when the actor returns to baseline-only or unarmored native behavior. The old visible `Piecemeal Armor Aggregate` path is retained only as migration and recovery support for older worlds.
 
-## Exposed Slots And Helmet Skill Penalties
+## Called-Shot AC House Rules And Helmet Skill Penalties
 
 Called shots use normal applicable AC by default. The disabled-by-default exposed headshot and exposed hand-shot settings are separate house rules, not PF1e RAW and not a fourth piecemeal armor category. Exposed Head/Eye/Ear checks look only for an equipped native D35E `Head` slot item, and exposed Hand checks look only for an equipped native `Hands` slot item. If the relevant slot is empty, the pre-hit hook subtracts the active armor/profile armor contribution and leaves shield, natural armor, Dexterity, deflection, dodge, size, and other AC sources alone.
+
+`Called shots use local armor piece AC` is another disabled-by-default house rule. It runs before exposed head/hand checks and never stacks with them. When the master setting and the selected location toggle are both enabled, the pre-hit hook resolves the target's active PAcS profile or recognized native Armor-slot baseline suit, then replaces only the armor/profile armor contribution with the local armor piece contribution for the called location. The per-location menu stores world-level overrides keyed by called-shot location ID; missing locations default enabled underneath the disabled master switch so new profile locations participate only after a GM opts into the rule.
 
 The `PAcS Helmets` Item compendium provides editable `[PAcS]` Head-slot starter records with house-rule weight/price defaults. Those helmets can prevent exposed headshots because they occupy the native `Head` slot, but their old local armor value flags are ignored by runtime AC math.
 

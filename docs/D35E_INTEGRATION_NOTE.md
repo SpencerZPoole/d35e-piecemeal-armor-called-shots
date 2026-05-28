@@ -31,7 +31,7 @@ Called shots use D35E's native attack dialog and attack math:
 - `ChatAttack.addAttack` is wrapped to inject a D35E attack modifier such as `Called Shot: Ear -10`.
 - Melee called-shot range/reach penalties are calculated from token occupied-space adjacency. D35E's native `system.traits.reach` is read as a numeric feet value for context, but reach does not remove the RAW-adapted `-2` penalty when the target is not adjacent.
 - `ChatAttack` damage card builders are wrapped to carry called-shot metadata into D35E's stored chat template data.
-- `D35E.DamageRoll.preHitCheck` is used for RAW-adapted called-shot defense adjustments before D35E decides hit or crit: touch called shots use normal AC, non-soft cover can be doubled, and optional exposed head/hand settings can subtract only the active armor contribution when the relevant native slot is empty.
+- `D35E.DamageRoll.preHitCheck` is used for RAW-adapted called-shot defense adjustments before D35E decides hit or crit: touch called shots use normal AC, non-soft cover can be doubled, optional local armor piece AC can replace only the active armor/profile armor contribution for selected locations, and optional exposed head/hand settings can subtract only the active armor contribution when the relevant native slot is empty. Local armor runs first and prevents exposed head/hand from double-applying to the same hit check.
 - `D35E.DamageRoll.hit` and `D35E.DamageRoll.calculateDamage` are observed so the module can determine post-DR severity after D35E resolves the native damage flow.
 - `ActorDamageHelper.applyDamage` is wrapped so called-shot outcomes apply, ask for GM confirmation, or stay advisory only after the native Apply Damage action completes.
 

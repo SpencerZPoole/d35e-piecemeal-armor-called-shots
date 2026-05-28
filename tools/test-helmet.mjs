@@ -15,6 +15,8 @@ globalThis.game = {
       if (key === "enableHelmetHeadCoverage") return legacyHelmetCoverageEnabled;
       if (key === "enableExposedHeadshots") return exposedHeadshotsEnabled;
       if (key === "enableExposedHandShots") return false;
+      if (key === "enableCalledShotLocalArmor") return false;
+      if (key === "calledShotLocalArmorLocations") return {};
       if (key === "enableHelmetSkillPenalties") return helmetSkillPenaltiesEnabled;
       if (key === "enableArmorAutomation") return true;
       if (key === "armorWorkflowMode") return "nativeProfile";

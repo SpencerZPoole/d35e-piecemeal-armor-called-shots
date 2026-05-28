@@ -33,6 +33,7 @@ The module has two main workflows:
 | `PAcS Helmets` pack | Compendium Packs sidebar | Optional Head-slot helmet records for exposed headshot coverage and Spot/Listen penalty support. |
 | Called Shot Effects | Actor sheet header after an applied outcome | Lets a GM restore called-shot effects if the wrong damage card or target was used. |
 | Profile editor | Module settings | Edits locations, penalties, coverage slots, and outcome effects. |
+| Local armor locations | Module settings | Chooses which called-shot locations may use the advanced local armor piece AC house rule. |
 
 ## Armor Piece Pack
 
@@ -62,13 +63,15 @@ Settings:
 - `Edit called shot profiles`: opens the profile editor for locations, attack penalties, severity tiers, coverage slots, and outcome effects.
 - `Enable piecemeal armor`: adds the PAcS inventory slots, item piece fields, piecemeal armor math, and hidden D35E carrier. Turning it off hides the PAcS slots and suspends piecemeal armor automation without disabling called shots. This is the intended called-shots-only mode.
 - `Enable called shots`: adds the `Called Shot` selector to D35E's native attack dialog, applies the configured attack penalty to the native roll breakdown, carries context into Apply Damage, and posts outcome cards. Turning it off does not disable piecemeal armor.
+- `Called shots use local armor piece AC`: advanced, optional, and disabled by default. Selected called-shot locations replace only the defender's armor/profile armor contribution with the matching local armor piece contribution. This usually makes called shots easier for the attacker.
+- `Configure called-shot local armor locations`: controls which active profile locations may use local armor piece AC when the advanced master setting is on. New or missing locations default to enabled under the disabled master switch.
 - `Enable exposed headshots`: optional and disabled by default. Head, Eye, and Ear called shots remove the defender's active armor bonus only when the target has no equipped item in D35E's native `Head` slot.
 - `Enable exposed hand shots`: optional and disabled by default. Hand called shots remove the defender's active armor bonus only when the target has no equipped item in D35E's native `Hands` slot.
 - `Apply helmet Spot/Listen penalties`: optional and disabled by default. Configured PAcS helmets in D35E's native `Head` slot add their table-defined Spot and Listen penalties to native D35E skill rolls.
 - `Called-shot effect automation`: controls actor changes after Apply Damage. `GM confirms severe effects` is the default: normal outcomes apply automatically, while critical and debilitating outcomes ask the GM first. `Apply effects automatically` applies all resolved outcomes. `Advisory only` never changes actor data unless the GM clicks a chat-card severity button.
 - `Called shots on full attacks`: controls whether full attacks ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections. See [Full Attacks](#full-attacks).
 - `Called-shot full-attack feat rules`: controls only whether the module blocks full-attack called shots when the attacker lacks the optional feats. `Require feats (RAW-adapted)` is the default. `Warn only` allows the full attack but warns about missing Improved or Greater Called Shot. `Do not require feats` allows the full attack without warnings. Feat bonuses still require the actor to actually have the feat.
-- Called-shot AC uses normal applicable AC by default. See [Called-Shot AC And Exposed Slots](#called-shot-ac-and-exposed-slots).
+- Called-shot AC uses normal applicable AC by default. See [Called-Shot AC, Local Armor, And Exposed Slots](#called-shot-ac-local-armor-and-exposed-slots).
 - `Show called-shot coverage overlay`: adds the matching piecemeal armor coverage slot to called-shot chat cards as advisory information only. It does not change called-shot AC.
 - GM-only source/profile metadata appears automatically to GM users; players still see the useful called-shot result information.
 
@@ -92,7 +95,7 @@ Default location penalties:
 
 Those defaults come from the PF1e Ultimate Combat called-shot table and can be edited in the profile editor.
 
-## Called-Shot AC And Exposed Slots
+## Called-Shot AC, Local Armor, And Exposed Slots
 
 A called shot carries its location into D35E's native Apply Damage workflow. By default, the attack is checked against the defender's normal applicable AC. PAcS no longer replaces the armor bonus with only the armor covering that body part.
 
@@ -103,12 +106,21 @@ The module still applies the Ultimate Combat called-shot defense rules that D35E
 - Concealment miss chances are increased as the called-shot rule describes.
 - If damage reduction fully negates the damage, the called shot has no special effect.
 
+The optional local armor piece AC rule is an advanced non-RAW house rule:
+
+- `Called shots use local armor piece AC`: selected locations replace the defender's armor/profile armor contribution with the matching local armor piece contribution.
+- `Configure called-shot local armor locations`: lets the GM turn that local armor replacement on or off per called-shot location. The location defaults are all enabled, but they do nothing while the master setting is off.
+
+Only the armor contribution changes. Shield, natural armor, Dexterity, deflection, dodge, size, and other AC sources remain intact. PAcS resolves local armor from active PAcS profiles and recognized native Armor-slot baseline suits. It does not guess custom armor that cannot resolve through the catalog or explicit piece data.
+
+Example: a target's active profile contributes `7` armor AC, but the called location matches only a `1` point arm piece. With local armor piece AC enabled for that location, the Apply Damage AC Details row shows `Called Shot Local Armor: Arm (profile 7 -> local piece 1) -6`. With the setting disabled, the attack checks the target's normal applicable AC.
+
 The optional exposed rules are separate non-RAW house rules:
 
 - `Enable exposed headshots`: Head, Eye, and Ear called shots remove the target's active armor/profile armor contribution only if the target has no equipped item in D35E's native `Head` slot.
 - `Enable exposed hand shots`: Hand called shots remove the target's active armor/profile armor contribution only if the target has no equipped item in D35E's native `Hands` slot.
 
-These settings remove only the armor contribution, including armor enhancement as part of armor AC. They do not remove shield, natural armor, Dexterity, deflection, dodge, size, or other AC sources. Any equipped item in the relevant native slot prevents the exposed adjustment; it does not need to come from a PAcS pack.
+These settings remove only the armor contribution, including armor enhancement as part of armor AC. They do not remove shield, natural armor, Dexterity, deflection, dodge, size, or other AC sources. Any equipped item in the relevant native slot prevents the exposed adjustment; it does not need to come from a PAcS pack. If local armor piece AC applies to the same hit check, exposed head/hand does not stack on top of it.
 
 Example: a target with chainmail contributing `5` armor AC and no equipped Head-slot item is attacked with a Head called shot. With exposed headshots disabled, the attack checks the target's normal AC. With exposed headshots enabled, the Apply Damage AC Details row shows `Called Shot Exposed Head: no Head-slot item (armor 5 -> 0) -5`.
 
@@ -313,7 +325,9 @@ Clear occupied `PAcS:` slots if the actor is already using the native workflow. 
 
 ### Called-shot AC did not change in Apply Damage
 
-That is normal unless an optional exposed setting applies. Baseline called shots use the defender's normal applicable AC. The Apply Damage AC should change for touch called shots, non-soft cover, and the optional exposed head/hand house rules.
+That is normal unless an optional house rule or RAW-adapted defense adjustment applies. Baseline called shots use the defender's normal applicable AC. The Apply Damage AC should change for touch called shots, non-soft cover, optional local armor piece AC, and the optional exposed head/hand house rules.
+
+For local armor piece AC, enable `Called shots use local armor piece AC`, open `Configure called-shot local armor locations`, and confirm the chosen called-shot location is checked. The target must have a resolvable PAcS profile or recognized native Armor-slot baseline suit; unknown custom armor is not guessed.
 
 For exposed headshots, enable `Enable exposed headshots` and confirm the target has no equipped item in D35E's native `Head` slot. For exposed hand shots, enable `Enable exposed hand shots` and confirm the target has no equipped item in the native `Hands` slot. No-check damage intentionally skips called-shot AC adjustments.
 

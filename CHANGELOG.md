@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added disabled-by-default `Called shots use local armor piece AC`, an advanced house rule that replaces only the defender's armor/profile armor contribution with matching local piece armor for selected called-shot locations.
+- Added `Configure called-shot local armor locations`, a GM settings menu that lets tables enable or disable the local armor piece AC rule per active called-shot profile location.
+- Preserved exposed head/hand shots as separate fallback house rules: local armor runs first when enabled for a location, and exposed head/hand does not double-apply to the same hit check.
+- Documented the feature as a future v1.6.0-style optional house rule that partially helps issue #5's local-armor-by-location idea while leaving helmet family-cap inheritance open.
+
 ## 1.5.0
 
 - Rebased called-shot AC behavior on the Ultimate Combat default: called shots now keep the defender's normal applicable AC instead of replacing armor AC with local piecemeal coverage.

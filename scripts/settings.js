@@ -147,6 +147,39 @@ export function buildProfileManagerContext(profiles, activeProfileId = null) {
   };
 }
 
+export function normalizeLocalArmorLocationSettings(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  return Object.fromEntries(Object.entries(source).map(([key, enabled]) => [key, enabled !== false]));
+}
+
+export function buildLocalArmorLocationSettingsContext(profiles, locationSettings = {}) {
+  const normalized = normalizeCalledShotProfiles(profiles);
+  const activeProfile = normalized.profiles.find((profile) => profile.id === normalized.activeProfileId) ?? normalized.profiles[0];
+  const settings = normalizeLocalArmorLocationSettings(locationSettings);
+  return {
+    profileLabel: activeProfile.label,
+    locations: (activeProfile.locations ?? [])
+      .filter((location) => location.enabled !== false)
+      .map((location) => ({
+        id: location.id,
+        label: location.label,
+        coverageSlot: location.coverageSlot ?? "",
+        difficulty: location.difficulty ?? "",
+        enabled: settings[location.id] !== false
+      }))
+  };
+}
+
+export function updateLocalArmorLocationSettings(currentSettings, formData, profiles) {
+  const current = normalizeLocalArmorLocationSettings(currentSettings);
+  const context = buildLocalArmorLocationSettingsContext(profiles, current);
+  for (const location of context.locations) {
+    current[location.id] = formData[`location.${location.id}.enabled`] === true ||
+      formData[`location.${location.id}.enabled`] === "on";
+  }
+  return current;
+}
+
 export function updateProfilesFromProfileManager(profiles, formData, activeProfileId) {
   const normalized = normalizeCalledShotProfiles(profiles);
   const profile = normalized.profiles.find((entry) => entry.id === activeProfileId) ?? normalized.profiles[0];
@@ -172,6 +205,64 @@ export function updateProfilesFromProfileManager(profiles, formData, activeProfi
   }
   normalized.activeProfileId = profile.id;
   return normalizeCalledShotProfiles(normalized);
+}
+
+export class LocalArmorLocationSettings extends HandlebarsApplication {
+  static DEFAULT_OPTIONS = {
+    id: `${MODULE_ID}-local-armor-locations`,
+    tag: "form",
+    classes: ["standard-form", "d35e-pacs", "called-shot-local-armor-settings"],
+    window: {
+      title: `${MODULE_TITLE}: Called-Shot Local Armor`,
+      icon: "fa-solid fa-shield-halved",
+      resizable: true
+    },
+    position: {
+      width: 680,
+      height: 620
+    }
+  };
+
+  static PARTS = {
+    body: {
+      template: `modules/${MODULE_ID}/templates/local-armor-location-settings.hbs`,
+      scrollable: [".d35e-pacs-local-armor-locations"]
+    }
+  };
+
+  async _prepareContext(options = {}) {
+    return {
+      ...(await super._prepareContext(options)),
+      ...buildLocalArmorLocationSettingsContext(
+        game.settings.get(MODULE_ID, SETTINGS.calledShotProfiles),
+        game.settings.get(MODULE_ID, SETTINGS.calledShotLocalArmorLocations)
+      )
+    };
+  }
+
+  async _onRender(context, options) {
+    await super._onRender(context, options);
+    this.element?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      this.saveLocalArmorLocations().catch((error) => {
+        console.error(`${MODULE_ID} | Failed to save called-shot local armor locations.`, error);
+        ui.notifications.error(error.message ?? String(error));
+      });
+    });
+  }
+
+  async saveLocalArmorLocations() {
+    const formData = new FormData(this.element);
+    const data = Object.fromEntries(formData.entries());
+    const settings = updateLocalArmorLocationSettings(
+      game.settings.get(MODULE_ID, SETTINGS.calledShotLocalArmorLocations),
+      data,
+      game.settings.get(MODULE_ID, SETTINGS.calledShotProfiles)
+    );
+    await game.settings.set(MODULE_ID, SETTINGS.calledShotLocalArmorLocations, settings);
+    ui.notifications.info("Called-shot local armor locations saved.");
+    this.render({ force: true });
+  }
 }
 
 export class CalledShotProfileEditor extends HandlebarsApplication {
@@ -348,6 +439,15 @@ export function registerSettings() {
     default: false
   });
 
+  game.settings.register(MODULE_ID, SETTINGS.enableCalledShotLocalArmor, {
+    name: "Called shots use local armor piece AC",
+    hint: "Advanced house rule. This almost always makes called shots easier for the attacker by using only the defender's matching armor piece AC for the armor bonus, not the armor bonus from the full suit/profile.",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
   game.settings.register(MODULE_ID, SETTINGS.enableHelmetHeadCoverage, {
     name: "Enable helmet head coverage house rule",
     hint: "Compatibility setting retained for older worlds. Helmet local armor AC has been superseded by exposed headshots.",
@@ -449,12 +549,29 @@ export function registerSettings() {
     default: getDefaultCalledShotProfiles()
   });
 
+  game.settings.register(MODULE_ID, SETTINGS.calledShotLocalArmorLocations, {
+    name: "Called-shot local armor locations",
+    scope: "world",
+    config: false,
+    type: Object,
+    default: {}
+  });
+
   game.settings.registerMenu(MODULE_ID, "calledShotProfileEditor", {
     name: "Edit called shot profiles",
     label: "Open Profile Editor",
     hint: "Edit locations, penalties, severity tiers, coverage mapping, and outcome effects as JSON.",
     icon: "fas fa-crosshairs",
     type: CalledShotProfileEditor,
+    restricted: true
+  });
+
+  game.settings.registerMenu(MODULE_ID, "calledShotLocalArmorLocations", {
+    name: "Configure called-shot local armor locations",
+    label: "Configure Locations",
+    hint: "Choose which called-shot locations use local armor piece AC when the advanced house rule is enabled.",
+    icon: "fas fa-shield-alt",
+    type: LocalArmorLocationSettings,
     restricted: true
   });
 }
