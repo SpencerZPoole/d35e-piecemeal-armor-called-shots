@@ -19,6 +19,9 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Install pack test dependency
+        run: npm install --no-audit --no-fund --no-save classic-level
+
       - name: Validate module
         run: npm run validate
 

@@ -40,6 +40,9 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Install pack test dependency
+        run: npm install --no-audit --no-fund --no-save classic-level
+
       - name: Validate module
         run: npm run validate
 
@@ -65,12 +68,22 @@ jobs:
             echo "Missing release notes file: $notes_file" >&2
             exit 1
           fi
-          gh release create "${{ steps.release.outputs.tag }}" \
-            dist/module.json \
-            dist/d35e-piecemeal-armor-called-shots-${{ steps.release.outputs.tag }}.zip \
-            --title "${{ steps.release.outputs.tag }}" \
-            --notes-file "$notes_file" \
-            --verify-tag
+          if gh release view "${{ steps.release.outputs.tag }}" >/dev/null 2>&1; then
+            gh release edit "${{ steps.release.outputs.tag }}" \
+              --title "${{ steps.release.outputs.tag }}" \
+              --notes-file "$notes_file"
+            gh release upload "${{ steps.release.outputs.tag }}" \
+              dist/module.json \
+              dist/d35e-piecemeal-armor-called-shots-${{ steps.release.outputs.tag }}.zip \
+              --clobber
+          else
+            gh release create "${{ steps.release.outputs.tag }}" \
+              dist/module.json \
+              dist/d35e-piecemeal-armor-called-shots-${{ steps.release.outputs.tag }}.zip \
+              --title "${{ steps.release.outputs.tag }}" \
+              --notes-file "$notes_file" \
+              --verify-tag
+          fi
 
       - name: Publish Foundry package version
         if: env.FOUNDRY_PACKAGE_RELEASE_TOKEN != ''
