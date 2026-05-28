@@ -30,9 +30,9 @@ globalThis.game = {
 };
 
 const { getDefaultCalledShotProfiles } = await import("../scripts/profiles.js");
-const { FULL_ATTACK_FEAT_RULE_MODES, FULL_ATTACK_MODES, OUTCOME_MODES, SETTINGS } = await import("../scripts/constants.js");
+const { FLAGS, FULL_ATTACK_FEAT_RULE_MODES, FULL_ATTACK_MODES, MODULE_ID, OUTCOME_MODES, SETTINGS } = await import("../scripts/constants.js");
 const { buildProfileManagerContext, registerSettings, updateProfilesFromProfileManager } = await import("../scripts/settings.js");
-const { hideDisabledArmorAutomationRows } = await import("../scripts/ui.js");
+const { createPiecemealItemPanel, hideDisabledArmorAutomationRows } = await import("../scripts/ui.js");
 const {
   CALLED_SHOT_QUEUE_NAME,
   CALLED_SHOT_SELECT_NAME,
@@ -127,6 +127,146 @@ assert.equal(itemRows[0].hidden, true);
 assert.equal(itemRows[1].hidden, false);
 assert.equal(slotRows.filter((row) => row.hidden).map((row) => row.dataset.slot).join(","), "pacsTorso,pacsArms,pacsLegs");
 assert.equal(slotRows.find((row) => row.dataset.slot === "armor").hidden, false);
+
+class FakeClassList {
+  constructor() {
+    this.values = new Set();
+  }
+
+  add(...classNames) {
+    for (const className of classNames) this.values.add(className);
+  }
+
+  contains(className) {
+    return this.values.has(className);
+  }
+}
+
+class FakeElement {
+  constructor(tagName) {
+    this.tagName = String(tagName).toUpperCase();
+    this.attributes = {};
+    this.children = [];
+    this.classList = new FakeClassList();
+    this.dataset = {};
+    this.style = {};
+  }
+
+  append(...children) {
+    this.children.push(...children);
+  }
+
+  appendChild(child) {
+    this.children.push(child);
+    return child;
+  }
+
+  setAttribute(key, value) {
+    this.attributes[key] = String(value);
+  }
+
+  get textContent() {
+    return [
+      this._textContent ?? "",
+      ...this.children.map((child) => child?.textContent ?? "")
+    ].join("");
+  }
+
+  set textContent(value) {
+    this._textContent = String(value);
+  }
+
+  querySelector(selector) {
+    return this.querySelectorAll(selector)[0] ?? null;
+  }
+
+  querySelectorAll(selector) {
+    const results = [];
+    const matches = (element) => {
+      if (!(element instanceof FakeElement)) return false;
+      if (selector.startsWith(".")) return element.classList.contains(selector.slice(1));
+      if (selector === "details") return element.tagName === "DETAILS";
+      if (selector === "section") return element.tagName === "SECTION";
+      const nameMatch = selector.match(/^\[name="(.+)"\]$/);
+      if (nameMatch) return element.name === nameMatch[1];
+      return element.tagName.toLowerCase() === selector.toLowerCase();
+    };
+    const walk = (element) => {
+      for (const child of element.children ?? []) {
+        if (matches(child)) results.push(child);
+        if (child instanceof FakeElement) walk(child);
+      }
+    };
+    walk(this);
+    return results;
+  }
+}
+
+const originalDocument = globalThis.document;
+globalThis.document = {
+  createElement(tagName) {
+    return new FakeElement(tagName);
+  },
+  createTextNode(text) {
+    return { textContent: String(text) };
+  }
+};
+const panel = createPiecemealItemPanel({
+  type: "equipment",
+  system: {
+    armor: { value: 0, enh: 0, dex: 2, acp: 2 },
+    equipmentSubtype: "mediumArmor",
+    price: 25,
+    spellFailure: 15,
+    weight: 10
+  },
+  getFlag(moduleId, key) {
+    if (moduleId !== MODULE_ID) return undefined;
+    if (key === FLAGS.piecemeal) {
+      return {
+        enabled: true,
+        armorFamily: "chain",
+        catalogId: "chain-legs",
+        coverageSlots: "legs; feet",
+        pieceCategory: "legs",
+        suitId: "test-suit"
+      };
+    }
+    if (key === FLAGS.helmet) {
+      return {
+        enabled: true,
+        armorFamily: "chain",
+        coverageSlots: "head; eyes; ears",
+        localArmorBonus: 5
+      };
+    }
+    return undefined;
+  }
+});
+globalThis.document = originalDocument;
+assert.deepEqual(panel.querySelectorAll(".d35e-pacs-section").map((section) => section.dataset.d35ePacsPanelSection), [
+  "Piecemeal armor",
+  "Magic, material, and suit data",
+  "Helmet head coverage"
+]);
+assert.deepEqual(panel.querySelectorAll("details").map((details) => details.querySelector("summary").textContent), [
+  "Show magic and suit fields",
+  "Helmet coverage and skill penalties"
+]);
+for (const fieldName of [
+  `flags.${MODULE_ID}.${FLAGS.piecemeal}.catalogId`,
+  `flags.${MODULE_ID}.${FLAGS.piecemeal}.pieceCategory`,
+  `flags.${MODULE_ID}.${FLAGS.piecemeal}.coverageSlots`,
+  `flags.${MODULE_ID}.${FLAGS.piecemeal}.suitId`,
+  `flags.${MODULE_ID}.${FLAGS.piecemeal}.masterwork`,
+  `flags.${MODULE_ID}.${FLAGS.helmet}.armorFamily`,
+  `flags.${MODULE_ID}.${FLAGS.helmet}.localArmorBonus`,
+  `flags.${MODULE_ID}.${FLAGS.helmet}.coverageSlots`,
+  `flags.${MODULE_ID}.${FLAGS.helmet}.spotPenalty`
+]) {
+  assert.ok(panel.querySelector(`[name="${fieldName}"]`), `Missing PAcS panel field: ${fieldName}`);
+}
+
 const context = buildProfileManagerContext(profiles);
 assert.equal(context.activeProfileId, "pf1e-uc-raw-adapted");
 assert.ok(context.locations.length >= 10);

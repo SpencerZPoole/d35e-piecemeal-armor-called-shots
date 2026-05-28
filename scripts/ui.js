@@ -53,6 +53,7 @@ function appendIconText(element, iconClass, text) {
 
 function buildLabeledInput(labelText, type, name, value, attributes = {}) {
   const label = document.createElement("label");
+  label.classList.add("d35e-pacs-field");
   label.append(document.createTextNode(labelText));
   const input = document.createElement("input");
   input.type = type;
@@ -65,6 +66,7 @@ function buildLabeledInput(labelText, type, name, value, attributes = {}) {
 
 function buildLabeledSelect(labelText, name, value, options) {
   const label = document.createElement("label");
+  label.classList.add("d35e-pacs-field");
   label.append(document.createTextNode(labelText));
   const select = document.createElement("select");
   select.name = name;
@@ -77,6 +79,32 @@ function buildLabeledSelect(labelText, name, value, options) {
   }
   label.append(select);
   return label;
+}
+
+function createPacsPanelSection(title) {
+  const section = document.createElement("section");
+  section.classList.add("d35e-pacs-section");
+  section.dataset.d35ePacsPanelSection = title;
+  const heading = document.createElement("h4");
+  heading.classList.add("d35e-pacs-section-title");
+  heading.textContent = title;
+  section.append(heading);
+  return section;
+}
+
+function createPacsPanelGrid() {
+  const grid = document.createElement("div");
+  grid.classList.add("d35e-pacs-grid");
+  return grid;
+}
+
+function createPacsAdvancedSection(title) {
+  const details = document.createElement("details");
+  details.classList.add("d35e-pacs-advanced-section");
+  const summary = document.createElement("summary");
+  summary.textContent = title;
+  details.append(summary);
+  return details;
 }
 
 function readPanelControlValue(control) {
@@ -638,12 +666,9 @@ export async function openCalledShotLedgerDialog(actor) {
   });
 }
 
-function injectPiecemealItemPanel(item, root, form) {
-  if (root.querySelector("[data-d35e-pacs-piece-panel]")) return;
+export function createPiecemealItemPanel(item) {
   const flag = item.getFlag?.(MODULE_ID, FLAGS.piecemeal) ?? {};
   const helmetFlag = getHelmetFlag(item);
-  const detailsTab = root.querySelector('.tab[data-tab="details"]') ?? root.querySelector(".tab.details");
-  const insertTarget = detailsTab ?? form;
   const fieldset = document.createElement("fieldset");
   fieldset.classList.add("d35e-pacs-fieldset");
   fieldset.dataset.d35ePacsPiecePanel = "true";
@@ -651,7 +676,8 @@ function injectPiecemealItemPanel(item, root, form) {
   legend.textContent = "PAcS Armor Options";
   const help = document.createElement("p");
   help.classList.add("d35e-pacs-help");
-  help.textContent = "Use piecemeal fields for custom Torso/Arms/Legs armor pieces. Use helmet fields for the optional head-coverage house rule; helmets affect Head, Eye, and Ear called-shot armor only.";
+  help.textContent = "Configure PAcS armor-piece values or optional helmet local armor for this item.";
+  const armorSection = createPacsPanelSection("Piecemeal armor");
   const enabledLabel = document.createElement("label");
   enabledLabel.classList.add("d35e-pacs-checkbox");
   const enabled = document.createElement("input");
@@ -659,8 +685,7 @@ function injectPiecemealItemPanel(item, root, form) {
   enabled.name = `flags.${MODULE_ID}.${FLAGS.piecemeal}.enabled`;
   enabled.checked = flag.enabled === true;
   enabledLabel.append(enabled, document.createTextNode(" Use explicit piecemeal armor values"));
-  const grid = document.createElement("div");
-  grid.classList.add("d35e-pacs-grid");
+  const grid = createPacsPanelGrid();
   const category = flag.equipmentSubtype ?? item.system?.equipmentSubtype ?? "lightArmor";
   const coverage = flag.coverageSlots ?? flag.coverageSlot ?? flag.slot ?? "torso";
   grid.append(
@@ -680,16 +705,23 @@ function injectPiecemealItemPanel(item, root, form) {
     buildLabeledInput("Armor family ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.armorFamily`, flag.armorFamily ?? flag.family ?? "", {
       placeholder: "plate"
     }),
-    buildLabeledInput("Material ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.material`, flag.material ?? "", {
-      placeholder: "mithral"
-    }),
     buildLabeledInput("Armor bonus ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.armorBonus`, flag.armorBonus ?? item.system?.armor?.value ?? 0),
-    buildLabeledInput("Enhancement bonus ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.enhancementBonus`, flag.enhancementBonus ?? item.system?.armor?.enh ?? 0),
     buildLabeledInput("Max Dex ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.maxDex`, flag.maxDex ?? item.system?.armor?.dex ?? ""),
     buildLabeledInput("Armor check penalty ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.acp`, flag.acp ?? item.system?.armor?.acp ?? 0),
     buildLabeledInput("Arcane failure % ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.spellFailure`, flag.spellFailure ?? item.system?.spellFailure ?? 0),
     buildLabeledInput("Weight ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.weight`, flag.weight ?? item.system?.weight ?? 0),
-    buildLabeledInput("Cost ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.cost`, flag.cost ?? item.system?.price ?? 0),
+    buildLabeledInput("Cost ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.cost`, flag.cost ?? item.system?.price ?? 0)
+  );
+  armorSection.append(enabledLabel, grid);
+
+  const magicSection = createPacsPanelSection("Magic, material, and suit data");
+  const magicAdvanced = createPacsAdvancedSection("Show magic and suit fields");
+  const magicGrid = createPacsPanelGrid();
+  magicGrid.append(
+    buildLabeledInput("Material ", "text", `flags.${MODULE_ID}.${FLAGS.piecemeal}.material`, flag.material ?? "", {
+      placeholder: "mithral"
+    }),
+    buildLabeledInput("Enhancement bonus ", "number", `flags.${MODULE_ID}.${FLAGS.piecemeal}.enhancementBonus`, flag.enhancementBonus ?? item.system?.armor?.enh ?? 0),
     buildLabeledSelect("Armor category ", `flags.${MODULE_ID}.${FLAGS.piecemeal}.equipmentSubtype`, category, [
       ["clothing", "Clothing"],
       ["lightArmor", "Light armor"],
@@ -717,12 +749,14 @@ function injectPiecemealItemPanel(item, root, form) {
   masterwork.name = `flags.${MODULE_ID}.${FLAGS.piecemeal}.masterwork`;
   masterwork.checked = flag.masterwork === true || item.system?.masterwork === true;
   masterworkLabel.append(masterwork, document.createTextNode(" Masterwork piece"));
-  grid.append(masterworkLabel);
-  const helmetHeading = document.createElement("h4");
-  helmetHeading.textContent = "Helmet head coverage house rule";
+  magicGrid.append(masterworkLabel);
+  magicAdvanced.append(magicGrid);
+  magicSection.append(magicAdvanced);
+
+  const helmetSection = createPacsPanelSection("Helmet head coverage");
   const helmetHelp = document.createElement("p");
   helmetHelp.classList.add("d35e-pacs-help");
-  helmetHelp.textContent = "Configured helmets work from D35E's native Head slot. Their local armor bonus applies to Head, Eye, and Ear called shots only and never adds to total AC.";
+  helmetHelp.textContent = "Optional: configured Head-slot helmets protect Head, Eye, and Ear called shots only.";
   const helmetEnabledLabel = document.createElement("label");
   helmetEnabledLabel.classList.add("d35e-pacs-checkbox");
   const helmetEnabled = document.createElement("input");
@@ -730,20 +764,33 @@ function injectPiecemealItemPanel(item, root, form) {
   helmetEnabled.name = `flags.${MODULE_ID}.${FLAGS.helmet}.enabled`;
   helmetEnabled.checked = helmetFlag.enabled === true;
   helmetEnabledLabel.append(helmetEnabled, document.createTextNode(" Use as helmet head coverage"));
-  const helmetGrid = document.createElement("div");
-  helmetGrid.classList.add("d35e-pacs-grid");
+  const helmetGrid = createPacsPanelGrid();
   helmetGrid.append(
     buildLabeledSelect("Helmet family ", `flags.${MODULE_ID}.${FLAGS.helmet}.armorFamily`, helmetFlag.armorFamily ?? helmetFlag.family ?? "", HELMET_FAMILY_OPTIONS),
     buildLabeledInput("Head local armor bonus ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.localArmorBonus`, helmetFlag.localArmorBonus ?? "", {
       placeholder: "blank = D35E full armor bonus"
-    }),
+    })
+  );
+  const helmetAdvanced = createPacsAdvancedSection("Helmet coverage and skill penalties");
+  const helmetAdvancedGrid = createPacsPanelGrid();
+  helmetAdvancedGrid.append(
     buildLabeledInput("Helmet coverage slot(s) ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.coverageSlots`, helmetFlag.coverageSlots ?? helmetFlag.coverageSlot ?? DEFAULT_HELMET_COVERAGE, {
       placeholder: DEFAULT_HELMET_COVERAGE
     }),
     buildLabeledInput("Spot penalty ", "number", `flags.${MODULE_ID}.${FLAGS.helmet}.spotPenalty`, helmetFlag.spotPenalty ?? 0),
     buildLabeledInput("Listen penalty ", "number", `flags.${MODULE_ID}.${FLAGS.helmet}.listenPenalty`, helmetFlag.listenPenalty ?? 0)
   );
-  fieldset.append(legend, help, enabledLabel, grid, helmetHeading, helmetHelp, helmetEnabledLabel, helmetGrid);
+  helmetAdvanced.append(helmetAdvancedGrid);
+  helmetSection.append(helmetHelp, helmetEnabledLabel, helmetGrid, helmetAdvanced);
+  fieldset.append(legend, help, armorSection, magicSection, helmetSection);
+  return fieldset;
+}
+
+function injectPiecemealItemPanel(item, root, form) {
+  if (root.querySelector("[data-d35e-pacs-piece-panel]")) return;
+  const detailsTab = root.querySelector('.tab[data-tab="details"]') ?? root.querySelector(".tab.details");
+  const insertTarget = detailsTab ?? form;
+  const fieldset = createPiecemealItemPanel(item);
   fieldset.addEventListener("input", (event) => {
     const control = event.target;
     if (!isPacsPanelControl(control) || !["number", "text"].includes(control.type)) return;

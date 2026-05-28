@@ -1,7 +1,10 @@
 .d35e-pacs-fieldset {
   border: 1px solid rgba(120, 120, 120, 0.35);
+  box-sizing: border-box;
   margin: 10px 0;
   padding: 8px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .d35e-pacs-fieldset legend {
@@ -10,26 +13,78 @@
 }
 
 .d35e-pacs-help {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 
 .d35e-pacs-checkbox {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 8px;
+  min-width: 0;
+}
+
+.d35e-pacs-checkbox input[type="checkbox"] {
+  flex: 0 0 auto;
+}
+
+.d35e-pacs-section {
+  border-top: 1px solid rgba(120, 120, 120, 0.22);
+  margin-top: 8px;
+  min-width: 0;
+  padding-top: 8px;
+}
+
+.d35e-pacs-section:first-of-type {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.d35e-pacs-section-title {
+  margin: 0 0 6px;
 }
 
 .d35e-pacs-grid {
   display: grid;
-  gap: 6px;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  margin-top: 8px;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  margin-top: 6px;
+  min-width: 0;
 }
 
 .d35e-pacs-grid label {
   display: grid;
   gap: 2px;
+  min-width: 0;
+}
+
+.d35e-pacs-fieldset input,
+.d35e-pacs-fieldset select,
+.d35e-pacs-fieldset textarea {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.d35e-pacs-advanced-section {
+  border-top: 1px dashed rgba(120, 120, 120, 0.24);
+  margin-top: 8px;
+  min-width: 0;
+  padding-top: 6px;
+}
+
+.d35e-pacs-advanced-section summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+@media (max-width: 560px) {
+  .d35e-pacs-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .d35e-pacs-header-button {

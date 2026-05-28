@@ -8,6 +8,7 @@
 - Made `Enable piecemeal armor` hide the `PAcS:` inventory slots when disabled, giving called-shots-only tables a cleaner actor sheet.
 - Tightened masterwork, special material, and magic armor math so partial suit-bound magic stays inert, separately enchanted pieces use torso > legs > arms precedence, and mithral-style benefits require all active pieces to be mithral.
 - Fixed vanilla full-suit breakdown so copied masterwork/enhancement data stays suit-bound instead of making each generated piece separately magical.
+- Reduced item-sheet overflow in the PAcS armor/helmet configuration panel by splitting it into responsive sections with advanced fields collapsed by default.
 - Updated docs to explain the stricter baseline-vs-piece workflow and the breakdown prompt.
 
 ## 1.4.0
