@@ -330,6 +330,26 @@ assert.equal(enhancedRows.at(-1).name, "PAcS Enhancement");
 assert.equal(enhancedRows.at(-1).value, 2);
 assert.equal(enhancedRows.reduce((total, row) => total + row.value, 0), enhancedPiece.armorBonus + enhancedPiece.enhancementBonus);
 
+const partialSuitMagicPiece = calculatePiecemealArmor([
+  item("partial-suit-magic-torso", "Partial Suit Magic Torso", {
+    enabled: true,
+    pieceCategory: "torso",
+    coverageSlots: "torso",
+    armorFamily: "plate",
+    armorBonus: 5,
+    acp: 4,
+    enhancementBonus: 2,
+    masterwork: true,
+    magicMode: "suit",
+    suitId: "shared-magic-suit"
+  })
+]);
+assert.equal(partialSuitMagicPiece.completeSuit, false);
+assert.equal(partialSuitMagicPiece.enhancementBonus, 0);
+assert.equal(partialSuitMagicPiece.magic.masterworkApplied, false);
+assert.equal(partialSuitMagicPiece.acp, 4);
+assert.equal(partialSuitMagicPiece.magic.mode, "none");
+
 const separatelyEnhancedSuit = calculatePiecemealArmor([
   item("separate-torso", "Separately Enhanced Torso", {
     enabled: true,
@@ -362,6 +382,45 @@ const separatelyEnhancedSuit = calculatePiecemealArmor([
 assert.equal(separatelyEnhancedSuit.magic.appliedPieceId, "separate-torso");
 assert.equal(separatelyEnhancedSuit.enhancementBonus, 1);
 
+const noTorsoSeparateMagic = calculatePiecemealArmor([
+  item("separate-legs-only", "Separately Enhanced Legs", {
+    enabled: true,
+    pieceCategory: "legs",
+    coverageSlots: "legs",
+    armorFamily: "plate",
+    armorBonus: 1,
+    enhancementBonus: 4,
+    magicMode: "separatePiece"
+  }),
+  item("separate-arms-only", "Separately Enhanced Arms", {
+    enabled: true,
+    pieceCategory: "arms",
+    coverageSlots: "arms",
+    armorFamily: "plate",
+    armorBonus: 1,
+    enhancementBonus: 5,
+    magicMode: "separatePiece"
+  })
+]);
+assert.equal(noTorsoSeparateMagic.magic.appliedPieceId, "separate-legs-only");
+assert.equal(noTorsoSeparateMagic.enhancementBonus, 4);
+
+const separateMasterworkTorso = calculatePiecemealArmor([
+  item("separate-masterwork-torso", "Separately Masterwork Torso", {
+    enabled: true,
+    pieceCategory: "torso",
+    coverageSlots: "torso",
+    armorFamily: "chain",
+    armorBonus: 3,
+    acp: 3,
+    masterwork: true,
+    magicMode: "none"
+  })
+]);
+assert.equal(separateMasterworkTorso.enhancementBonus, 0);
+assert.equal(separateMasterworkTorso.magic.masterworkApplied, true);
+assert.equal(separateMasterworkTorso.acp, 2);
+
 const enchantedSuit = calculatePiecemealArmor([
   item("magic-suit-torso", "Magic Suit Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorFamily: "plate", armorBonus: 6, enhancementBonus: 2, magicMode: "suit", suitId: "plate-suit" }),
   item("magic-suit-legs", "Magic Suit Legs", { enabled: true, pieceCategory: "legs", coverageSlots: "legs", armorFamily: "plate", armorBonus: 1, enhancementBonus: 2, magicMode: "suit", suitId: "plate-suit" }),
@@ -371,6 +430,16 @@ assert.equal(enchantedSuit.magic.mode, "suit");
 assert.equal(enchantedSuit.enhancementBonus, 2);
 assert.equal(enchantedSuit.armorBonus, 9);
 
+const mismatchedSuitMagic = calculatePiecemealArmor([
+  item("mixed-suit-torso", "Mixed Suit Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorFamily: "plate", armorBonus: 5, enhancementBonus: 2, magicMode: "suit", suitId: "plate-suit-a" }),
+  item("mixed-suit-legs", "Mixed Suit Legs", { enabled: true, pieceCategory: "legs", coverageSlots: "legs", armorFamily: "plate", armorBonus: 1, enhancementBonus: 2, magicMode: "suit", suitId: "plate-suit-b" }),
+  item("mixed-suit-arms", "Mixed Suit Arms", { enabled: true, pieceCategory: "arms", coverageSlots: "arms", armorFamily: "plate", armorBonus: 1, enhancementBonus: 2, magicMode: "suit", suitId: "plate-suit-a" })
+]);
+assert.equal(mismatchedSuitMagic.completeSuit, true);
+assert.equal(mismatchedSuitMagic.magic.mode, "none");
+assert.equal(mismatchedSuitMagic.enhancementBonus, 0);
+assert.equal(mismatchedSuitMagic.armorBonus, 8);
+
 const mithralSuit = calculatePiecemealArmor([
   item("mithral-torso", "Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorFamily: "chain", material: "mithral", armorBonus: 4, maxDex: 4, acp: 4, spellFailure: 25, equipmentSubtype: "mediumArmor", weight: 20 }),
   item("mithral-legs", "Legs", { enabled: true, pieceCategory: "legs", coverageSlots: "legs", armorFamily: "chain", material: "mithral", armorBonus: 1, maxDex: 5, acp: 2, spellFailure: 15, equipmentSubtype: "mediumArmor", weight: 10 })
@@ -379,6 +448,25 @@ assert.equal(mithralSuit.maxDex, 6);
 assert.equal(mithralSuit.acp, 1);
 assert.equal(mithralSuit.spellFailure, 15);
 assert.equal(mithralSuit.equipmentSubtype, "lightArmor");
+
+const mixedMaterialSuit = calculatePiecemealArmor([
+  item("mithral-mixed-torso", "Mithral mixed torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorFamily: "chain", material: "mithral", armorBonus: 4, maxDex: 4, acp: 4, spellFailure: 25, equipmentSubtype: "mediumArmor", weight: 20 }),
+  item("normal-mixed-legs", "Normal mixed legs", { enabled: true, pieceCategory: "legs", coverageSlots: "legs", armorFamily: "chain", armorBonus: 1, maxDex: 5, acp: 2, spellFailure: 15, equipmentSubtype: "mediumArmor", weight: 10 })
+]);
+assert.equal(mixedMaterialSuit.material.allMithral, false);
+assert.equal(mixedMaterialSuit.maxDex, 4);
+assert.equal(mixedMaterialSuit.acp, 4);
+assert.equal(mixedMaterialSuit.spellFailure, 25);
+assert.equal(mixedMaterialSuit.equipmentSubtype, "mediumArmor");
+
+const singleMithralPiece = calculatePiecemealArmor([
+  item("single-mithral-arms", "Single Mithral Arms", { enabled: true, pieceCategory: "arms", coverageSlots: "arms", armorFamily: "chain", material: "mithral", armorBonus: 1, maxDex: 4, acp: 3, spellFailure: 30, equipmentSubtype: "mediumArmor", weight: 5 })
+]);
+assert.equal(singleMithralPiece.material.allMithral, true);
+assert.equal(singleMithralPiece.maxDex, 6);
+assert.equal(singleMithralPiece.acp, 0);
+assert.equal(singleMithralPiece.spellFailure, 20);
+assert.equal(singleMithralPiece.equipmentSubtype, "lightArmor");
 
 const duplicateCategory = calculatePiecemealArmor([
   item("weak-torso", "Weak Torso", { enabled: true, pieceCategory: "torso", coverageSlots: "torso", armorBonus: 2 }),

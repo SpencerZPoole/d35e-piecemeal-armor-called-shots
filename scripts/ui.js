@@ -2,7 +2,10 @@ import { FLAGS, MODULE_ID, OUTCOME_MODES, PIECE_CATEGORIES, SETTINGS } from "./c
 import { applyCalledShotOutcome, getCalledShotOutcomeMode } from "./called-shots.js";
 import { getFlagData, getItems, isAggregateArmorItem, isInternalArmorProfileItem, isPiecemealArmorPiece, previewArmorSync, RAW_ARMOR_PIECE_CATALOG, restoreArmorComponents, syncArmorAggregate } from "./armor.js";
 import {
+  breakDownArmorSuitForProfileSlot,
   categoryForPacsEquipmentSlot,
+  normalizeArmorProfileCategory,
+  previewArmorSuitBreakdownForSlot,
   readArmorProfile,
   setArmorProfileBaseline,
   setArmorProfileSlot
@@ -276,25 +279,31 @@ export async function openArmorSyncDialog(actor) {
   });
 }
 
-async function itemIdFromDrop(actor, event) {
+async function itemIdFromDrop(actor, event, { returnDetails = false } = {}) {
   const raw = event.dataTransfer?.getData("text/plain") || event.dataTransfer?.getData("application/json") || "";
-  if (!raw) return null;
+  const result = (itemId, created = false) => returnDetails ? { itemId, created } : itemId;
+  if (!raw) return result(null, false);
   let data;
   try {
     data = JSON.parse(raw);
   } catch (_error) {
-    return null;
+    return result(null, false);
   }
-  if (data.itemId && actor.items?.get?.(data.itemId)) return data.itemId;
+  if (data.itemId && actor.items?.get?.(data.itemId)) return result(data.itemId, false);
   if (data.uuid && globalThis.fromUuid) {
     const document = await fromUuid(data.uuid);
-    if (!document || document.documentName !== "Item") return null;
-    if (document.parent?.id === actor.id) return document.id;
-    if (!actor.createEmbeddedDocuments) return null;
+    if (!document || document.documentName !== "Item") return result(null, false);
+    if (document.parent?.id === actor.id) return result(document.id, false);
+    if (!actor.createEmbeddedDocuments) return result(null, false);
     const created = await actor.createEmbeddedDocuments("Item", [document.toObject()], { d35ePacsProfile: true });
-    return created?.[0]?.id ?? null;
+    return result(created?.[0]?.id ?? null, true);
   }
-  return null;
+  return result(null, false);
+}
+
+async function deleteCreatedDropItem(actor, itemId) {
+  if (!itemId || !actor?.deleteEmbeddedDocuments) return;
+  await actor.deleteEmbeddedDocuments("Item", [itemId], { d35ePacsProfile: true, d35ePacsDropRejected: true });
 }
 
 function actorItemIdFromDrop(actor, event) {
@@ -316,8 +325,8 @@ function actorItemIdFromDrop(actor, event) {
 function pacsSlotTargetFromEvent(event) {
   const target = event.target?.closest?.(".slot-placeholder-row[data-slot], [data-d35e-pacs-profile-slot]");
   if (!target) return null;
-  const slot = target.dataset.slot ?? target.dataset.d35ePacsProfileSlot ?? "";
-  const category = categoryForPacsEquipmentSlot(slot);
+  const slot = target.dataset.d35ePacsProfileSlot ?? target.dataset.slot ?? "";
+  const category = normalizeArmorProfileCategory(slot);
   return category ? { target, slot, category } : null;
 }
 
@@ -349,6 +358,25 @@ function hasOtherNativeArmorSlotItem(actor, itemId) {
 
 function shouldHandleArmorSlotDrop(actor, itemId) {
   return isPacsProfileOverrideItem(actor, itemId) && !hasOtherNativeArmorSlotItem(actor, itemId);
+}
+
+async function confirmArmorSuitBreakdown(preview) {
+  const targetLabel = preview.targetCategory
+    ? `${preview.targetCategory.charAt(0).toUpperCase()}${preview.targetCategory.slice(1)}`
+    : "this slot";
+  const content = [
+    `<p><strong>${escapeHtml(preview.itemName)}</strong> is a full armor item, not a PAcS armor piece.</p>`,
+    `<p>Break it down into matching PAcS armor pieces, assign the ${escapeHtml(targetLabel)} piece to this slot, and leave the other pieces in inventory?</p>`,
+    "<p>The original suit will be consumed. Basic price, weight, and material data will be copied where possible. Masterwork and enhancement data copied from a full suit stays tied to that suit, so a single piece does not gain those benefits by itself. Review special custom effects manually.</p>"
+  ].join("");
+  if (!globalThis.Dialog?.confirm) return globalThis.window?.confirm?.(`Break down ${preview.itemName} into PAcS armor pieces?`) === true;
+  return Dialog.confirm({
+    title: "Break Down Armor Suit?",
+    content,
+    yes: () => true,
+    no: () => false,
+    defaultYes: false
+  });
 }
 
 function wireNativeArmorProfileSlots(actor, root) {
@@ -401,9 +429,35 @@ function wireNativeArmorProfileSlots(actor, root) {
     slotTarget.target.classList.remove("d35e-pacs-drop-hover");
     void (async () => {
       try {
-        const itemId = await itemIdFromDrop(actor, event);
+        const drop = await itemIdFromDrop(actor, event, { returnDetails: true });
+        const itemId = drop.itemId;
         if (!itemId) return;
-        await setArmorProfileSlot(actor, slotTarget.category, itemId);
+        const item = actor.items?.get?.(itemId);
+        if (item && !isPiecemealArmorPiece(item)) {
+          const preview = previewArmorSuitBreakdownForSlot(actor, slotTarget.category, itemId);
+          if (preview.canBreak) {
+            const confirmed = await confirmArmorSuitBreakdown(preview);
+            if (!confirmed) {
+              if (drop.created) await deleteCreatedDropItem(actor, itemId);
+              return;
+            }
+            const result = await breakDownArmorSuitForProfileSlot(actor, slotTarget.category, itemId);
+            ui.notifications?.info(`Broke down ${preview.itemName} and assigned ${result.breakdown.assignedItemName}.`);
+            if (result.breakdown.copiedMagic) {
+              ui.notifications?.warn("Copied simple magic/custom armor data to the new PAcS pieces. Review special effects manually.");
+            }
+            return;
+          }
+          if (drop.created) await deleteCreatedDropItem(actor, itemId);
+          if (preview.reason === "notBreakdownSource") return;
+          throw new Error(preview.message);
+        }
+        try {
+          await setArmorProfileSlot(actor, slotTarget.category, itemId);
+        } catch (error) {
+          if (drop.created) await deleteCreatedDropItem(actor, itemId);
+          throw error;
+        }
         ui.notifications?.info(`Assigned armor to PAcS: ${slotTarget.category.charAt(0).toUpperCase()}${slotTarget.category.slice(1)}.`);
       } catch (error) {
         console.error(`${MODULE_ID} | Failed to assign armor profile slot.`, error);
@@ -425,8 +479,44 @@ function createIconAction({ title, iconClass, dataset, className = "d35e-pacs-it
   return action;
 }
 
+function hideRow(row) {
+  if (!row) return false;
+  row.hidden = true;
+  row.style.display = "none";
+  if (row.dataset) row.dataset.d35ePacsHidden = "true";
+  return true;
+}
+
+function hideImplementationDetailArmorRows(actor, root) {
+  if (!actor?.items || !root?.querySelectorAll) return 0;
+  let hidden = 0;
+  for (const row of root.querySelectorAll("[data-item-id]")) {
+    const item = actor.items.get?.(row.dataset.itemId);
+    if (item?.type === "equipment" && isInternalArmorProfileItem(item)) {
+      if (hideRow(row)) hidden += 1;
+    }
+  }
+  return hidden;
+}
+
+function hidePacsSlotPlaceholderRows(root) {
+  if (!root?.querySelectorAll) return 0;
+  let hidden = 0;
+  for (const row of root.querySelectorAll(".slot-placeholder-row[data-slot]")) {
+    if (!categoryForPacsEquipmentSlot(row.dataset?.slot)) continue;
+    if (hideRow(row)) hidden += 1;
+  }
+  return hidden;
+}
+
+export function hideDisabledArmorAutomationRows(actor, root) {
+  return {
+    internalRows: hideImplementationDetailArmorRows(actor, root),
+    pacsSlotRows: hidePacsSlotPlaceholderRows(root)
+  };
+}
+
 function appendInventoryIndicators(app, root) {
-  if (!isEnabled(SETTINGS.enableArmor, true)) return;
   const actor = sheetDocument(app);
   if (!actor?.items) return;
   for (const row of root.querySelectorAll("[data-item-id]")) {
@@ -719,7 +809,10 @@ function appendActorSheetControls(app, html) {
   const root = htmlRoot(html);
   const title = root?.querySelector?.(".window-header .window-title");
   const form = root?.querySelector?.("form");
-  wireNativeArmorProfileSlots(actor, root);
+  const armorEnabled = isEnabled(SETTINGS.enableArmor, true);
+  hideImplementationDetailArmorRows(actor, root);
+  if (!armorEnabled) hidePacsSlotPlaceholderRows(root);
+  else wireNativeArmorProfileSlots(actor, root);
   const activeLedgerEntries = game.user?.isGM ? getCalledShotLedger(actor).filter((entry) => !entry.restoredAt) : [];
   if ((title || form) && activeLedgerEntries.length && !root.querySelector("[data-d35e-pacs-called-shot-ledger]")) {
     const button = document.createElement("a");
@@ -733,7 +826,8 @@ function appendActorSheetControls(app, html) {
     if (title) title.after(button);
     else form.prepend(button);
   }
-  appendInventoryIndicators(app, root);
+  if (armorEnabled) appendInventoryIndicators(app, root);
+  if (!armorEnabled) return;
   root.addEventListener("click", (event) => {
     const clearProfileSlot = event.target.closest("[data-d35e-pacs-clear-profile-slot]");
     if (clearProfileSlot) {

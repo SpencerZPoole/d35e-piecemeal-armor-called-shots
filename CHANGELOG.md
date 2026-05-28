@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Changed PAcS slot assignment so Torso/Arms/Legs slots accept only real PAcS armor-piece items for the matching category.
+- Added a full-suit breakdown path for recognized native D35E armor dropped onto a PAcS slot, creating matching `[PAcS]` pieces while preserving visible price/weight totals and simple copied armor metadata.
+- Restricted the breakdown prompt to vanilla full armor suits; torso-only armor, shields, custom equipment, and other non-PAcS items are rejected instead of opening the breakdown flow.
+- Made `Enable piecemeal armor` hide the `PAcS:` inventory slots when disabled, giving called-shots-only tables a cleaner actor sheet.
+- Tightened masterwork, special material, and magic armor math so partial suit-bound magic stays inert, separately enchanted pieces use torso > legs > arms precedence, and mithral-style benefits require all active pieces to be mithral.
+- Fixed vanilla full-suit breakdown so copied masterwork/enhancement data stays suit-bound instead of making each generated piece separately magical.
+- Updated docs to explain the stricter baseline-vs-piece workflow and the breakdown prompt.
+
 ## 1.4.0
 
 - Added a `PAcS Armor Pieces` Item compendium with ready-to-use torso, arm, and leg override records generated from the D35E-calibrated armor catalog.

@@ -32,6 +32,7 @@ globalThis.game = {
 const { getDefaultCalledShotProfiles } = await import("../scripts/profiles.js");
 const { FULL_ATTACK_FEAT_RULE_MODES, FULL_ATTACK_MODES, OUTCOME_MODES, SETTINGS } = await import("../scripts/constants.js");
 const { buildProfileManagerContext, registerSettings, updateProfilesFromProfileManager } = await import("../scripts/settings.js");
+const { hideDisabledArmorAutomationRows } = await import("../scripts/ui.js");
 const {
   CALLED_SHOT_QUEUE_NAME,
   CALLED_SHOT_SELECT_NAME,
@@ -77,6 +78,55 @@ assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).conf
 assert.equal(registeredSettings.get(SETTINGS.locationArmorOverlay).name, "Show location armor overlay");
 assert.equal(registeredSettings.get(SETTINGS.locationArmorOverlay).default, false);
 assert.equal(registeredMenus.has("calledShotProfileEditor"), true);
+assert.match(registeredSettings.get(SETTINGS.enableArmor).hint, /hides the PAcS slots/);
+
+function fakeRow(dataset) {
+  return { dataset, hidden: false, style: {} };
+}
+
+const internalCarrier = {
+  id: "carrier",
+  type: "equipment",
+  flags: { "d35e-piecemeal-armor-called-shots": { internalArmor: { isInternal: true } } },
+  getFlag(moduleId, key) {
+    return this.flags?.[moduleId]?.[key];
+  }
+};
+const visibleArmor = {
+  id: "armor",
+  type: "equipment",
+  flags: {},
+  getFlag() {
+    return undefined;
+  }
+};
+const itemRows = [fakeRow({ itemId: "carrier" }), fakeRow({ itemId: "armor" })];
+const slotRows = [
+  fakeRow({ slot: "armor" }),
+  fakeRow({ slot: "pacsTorso" }),
+  fakeRow({ slot: "pacsArms" }),
+  fakeRow({ slot: "pacsLegs" }),
+  fakeRow({ slot: "shield" })
+];
+const fakeActor = {
+  items: {
+    get(id) {
+      return id === "carrier" ? internalCarrier : id === "armor" ? visibleArmor : null;
+    }
+  }
+};
+const fakeRoot = {
+  querySelectorAll(selector) {
+    if (selector === "[data-item-id]") return itemRows;
+    if (selector === ".slot-placeholder-row[data-slot]") return slotRows;
+    return [];
+  }
+};
+assert.deepEqual(hideDisabledArmorAutomationRows(fakeActor, fakeRoot), { internalRows: 1, pacsSlotRows: 3 });
+assert.equal(itemRows[0].hidden, true);
+assert.equal(itemRows[1].hidden, false);
+assert.equal(slotRows.filter((row) => row.hidden).map((row) => row.dataset.slot).join(","), "pacsTorso,pacsArms,pacsLegs");
+assert.equal(slotRows.find((row) => row.dataset.slot === "armor").hidden, false);
 const context = buildProfileManagerContext(profiles);
 assert.equal(context.activeProfileId, "pf1e-uc-raw-adapted");
 assert.ok(context.locations.length >= 10);

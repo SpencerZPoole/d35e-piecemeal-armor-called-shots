@@ -25,6 +25,7 @@ import {
   RAW_ARMOR_SUIT_CATALOG,
   readArmorPiece
 } from "./armor.js";
+import { buildArmorPieceDocumentsForSuit, PACK_SUIT_LABELS } from "./armor-piece-items.js";
 
 export const ARMOR_PROFILE_STATUS = Object.freeze({
   nativeArmor: "nativeArmor",
@@ -47,6 +48,7 @@ const PACS_SLOT_LABEL_KEYS = Object.freeze({
   [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.arms]]: "PAcS: Arms",
   [PACS_EQUIPMENT_SLOTS[PIECE_CATEGORIES.legs]]: "PAcS: Legs"
 });
+const PACS_SLOT_KEYS = Object.freeze(Object.values(PACS_EQUIPMENT_SLOTS));
 const PROFILE_CATEGORY_LABELS = Object.freeze({
   [PIECE_CATEGORIES.torso]: "Torso",
   [PIECE_CATEGORIES.arms]: "Arms",
@@ -87,11 +89,19 @@ function itemCollectionGet(items, id) {
 }
 
 export function categoryForPacsEquipmentSlot(slot) {
-  return PACS_SLOT_TO_CATEGORY[slot] ?? "";
+  if (PACS_SLOT_TO_CATEGORY[slot]) return PACS_SLOT_TO_CATEGORY[slot];
+  const normalizedSlot = String(slot ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+  if (!normalizedSlot) return "";
+  return Object.entries(PACS_SLOT_TO_CATEGORY)
+    .find(([slotKey]) => slotKey.toLowerCase().replace(/[^a-z0-9]+/g, "") === normalizedSlot)?.[1] ?? "";
+}
+
+export function normalizeArmorProfileCategory(value) {
+  return normalizePieceCategory(value) || categoryForPacsEquipmentSlot(value);
 }
 
 export function profileSlotForCategory(category) {
-  const normalized = normalizePieceCategory(category);
+  const normalized = normalizeArmorProfileCategory(category);
   return normalized ? PACS_EQUIPMENT_SLOTS[normalized] ?? null : null;
 }
 
@@ -181,30 +191,39 @@ export function decorateArmorProfileSourceDetails(actor, resolution = null) {
   };
 }
 
-export function registerPacsEquipmentSlots() {
-  const d35eConfig = globalThis.CONFIG?.D35E;
-  if (!d35eConfig) return false;
+function withoutPacsSlots(source = {}) {
+  return Object.fromEntries(
+    Object.entries(source).filter(([key]) => !PACS_SLOT_KEYS.includes(key))
+  );
+}
 
-  const defaultCapacities = d35eConfig.defaultSlotCapacities ?? {};
+export function syncPacsEquipmentSlots(enabled = isArmorAutomationEnabled()) {
+  const d35eConfig = globalThis.CONFIG?.D35E;
+  if (!d35eConfig) return { synced: false, reason: "missingD35EConfig", enabled };
+
+  const defaultCapacities = withoutPacsSlots(d35eConfig.defaultSlotCapacities ?? {});
   const nextCapacities = {};
   let inserted = false;
   for (const [key, value] of Object.entries(defaultCapacities)) {
-    if (Object.values(PACS_EQUIPMENT_SLOTS).includes(key)) continue;
     nextCapacities[key] = value;
-    if (key !== "armor") continue;
-    for (const slot of Object.values(PACS_EQUIPMENT_SLOTS)) nextCapacities[slot] = 1;
+    if (!enabled || key !== "armor") continue;
+    for (const slot of PACS_SLOT_KEYS) nextCapacities[slot] = 1;
     inserted = true;
   }
-  if (!inserted) {
-    for (const slot of Object.values(PACS_EQUIPMENT_SLOTS)) nextCapacities[slot] = 1;
+  if (enabled && !inserted) {
+    for (const slot of PACS_SLOT_KEYS) nextCapacities[slot] = 1;
   }
   d35eConfig.defaultSlotCapacities = nextCapacities;
   d35eConfig.equipmentSlots = d35eConfig.equipmentSlots ?? {};
-  d35eConfig.equipmentSlots.misc = {
-    ...(d35eConfig.equipmentSlots.misc ?? {}),
-    ...PACS_SLOT_LABEL_KEYS
-  };
-  return true;
+  const nextMiscSlots = withoutPacsSlots(d35eConfig.equipmentSlots.misc ?? {});
+  d35eConfig.equipmentSlots.misc = enabled
+    ? { ...nextMiscSlots, ...PACS_SLOT_LABEL_KEYS }
+    : nextMiscSlots;
+  return { synced: true, enabled, slots: PACS_SLOT_KEYS };
+}
+
+export function registerPacsEquipmentSlots() {
+  return syncPacsEquipmentSlots(true).synced === true;
 }
 
 export function getArmorWorkflowMode() {
@@ -231,7 +250,7 @@ export function readArmorProfile(actor) {
     const category = item?.system?.equipped === true ? categoryForPacsEquipmentSlot(item.system?.slot) : "";
     if (!category || slots[category]) continue;
     if (Object.hasOwn(flagSlots, category)) continue;
-    if (!isArmorProfileSourceItem(item)) continue;
+    if (!isPiecemealArmorPiece(item)) continue;
     slots[category] = item.id ?? item._id ?? null;
   }
   return {
@@ -310,10 +329,6 @@ function isArmorProfileCatalogSourceItem(item) {
     !isInternalArmorProfileItem(item);
 }
 
-function isArmorProfileSourceItem(item) {
-  return isPiecemealArmorPiece(item) || isArmorProfileCatalogSourceItem(item);
-}
-
 function profileSlotItemIds(profile) {
   return new Set(Object.values(profile?.slots ?? {}).filter(Boolean));
 }
@@ -340,10 +355,30 @@ function suitCatalogMatch(item) {
     if (byFamily) return byFamily;
   }
 
-  const name = keyForValue(item.name);
+  return suitCatalogMatchByName(item);
+}
+
+function suitCatalogMatchByName(item) {
+  const name = keyForValue(item?.name);
   return [...RAW_ARMOR_SUIT_CATALOG]
     .sort((a, b) => Math.max(...b.labels.map((label) => keyForValue(label).length)) - Math.max(...a.labels.map((label) => keyForValue(label).length)))
     .find((entry) => entry.labels.some((label) => name === keyForValue(label) || name.includes(keyForValue(label)))) ?? null;
+}
+
+function suitCatalogArmorBonus(suit) {
+  if (!isThreeCategorySuit(suit)) return null;
+  const pieces = Object.values(suit.pieceIds).map((pieceId) => pieceCatalogEntry(pieceId)).filter(Boolean);
+  return pieces.reduce((total, piece) => total + (finiteNumber(piece.armorBonus) ?? 0), 1);
+}
+
+function nativeFullSuitBreakdownMatch(item) {
+  if (!isNativeArmorItem(item)) return null;
+  const suit = suitCatalogMatchByName(item);
+  if (!suit || !isThreeCategorySuit(suit)) return null;
+  const armorBonus = finiteNumber(getProperty(item.system, "armor.value"));
+  const expectedArmorBonus = suitCatalogArmorBonus(suit);
+  if (armorBonus === null || expectedArmorBonus === null || armorBonus !== expectedArmorBonus) return null;
+  return suit;
 }
 
 function pieceFromCatalog(entry, item, category, { sourceKind = "profile", fullBaselineSuit = false } = {}) {
@@ -356,7 +391,8 @@ function pieceFromCatalog(entry, item, category, { sourceKind = "profile", fullB
     getProperty(system, "material.type"),
     getProperty(system, "material")
   ));
-  const masterwork = native.masterwork === true || system.masterwork === true || enhancementBonus > 0 || ["mithral", "adamantine"].includes(material);
+  const masterwork = native.masterwork === true || system.masterwork === true || enhancementBonus > 0;
+  const suitBoundMagic = fullBaselineSuit && (masterwork || enhancementBonus > 0);
   return {
     ...cloneData(entry),
     id: `${item?.id ?? item?._id ?? "catalog"}:${entry.id}:${category}`,
@@ -368,10 +404,10 @@ function pieceFromCatalog(entry, item, category, { sourceKind = "profile", fullB
     material: material || entry.material || "",
     masterwork,
     enhancementBonus,
-    magicMode: enhancementBonus > 0
-      ? fullBaselineSuit ? MAGIC_MODES.suit : MAGIC_MODES.separatePiece
-      : MAGIC_MODES.none,
-    suitId: enhancementBonus > 0 && fullBaselineSuit ? `baseline-${item?.id ?? item?._id ?? keyForValue(item?.name)}` : ""
+    magicMode: suitBoundMagic
+      ? MAGIC_MODES.suit
+      : enhancementBonus > 0 ? MAGIC_MODES.separatePiece : MAGIC_MODES.none,
+    suitId: suitBoundMagic ? `baseline-${item?.id ?? item?._id ?? keyForValue(item?.name)}` : ""
   };
 }
 
@@ -385,6 +421,157 @@ function catalogPiecesForItem(item, sourceKind = "baseline") {
     if (entry) piecesByCategory.set(category, pieceFromCatalog(entry, item, category, { sourceKind, fullBaselineSuit }));
   }
   return { piecesByCategory, unresolved: false, suit };
+}
+
+function finiteNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function roundShare(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 1000) / 1000;
+}
+
+function distributeNumber(total, weights) {
+  const numericTotal = finiteNumber(total) ?? 0;
+  const numericWeights = weights.map((value) => Math.max(finiteNumber(value) ?? 0, 0));
+  const weightTotal = numericWeights.reduce((sum, value) => sum + value, 0);
+  const shares = [];
+  let assigned = 0;
+  for (let index = 0; index < numericWeights.length; index += 1) {
+    if (index === numericWeights.length - 1) {
+      shares.push(roundShare(numericTotal - assigned));
+      break;
+    }
+    const ratio = weightTotal > 0 ? numericWeights[index] / weightTotal : 1 / numericWeights.length;
+    const share = roundShare(numericTotal * ratio);
+    shares.push(share);
+    assigned += share;
+  }
+  return shares;
+}
+
+function simpleMagicDataFromItem(item, { suitBound = false } = {}) {
+  const system = item?.system ?? {};
+  const native = getFlagData(item, FLAGS.nativeBackup)?.native ?? {};
+  const enhancementBonus = finiteNumber(native.armor?.enh) ?? finiteNumber(getProperty(system, "armor.enh")) ?? 0;
+  const material = keyForValue(firstTextValue(
+    getProperty(native, "material.type"),
+    getProperty(native, "material"),
+    getProperty(system, "material.type"),
+    getProperty(system, "material")
+  ));
+  const masterwork = native.masterwork === true || system.masterwork === true || enhancementBonus > 0;
+  const hasMagicOrMasterwork = masterwork || enhancementBonus > 0;
+  return {
+    enhancementBonus,
+    material,
+    masterwork,
+    magicMode: suitBound && hasMagicOrMasterwork
+      ? MAGIC_MODES.suit
+      : enhancementBonus > 0 ? MAGIC_MODES.separatePiece : MAGIC_MODES.none
+  };
+}
+
+function isThreeCategorySuit(suit) {
+  const pieceCategories = new Set(Object.keys(suit?.pieceIds ?? {}));
+  return CATEGORY_ORDER.every((category) => pieceCategories.has(category));
+}
+
+function suitCatalogTotal(suit, field) {
+  return Object.values(suit?.pieceIds ?? {})
+    .map((pieceId) => pieceCatalogEntry(pieceId)?.[field] ?? 0)
+    .reduce((sum, value) => sum + value, 0);
+}
+
+function breakdownMessage(preview) {
+  if (preview?.reason === "alreadyPiece") return `${preview.itemName} is already a PAcS armor piece. Drop it on its matching PAcS slot.`;
+  if (preview?.reason === "unsupportedCategory") {
+    return `${preview.itemName} only maps to PAcS: ${preview.supportedCategories.map((category) => PROFILE_CATEGORY_LABELS[category] ?? category).join(", ")}. Drop it there, use it as baseline armor, or import a matching PAcS piece.`;
+  }
+  if (preview?.reason === "notBreakdownSource") return `${preview.itemName} is not a vanilla full armor suit that can be broken down. Use a matching [PAcS] armor piece for PAcS slots.`;
+  if (preview?.reason === "unknownArmor") return `${preview.itemName} is not a recognized D35E armor suit. Import a matching item from PAcS Armor Pieces or configure a custom PAcS piece first.`;
+  return `${preview?.itemName ?? "This item"} cannot be assigned directly to a PAcS armor-piece slot. Use a [PAcS] armor piece or break down a recognized full armor suit.`;
+}
+
+export function previewArmorSuitBreakdownForSlot(actor, category, itemId) {
+  const normalized = normalizeArmorProfileCategory(category);
+  if (!normalized) throw new Error(`Unknown armor profile category: ${category}`);
+  const item = itemCollectionGet(actor?.items ?? [], itemId);
+  const itemName = item?.name ?? "This item";
+  if (!item) return { canBreak: false, reason: "missingItem", itemName, message: "Could not find the dropped armor item." };
+  if (isPiecemealArmorPiece(item)) return { canBreak: false, reason: "alreadyPiece", item, itemName, message: breakdownMessage({ reason: "alreadyPiece", itemName }) };
+  const suit = nativeFullSuitBreakdownMatch(item);
+  if (!suit) return { canBreak: false, reason: "notBreakdownSource", item, itemName, message: breakdownMessage({ reason: "notBreakdownSource", itemName }) };
+  const supportedCategories = Object.keys(suit.pieceIds).filter((pieceCategory) => pieceCatalogEntry(suit.pieceIds[pieceCategory]));
+  if (!suit.pieceIds[normalized]) {
+    const preview = { canBreak: false, reason: "unsupportedCategory", item, itemName, suit, supportedCategories };
+    return { ...preview, message: breakdownMessage(preview) };
+  }
+  return {
+    canBreak: true,
+    reason: "recognizedSuit",
+    item,
+    itemName,
+    itemId: item.id ?? item._id ?? itemId,
+    suit,
+    suitLabel: PACK_SUIT_LABELS[suit.id] ?? suit.labels?.[0] ?? suit.id,
+    targetCategory: normalized,
+    supportedCategories,
+    message: ""
+  };
+}
+
+function breakdownDocumentsForItem(item, suit) {
+  const entries = Object.entries(suit.pieceIds)
+    .map(([category, pieceId]) => ({ category, piece: pieceCatalogEntry(pieceId) }))
+    .filter((entry) => entry.piece);
+  const fallbackPrice = suitCatalogTotal(suit, "cost");
+  const fallbackWeight = suitCatalogTotal(suit, "weight");
+  const totalPrice = finiteNumber(item?.system?.price) ?? fallbackPrice;
+  const totalWeight = finiteNumber(item?.system?.weight) ?? fallbackWeight;
+  const priceShares = distributeNumber(totalPrice, entries.map((entry) => entry.piece.cost));
+  const weightShares = distributeNumber(totalWeight, entries.map((entry) => entry.piece.weight));
+  const magic = simpleMagicDataFromItem(item, { suitBound: isThreeCategorySuit(suit) });
+  const sourceItemId = item?.id ?? item?._id ?? "";
+  const suitId = `${sourceItemId || keyForValue(item?.name)}-${Date.now()}`;
+  const systemOverridesByCategory = {};
+  const piecemealOverridesByCategory = {};
+
+  entries.forEach((entry, index) => {
+    systemOverridesByCategory[entry.category] = {
+      weight: weightShares[index],
+      price: priceShares[index]
+    };
+    piecemealOverridesByCategory[entry.category] = {
+      weight: weightShares[index],
+      cost: priceShares[index],
+      material: magic.material,
+      masterwork: magic.masterwork,
+      enhancementBonus: magic.enhancementBonus,
+      magicMode: magic.magicMode,
+      suitId,
+      breakdownSourceItemId: sourceItemId,
+      breakdownSourceItemName: item?.name ?? ""
+    };
+  });
+
+  return buildArmorPieceDocumentsForSuit(suit, {
+    includeId: false,
+    sourceItemName: item?.name ?? "",
+    systemOverridesByCategory,
+    piecemealOverridesByCategory
+  });
+}
+
+async function consumeOneArmorItem(actor, item) {
+  const quantity = finiteNumber(item?.system?.quantity) ?? 1;
+  if (quantity > 1) {
+    await item.update?.({ "system.quantity": quantity - 1 }, { _slotBypass: true, d35ePacsProfile: true });
+    return { consumed: "quantity", remainingQuantity: quantity - 1 };
+  }
+  await deleteItemIfPresent(actor, item);
+  return { consumed: "item", remainingQuantity: 0 };
 }
 
 function pieceFromItemForCategory(item, category) {
@@ -784,11 +971,18 @@ export async function setArmorProfileBaseline(actor, itemId) {
 }
 
 export async function setArmorProfileSlot(actor, category, itemId) {
-  const normalized = normalizePieceCategory(category);
+  const normalized = normalizeArmorProfileCategory(category);
   if (!normalized) throw new Error(`Unknown armor profile category: ${category}`);
   const profile = readArmorProfile(actor);
   if (itemId) {
     const item = itemCollectionGet(actor?.items ?? [], itemId);
+    if (!item) {
+      throw new Error("Could not find the armor item for this PAcS slot.");
+    }
+    if (!isPiecemealArmorPiece(item)) {
+      const preview = previewArmorSuitBreakdownForSlot(actor, normalized, itemId);
+      throw new Error(preview.message || `${item.name ?? "This item"} is a full armor item. Break it down into PAcS armor pieces before assigning it to PAcS: ${PROFILE_CATEGORY_LABELS[normalized] ?? normalized}.`);
+    }
     if (item && isPiecemealArmorPiece(item)) {
       const piece = readArmorPiece(item);
       const explicitCategory = normalizePieceCategory(piece.pieceCategory);
@@ -811,6 +1005,44 @@ export async function setArmorProfileSlot(actor, category, itemId) {
   profile.slots[normalized] = itemId || null;
   await setActorArmorProfile(actor, profile);
   return applyArmorProfile(actor, { migrateLegacy: false });
+}
+
+export async function breakDownArmorSuitForProfileSlot(actor, category, itemId) {
+  const preview = previewArmorSuitBreakdownForSlot(actor, category, itemId);
+  if (!preview.canBreak) throw new Error(preview.message);
+  if (!actor?.createEmbeddedDocuments) throw new Error("This actor cannot create armor-piece items.");
+
+  const documents = breakdownDocumentsForItem(preview.item, preview.suit);
+  const targetDocument = documents.find((document) =>
+    normalizePieceCategory(document.flags?.[MODULE_ID]?.[FLAGS.piecemeal]?.pieceCategory) === preview.targetCategory
+  );
+  if (!targetDocument) throw new Error(`${preview.itemName} does not have a PAcS: ${PROFILE_CATEGORY_LABELS[preview.targetCategory] ?? preview.targetCategory} piece.`);
+
+  const created = await actor.createEmbeddedDocuments("Item", documents, { d35ePacsProfile: true, d35ePacsBreakdown: true });
+  const createdItems = Array.from(created ?? []);
+  const assignedItem = createdItems.find((item) =>
+    normalizePieceCategory(item.getFlag?.(MODULE_ID, FLAGS.piecemeal)?.pieceCategory ?? item.flags?.[MODULE_ID]?.[FLAGS.piecemeal]?.pieceCategory) === preview.targetCategory
+  );
+  if (!assignedItem?.id) throw new Error("Could not create the selected PAcS armor piece.");
+
+  const consumption = await consumeOneArmorItem(actor, preview.item);
+  const result = await setArmorProfileSlot(actor, preview.targetCategory, assignedItem.id);
+  const magic = simpleMagicDataFromItem(preview.item);
+  return {
+    ...result,
+    breakdown: {
+      suitId: preview.suit.id,
+      suitLabel: preview.suitLabel,
+      sourceItemName: preview.itemName,
+      assignedCategory: preview.targetCategory,
+      assignedItemId: assignedItem.id,
+      assignedItemName: assignedItem.name,
+      createdItemIds: createdItems.map((item) => item.id).filter(Boolean),
+      createdItemNames: createdItems.map((item) => item.name).filter(Boolean),
+      consumption,
+      copiedMagic: Boolean(magic.enhancementBonus || magic.material || magic.masterwork)
+    }
+  };
 }
 
 export async function clearArmorProfile(actor) {

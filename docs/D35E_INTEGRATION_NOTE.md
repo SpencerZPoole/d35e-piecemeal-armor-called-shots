@@ -17,9 +17,9 @@ The native armor profile relies on D35E 3.0.2 equipment fields:
 
 Baseline-only armor remains ordinary D35E armor. Composite piecemeal armor uses a hidden zero-weight equipment carrier so D35E can calculate actor AC, armor check penalty, max Dexterity, arcane spell failure, and related derived values through its normal equipment pipeline.
 
-The module calculates the profile values before handing them to D35E. D35E still owns the final actor preparation, but the hidden carrier uses worst-piece ACP/ASF/max Dex, complete-suit and mixed-suit adjustments, and D35E-representable material/magic results. Source items are backed up and neutralized while the profile is active so armor is not counted twice.
+The module calculates the profile values before handing them to D35E. D35E still owns the final actor preparation, but the hidden carrier uses worst-piece ACP/ASF/max Dex, complete-suit and mixed-suit adjustments, and D35E-representable material/magic results. Separately enchanted pieces use torso > legs > arms precedence, suit-bound magic requires a complete matching suit ID, and material benefits require all active selected pieces to share the same material. Source items are backed up and neutralized while the profile is active so armor is not counted twice.
 
-The `PAcS Armor Pieces` compendium records are D35E Item documents with explicit module flags for piece category, coverage, armor family, armor bonus, max Dex, ACP, ASF, weight, and cost. They are generated from the same catalog resolver used by runtime armor math. The visible item names are for searchability, while the flags are the integration contract.
+The `PAcS Armor Pieces` compendium records are D35E Item documents with explicit module flags for piece category, coverage, armor family, armor bonus, max Dex, ACP, ASF, weight, and cost. They are generated from the same catalog resolver used by runtime armor math. The visible item names are for searchability, while the flags are the integration contract. PAcS slots accept those flagged piece records directly; ordinary full armor items stay in D35E's native `Armor` slot unless the sheet drop handler breaks one suit into flagged PAcS pieces through the confirmation workflow.
 
 ## Attack Workflow
 

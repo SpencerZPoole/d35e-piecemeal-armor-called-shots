@@ -33,6 +33,7 @@
   <li>Uses the native D35E <code>Armor</code> slot as the baseline suit source, with PAcS slots overriding only the categories a table mixes.</li>
   <li>Provides a D35E-calibrated starter catalog for padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate mappings.</li>
   <li>Ships a <code>PAcS Armor Pieces</code> compendium with ready-to-use override items such as <code>[PAcS] Studded Leather, Legs</code>, <code>[PAcS] Chainmail, Torso</code>, and <code>[PAcS] Full Plate, Arms</code>.</li>
+  <li>Keeps PAcS slots category-specific. Vanilla full armor suits dropped onto a PAcS slot ask whether to break the suit into matching <code>[PAcS]</code> pieces instead of treating the whole suit as one piece.</li>
   <li>Calibrates complete catalog suits so torso + arms + legs + the full-suit bonus equals the matching D&amp;D 3.5e armor bonus.</li>
   <li>Keeps baseline-only armor native to D35E and uses a hidden zero-weight D35E carrier only when composite profile math is active.</li>
   <li>Marks profile source items as worn in profile while preventing duplicate armor AC and weight.</li>
@@ -52,9 +53,13 @@
 
 <p>The normal D35E <code>Armor</code> slot is the baseline suit. Empty PAcS slots inherit from that baseline when the catalog supports the category. Imported <code>[PAcS]</code> armor piece items do not affect AC just by sitting in inventory; they must be assigned to the matching PAcS slot.</p>
 
+<p>If a character owns a vanilla full suit and wants to use part of it as a piece, dropping the suit onto a PAcS slot opens a breakdown prompt. Confirming consumes one suit, creates all matching <code>[PAcS]</code> pieces, assigns only the dropped category, and leaves the other pieces in inventory. Copied magic or masterwork data remains tied to the original suit, so one generated piece is not separately enchanted by itself. Torso-only armor, shields, custom equipment, and other non-PAcS items do not open the breakdown prompt. Canceling leaves the actor unchanged.</p>
+
 <p>The module uses D35E-native item data for the final armor contribution. Composite profiles use a hidden zero-weight carrier and reversible source-item backups, so users no longer manage a visible aggregate item or a separate profile panel.</p>
 
 <p>The bundled armor catalog is a D35E-calibrated adaptation. It keeps the PF1e piecemeal structure, but a complete catalog suit closes to the normal D&amp;D 3.5e armor bonus after the full-suit <code>+1</code>.</p>
+
+<p>Masterwork, special material, and magic armor follow the supplied Ultimate Combat structure where D35E can represent it. Separately enchanted pieces use torso &gt; legs &gt; arms precedence, suit-bound magic applies only when the whole active suit shares one suit ID, vanilla full-suit breakdown keeps copied magic/masterwork suit-bound, and mithral-style material benefits require every active selected piece to share that material.</p>
 
 <h3>Called-Shot Workflow</h3>
 
@@ -70,7 +75,7 @@
 
 <h3>Configuration</h3>
 
-<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, choose full-attack feat-gate behavior, enable optional helmet head coverage and Spot/Listen penalties, show location armor overlays, and edit called-shot profiles.</p>
+<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, choose full-attack feat-gate behavior, enable optional helmet head coverage and Spot/Listen penalties, show location armor overlays, and edit called-shot profiles. Turning off <strong>Enable piecemeal armor</strong> hides the PAcS inventory slots and is the intended called-shots-only mode.</p>
 
 <p>The <strong>PAcS Armor Pieces</strong> compendium ships the recommended override pieces for the native PAcS slots. The items are generated from the D35E-calibrated catalog, so their display names match the armor a user searched for while their flags preserve the correct piece category and armor-family math.</p>
 

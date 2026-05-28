@@ -49,6 +49,8 @@ The pack uses the module's D35E-calibrated PF1e piecemeal adaptation. For exampl
 
 If a `[PAcS]` item says `Legs`, drop it on `PAcS: Legs`. The module rejects explicit pack pieces dropped onto the wrong PAcS category instead of silently turning them into a different piece.
 
+Ordinary D35E armor items belong in the native `Armor` slot as the baseline suit. If you drop a vanilla full suit such as leather, chainmail, splint mail, or full plate onto a PAcS slot, the module asks whether to break that suit down. Confirming consumes one copy of the original suit, creates all matching `[PAcS]` pieces, assigns only the piece for the slot you dropped on, and leaves the other pieces carried in inventory. Copied masterwork or enhancement data remains tied to the original suit, so one generated piece by itself is not separately magical or masterwork unless the GM edits it. Canceling makes no actor changes. Torso-only armor such as chain shirts and breastplates, shields, custom equipment, and other non-PAcS items do not open the breakdown prompt.
+
 ## Module Settings
 
 Open Foundry's right sidebar, click the gear icon, choose `Game Settings`, then select `D35E Piecemeal Armor And Called Shots` from the category list on the left.
@@ -58,7 +60,7 @@ Open Foundry's right sidebar, click the gear icon, choose `Game Settings`, then 
 Settings:
 
 - `Edit called shot profiles`: opens the profile editor for locations, attack penalties, severity tiers, coverage slots, and outcome effects.
-- `Enable piecemeal armor`: adds the PAcS inventory slots, item piece fields, piecemeal armor math, hidden D35E carrier, and location armor data. Turning it off suspends piecemeal armor automation without disabling called shots.
+- `Enable piecemeal armor`: adds the PAcS inventory slots, item piece fields, piecemeal armor math, hidden D35E carrier, and location armor data. Turning it off hides the PAcS slots and suspends piecemeal armor automation without disabling called shots. This is the intended called-shots-only mode.
 - `Enable called shots`: adds the `Called Shot` selector to D35E's native attack dialog, applies the configured attack penalty to the native roll breakdown, carries context into Apply Damage, and posts outcome cards. Turning it off does not disable piecemeal armor.
 - `Enable helmet head coverage house rule`: optional and disabled by default. Configured helmets in D35E's native `Head` slot provide local Head, Eye, and Ear armor AC without adding to total AC.
 - `Apply helmet Spot/Listen penalties`: optional and disabled by default. Configured helmets in D35E's native `Head` slot add their table-defined Spot and Listen penalties to native D35E skill rolls.
@@ -207,11 +209,11 @@ Inventory slots:
 - `PAcS: Legs`: replaces only leg armor.
 - Clear icon on a PAcS slot item: restores that item and empties the PAcS slot.
 - Native trash/delete on a PAcS slot item: deletes that inventory item and clears only the PAcS slot that referenced it. Use the clear icon when you want to keep the item.
-- Dragging a PAcS-worn item back to the native `Armor` slot makes it the baseline suit again. Occupied PAcS slots stay as overrides.
+- Full suit breakdown prompt: when a vanilla full D35E armor suit is dropped onto a PAcS slot, the module can consume one suit and create matching `[PAcS]` piece items instead of treating the full suit as a single piece.
 
 Empty PAcS slots inherit from the native Armor baseline when the baseline maps to that category. For example, studded leather in the Armor slot can fill torso, arms, and legs. A breastplate maps to torso only, so empty arms and legs remain unarmored unless a table assigns overrides.
 
-Recommended workflow: use ordinary D35E armor items for the native `Armor` baseline and use `PAcS Armor Pieces` for the three override slots. Dragging ordinary D35E armor items into PAcS slots is still supported as a convenience for existing actors and quick experiments, but the pack items are clearer because their names and flags already say which category they belong to.
+Recommended workflow: use ordinary D35E armor items for the native `Armor` baseline and use `PAcS Armor Pieces` for the three override slots. PAcS slots accept real PAcS piece items for the matching category. If a character wants to repurpose part of a vanilla full suit they already own, drop that suit onto the desired PAcS slot and use the breakdown prompt.
 
 RAW-adapted math:
 
@@ -221,6 +223,8 @@ RAW-adapted math:
 - Mixed full suits add the RAW `+5%` arcane spell failure adjustment.
 
 The bundled catalog is D35E-calibrated. It keeps the PF1e piecemeal structure, but complete catalog suits are adjusted so `torso + arms + legs + full-suit +1` equals the normal D&D 3.5e armor bonus. For example, chainmail resolves as `3 + 1 + 0 + 1 = 5`, and full plate resolves as `5 + 1 + 1 + 1 = 8`. Chain shirt and breastplate are torso-only entries, so they do not get a suit bonus unless the table deliberately adds other pieces.
+
+Masterwork, special material, and magic armor are handled as RAW-adapted PF1e optional-rule automation for D35E. Separately created or enchanted pieces do not stack their magic together: the module uses the most protective active piece for masterwork and enhancement benefits, checking torso first, then legs, then arms. Pieces marked as `Part of enchanted suit` are deliberately inert unless all three active categories are from the same suit ID, because a partial enchanted suit is no longer being worn as that suit. Breaking down a normal magic or masterwork full armor item creates suit-bound pieces, not three separately enchanted pieces; a GM can still edit a generated piece to `Separate piece` if that is what the table intends. Special material benefits are similarly all-or-nothing across the active pieces; mithral-style max Dex, ACP, ASF, and armor-category adjustments apply only when every active selected piece is mithral.
 
 Starter armor bonus mapping:
 
@@ -291,13 +295,17 @@ Clear each occupied `PAcS:` slot with its clear icon, then assign the pieces aga
 
 Importing `[PAcS] Studded Leather, Legs` or another armor piece into inventory is only the first step. Assign it to the matching `PAcS:` slot in the Armor and Equipment list. The item does not contribute to AC until it is in `PAcS: Torso`, `PAcS: Arms`, or `PAcS: Legs`.
 
+### I only use called shots and do not want PAcS slots on sheets
+
+Turn off `Enable piecemeal armor` in module settings. Called-shot attack controls, penalties, outcome cards, feat rules, and profile editing remain available while the PAcS armor slots and armor automation are hidden. If an actor sheet was already open when the setting changed, close and reopen it if the slots do not disappear immediately.
+
 ### The profile says Needs piece values
 
 The selected armor item is not in the starter catalog and is not configured as an explicit piecemeal armor item. Configure the item with piece category and armor values, then assign it again.
 
 ### Should pieces be armor or miscellaneous equipment?
 
-For normal use, prefer the `PAcS Armor Pieces` compendium. Those records are profile pieces: they stay harmless in inventory until assigned to a PAcS slot. Native D35E armor items still work as the baseline in `Armor`, and they can still be dragged into PAcS slots for quick setup or existing-world compatibility. Miscellaneous records also work for custom table pieces when they have explicit module piece values.
+For normal use, prefer the `PAcS Armor Pieces` compendium. Those records are profile pieces: they stay harmless in inventory until assigned to a PAcS slot. Native D35E armor items still work as the baseline in `Armor`, but PAcS slots require matching PAcS piece records. Dropping a recognized vanilla full suit onto a PAcS slot opens the breakdown prompt; miscellaneous custom records work only after they have explicit module piece values.
 
 ### Where should I report issues?
 

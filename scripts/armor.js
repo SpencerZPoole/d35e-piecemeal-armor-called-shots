@@ -266,7 +266,7 @@ export function readArmorPiece(item) {
     pieceCategory,
     armorFamily: keyForSlot(flag.armorFamily || flag.family || ""),
     material,
-    masterwork: boolOr(flag.masterwork, boolOr(system.masterwork, enhancementBonus > 0 || material === "mithral" || material === "adamantine")),
+    masterwork: boolOr(flag.masterwork, boolOr(system.masterwork, enhancementBonus > 0)),
     magicMode,
     suitId: keyForSlot(flag.suitId || ""),
     donState: Object.values(DON_STATES).includes(flag.donState) ? flag.donState : DON_STATES.normal,
@@ -387,11 +387,14 @@ function activeMagicSummary(pieces, isCompleteSuit) {
     };
   }
 
-  const contributes = protective.magicMode === MAGIC_MODES.separatePiece || protective.masterwork || protective.enhancementBonus > 0;
+  const isSuitBound = protective.magicMode === MAGIC_MODES.suit;
+  const enhancementApplies = protective.magicMode === MAGIC_MODES.separatePiece && numberOr(protective.enhancementBonus) > 0;
+  const masterworkApplies = !isSuitBound && protective.masterwork === true;
+  const contributes = enhancementApplies || masterworkApplies;
   return {
     mode: contributes ? MAGIC_MODES.separatePiece : MAGIC_MODES.none,
-    enhancementBonus: contributes ? Math.max(0, numberOr(protective.enhancementBonus)) : 0,
-    masterworkApplied: contributes && (protective.masterwork || protective.enhancementBonus > 0),
+    enhancementBonus: enhancementApplies ? Math.max(0, numberOr(protective.enhancementBonus)) : 0,
+    masterworkApplied: masterworkApplies || enhancementApplies,
     appliedPieceId: contributes ? protective.id : null
   };
 }

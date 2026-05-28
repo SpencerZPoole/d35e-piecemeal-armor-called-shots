@@ -47,9 +47,29 @@ function worldActors() {
   return [];
 }
 
+function rerenderOpenActorSheets() {
+  const windows = Object.values(globalThis.ui?.windows ?? {});
+  for (const app of windows) {
+    const document = app?.actor ?? app?.document ?? app?.object ?? null;
+    const isActorSheet = Boolean(app?.actor) ||
+      document?.documentName === "Actor" ||
+      document?.constructor?.documentName === "Actor";
+    if (isActorSheet) app.render?.(true);
+  }
+}
+
 async function updateArmorAutomationState(enabled) {
-  if (globalThis.game?.ready !== true) return;
-  const { readArmorProfile, resumeArmorProfileAutomation, suspendArmorProfileAutomation } = await import("./armor-profile.js");
+  const {
+    readArmorProfile,
+    resumeArmorProfileAutomation,
+    suspendArmorProfileAutomation,
+    syncPacsEquipmentSlots
+  } = await import("./armor-profile.js");
+  syncPacsEquipmentSlots(enabled);
+  if (globalThis.game?.ready !== true) {
+    rerenderOpenActorSheets();
+    return;
+  }
   const actorIds = worldActors().map((actor) => actor?.id).filter(Boolean);
   for (const actorId of actorIds) {
     const actor = globalThis.game?.actors?.get?.(actorId);
@@ -60,6 +80,7 @@ async function updateArmorAutomationState(enabled) {
     if (enabled) await resumeArmorProfileAutomation(actor);
     else await suspendArmorProfileAutomation(actor);
   }
+  rerenderOpenActorSheets();
 }
 
 let armorAutomationPendingState = null;
@@ -287,7 +308,7 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.enableArmor, {
     name: "Enable piecemeal armor",
-    hint: "Adds the PAcS Torso, Arms, and Legs inventory slots, piecemeal armor math, hidden D35E carrier, and local armor data. Disabling this suspends armor automation but does not disable called shots.",
+    hint: "Adds the PAcS Torso, Arms, and Legs inventory slots, piecemeal armor math, hidden D35E carrier, and local armor data. Disabling this hides the PAcS slots and suspends armor automation, but does not disable called shots.",
     scope: "world",
     config: true,
     type: Boolean,

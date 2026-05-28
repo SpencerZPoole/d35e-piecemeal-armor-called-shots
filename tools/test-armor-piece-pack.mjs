@@ -3,8 +3,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { calculatePiecemealArmorFromPieces, readArmorPiece } from "../scripts/armor.js";
-import { resolveArmorProfile, setArmorProfileSlot } from "../scripts/armor-profile.js";
+import { buildArmorProfileSourceDetailRows, calculatePiecemealArmorFromPieces, readArmorPiece } from "../scripts/armor.js";
+import { breakDownArmorSuitForProfileSlot, previewArmorSuitBreakdownForSlot, resolveArmorProfile, setArmorProfileSlot } from "../scripts/armor-profile.js";
 import { FLAGS, INTERNAL_ARMOR_PROFILE_NAME, MODULE_ID, PACS_EQUIPMENT_SLOTS } from "../scripts/constants.js";
 import { buildArmorPiecePackDocuments, expectedArmorPieceNames } from "./armor-piece-pack-documents.mjs";
 
@@ -75,6 +75,29 @@ function itemFromDocument(document, id = document._id) {
   };
 }
 
+function nativeArmorItem(id, name, system = {}, flags = {}) {
+  return itemFromDocument({
+    _id: id,
+    name,
+    type: "equipment",
+    system: {
+      quantity: 1,
+      equipped: false,
+      carried: true,
+      melded: false,
+      equipmentType: "armor",
+      equipmentSubtype: "mediumArmor",
+      slot: "slotless",
+      armor: { value: 0, enh: 0, dex: null, acp: 0 },
+      spellFailure: 0,
+      weight: 0,
+      price: 0,
+      ...system
+    },
+    flags
+  }, id);
+}
+
 function actor(items = [], flags = {}) {
   items.get = (id) => items.find((item) => item.id === id) ?? null;
   return {
@@ -110,6 +133,16 @@ function actor(items = [], flags = {}) {
       return this;
     }
   };
+}
+
+function actorWithReorderedCreateResult(items = [], flags = {}) {
+  const base = actor(items, flags);
+  base.createEmbeddedDocuments = async function createEmbeddedDocuments(_documentName, data) {
+    const created = data.map((entry, index) => itemFromDocument(entry, `created-${this.items.length + index}`));
+    created.forEach((item) => this.items.push(item));
+    return [...created].reverse();
+  };
+  return base;
 }
 
 function byName(documents, name) {
@@ -200,7 +233,7 @@ assert.equal(chainShirtTorso.flags?.[MODULE_ID]?.piecemeal?.catalogId, "chain-sh
 assert.equal(calculatePiecemealArmorFromPieces([readArmorPiece(itemFromDocument(studdedLegs))]).armorBonus, 1);
 
 const pieceActor = actor([itemFromDocument(studdedLegs, "studded-legs")]);
-await setArmorProfileSlot(pieceActor, "legs", "studded-legs");
+await setArmorProfileSlot(pieceActor, PACS_EQUIPMENT_SLOTS.legs, "studded-legs");
 let resolved = resolveArmorProfile(pieceActor);
 assert.equal(resolved.status, "compositeProfile");
 assert.equal(resolved.summary.armorBonus, 1);
@@ -208,10 +241,165 @@ assert.equal(resolved.pieces[0].name, "[PAcS] Studded Leather, Legs");
 assert.equal(pieceActor.items.get("studded-legs").system.slot, PACS_EQUIPMENT_SLOTS.legs);
 
 await assert.rejects(
-  () => setArmorProfileSlot(pieceActor, "arms", "studded-legs"),
+  () => setArmorProfileSlot(pieceActor, PACS_EQUIPMENT_SLOTS.arms, "studded-legs"),
   /is a Legs armor piece/
 );
 assert.equal(resolveArmorProfile(pieceActor).profile.slots.legs, "studded-legs");
+
+const nativeDirectActor = actor([nativeArmorItem("native-chainmail", "Chainmail", {
+  armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+  spellFailure: 30,
+  weight: 40,
+  price: 150
+})]);
+assert.equal(previewArmorSuitBreakdownForSlot(nativeDirectActor, "arms", "native-chainmail").canBreak, true);
+assert.equal(previewArmorSuitBreakdownForSlot(nativeDirectActor, PACS_EQUIPMENT_SLOTS.torso, "native-chainmail").targetCategory, "torso");
+assert.equal(previewArmorSuitBreakdownForSlot(nativeDirectActor, PACS_EQUIPMENT_SLOTS.arms, "native-chainmail").targetCategory, "arms");
+assert.equal(previewArmorSuitBreakdownForSlot(nativeDirectActor, PACS_EQUIPMENT_SLOTS.legs, "native-chainmail").targetCategory, "legs");
+await assert.rejects(
+  () => setArmorProfileSlot(nativeDirectActor, "arms", "native-chainmail"),
+  /Break it down into PAcS armor pieces/
+);
+assert.equal(resolveArmorProfile(nativeDirectActor).status, "empty");
+
+const studdedBreakdownActor = actor([nativeArmorItem("break-studded", "Studded Leather", {
+  equipmentSubtype: "lightArmor",
+  armor: { value: 3, enh: 0, dex: 5, acp: 1 },
+  spellFailure: 15,
+  weight: 20,
+  price: 25
+})]);
+const studdedBreakdown = await breakDownArmorSuitForProfileSlot(studdedBreakdownActor, PACS_EQUIPMENT_SLOTS.arms, "break-studded");
+assert.equal(studdedBreakdown.breakdown.assignedItemName, "[PAcS] Studded Leather, Arms");
+assert.equal(studdedBreakdown.profile.slots.arms, studdedBreakdown.breakdown.assignedItemId);
+assert.equal(studdedBreakdownActor.items.some((item) => item.id === "break-studded"), false);
+assert.deepEqual(studdedBreakdownActor.items.filter((item) => item.name?.startsWith("[PAcS] Studded Leather")).map((item) => item.name).sort(), [
+  "[PAcS] Studded Leather, Arms",
+  "[PAcS] Studded Leather, Legs",
+  "[PAcS] Studded Leather, Torso"
+]);
+assert.equal(Boolean(studdedBreakdownActor.items.find((item) => item.name === INTERNAL_ARMOR_PROFILE_NAME)), true);
+
+const reorderedStuddedBreakdownActor = actorWithReorderedCreateResult([nativeArmorItem("break-studded-reordered", "Studded Leather", {
+  equipmentSubtype: "lightArmor",
+  armor: { value: 3, enh: 0, dex: 5, acp: 1 },
+  spellFailure: 15,
+  weight: 20,
+  price: 25
+})]);
+const reorderedStuddedBreakdown = await breakDownArmorSuitForProfileSlot(reorderedStuddedBreakdownActor, PACS_EQUIPMENT_SLOTS.arms, "break-studded-reordered");
+assert.equal(reorderedStuddedBreakdown.breakdown.assignedItemName, "[PAcS] Studded Leather, Arms");
+assert.equal(reorderedStuddedBreakdownActor.items.get(reorderedStuddedBreakdown.profile.slots.arms).system.slot, PACS_EQUIPMENT_SLOTS.arms);
+
+const breakdownActor = actor([nativeArmorItem("break-chainmail", "Chainmail", {
+  armor: { value: 5, enh: 2, dex: 2, acp: 5 },
+  spellFailure: 30,
+  weight: 45,
+  price: 300,
+  material: { type: "mithral" },
+  masterwork: true
+})]);
+const breakdown = await breakDownArmorSuitForProfileSlot(breakdownActor, PACS_EQUIPMENT_SLOTS.arms, "break-chainmail");
+const breakdownPieces = breakdownActor.items.filter((item) => item.name?.startsWith?.("[PAcS] Chainmail"));
+assert.equal(breakdownActor.items.some((item) => item.id === "break-chainmail"), false);
+assert.deepEqual(breakdownPieces.map((item) => item.name).sort(), [
+  "[PAcS] Chainmail, Arms",
+  "[PAcS] Chainmail, Legs",
+  "[PAcS] Chainmail, Torso"
+]);
+assert.equal(breakdown.profile.slots.arms, breakdown.breakdown.assignedItemId);
+assert.equal(breakdown.profile.slots.torso, null);
+assert.equal(breakdown.profile.slots.legs, null);
+assert.equal(Math.round(breakdownPieces.reduce((total, item) => total + item.system.price, 0) * 1000) / 1000, 300);
+assert.equal(Math.round(breakdownPieces.reduce((total, item) => total + item.system.weight, 0) * 1000) / 1000, 45);
+const breakdownArms = breakdownPieces.find((item) => item.name === "[PAcS] Chainmail, Arms");
+const breakdownArmsFlag = breakdownArms.getFlag(MODULE_ID, FLAGS.piecemeal);
+assert.equal(breakdownArms.system.slot, PACS_EQUIPMENT_SLOTS.arms);
+assert.equal(breakdownArmsFlag.enhancementBonus, 2);
+assert.equal(breakdownArmsFlag.magicMode, "suit");
+assert.equal(breakdownArmsFlag.material, "mithral");
+assert.equal(breakdownArmsFlag.masterwork, true);
+assert.equal(typeof breakdownArmsFlag.suitId, "string");
+assert.ok(breakdownArmsFlag.suitId.length > 0);
+let breakdownArmsOnlyResolution = resolveArmorProfile(breakdownActor);
+assert.equal(breakdownArmsOnlyResolution.summary.enhancementBonus, 0);
+assert.equal(breakdownArmsOnlyResolution.summary.magic.masterworkApplied, false);
+const breakdownTorso = breakdownPieces.find((item) => item.name === "[PAcS] Chainmail, Torso");
+const breakdownLegs = breakdownPieces.find((item) => item.name === "[PAcS] Chainmail, Legs");
+const breakdownSuitIds = new Set(breakdownPieces.map((item) => item.getFlag(MODULE_ID, FLAGS.piecemeal)?.suitId).filter(Boolean));
+assert.equal(breakdownSuitIds.size, 1);
+await setArmorProfileSlot(breakdownActor, "torso", breakdownTorso.id);
+await setArmorProfileSlot(breakdownActor, "legs", breakdownLegs.id);
+const fullBreakdownResolution = resolveArmorProfile(breakdownActor);
+assert.equal(fullBreakdownResolution.summary.completeSuit, true);
+assert.equal(fullBreakdownResolution.summary.enhancementBonus, 2);
+assert.equal(buildArmorProfileSourceDetailRows(fullBreakdownResolution.summary).filter((row) => row.source === "enhancement").length, 1);
+
+const masterworkBreakdownActor = actor([nativeArmorItem("break-masterwork-chainmail", "Masterwork Chainmail", {
+  armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+  spellFailure: 30,
+  weight: 40,
+  price: 300,
+  masterwork: true
+})]);
+await breakDownArmorSuitForProfileSlot(masterworkBreakdownActor, "arms", "break-masterwork-chainmail");
+const masterworkPieces = masterworkBreakdownActor.items.filter((item) => item.name?.startsWith?.("[PAcS] Chainmail"));
+const masterworkArms = masterworkPieces.find((item) => item.name === "[PAcS] Chainmail, Arms");
+const masterworkTorso = masterworkPieces.find((item) => item.name === "[PAcS] Chainmail, Torso");
+const masterworkLegs = masterworkPieces.find((item) => item.name === "[PAcS] Chainmail, Legs");
+const masterworkArmsFlag = masterworkArms.getFlag(MODULE_ID, FLAGS.piecemeal);
+assert.equal(masterworkArmsFlag.magicMode, "suit");
+assert.equal(masterworkArmsFlag.masterwork, true);
+breakdownArmsOnlyResolution = resolveArmorProfile(masterworkBreakdownActor);
+assert.equal(breakdownArmsOnlyResolution.summary.enhancementBonus, 0);
+assert.equal(breakdownArmsOnlyResolution.summary.magic.masterworkApplied, false);
+const singleMasterworkAcp = breakdownArmsOnlyResolution.summary.acp;
+await setArmorProfileSlot(masterworkBreakdownActor, "torso", masterworkTorso.id);
+await setArmorProfileSlot(masterworkBreakdownActor, "legs", masterworkLegs.id);
+const fullMasterworkBreakdownResolution = resolveArmorProfile(masterworkBreakdownActor);
+assert.equal(fullMasterworkBreakdownResolution.summary.completeSuit, true);
+assert.equal(fullMasterworkBreakdownResolution.summary.enhancementBonus, 0);
+assert.equal(fullMasterworkBreakdownResolution.summary.magic.masterworkApplied, true);
+assert.equal(fullMasterworkBreakdownResolution.summary.acp < singleMasterworkAcp, true);
+
+const quantityActor = actor([nativeArmorItem("stacked-chainmail", "Chainmail", {
+  quantity: 2,
+  armor: { value: 5, enh: 0, dex: 2, acp: 5 },
+  weight: 40,
+  price: 150
+})]);
+await breakDownArmorSuitForProfileSlot(quantityActor, "legs", "stacked-chainmail");
+assert.equal(quantityActor.items.get("stacked-chainmail").system.quantity, 1);
+assert.equal(quantityActor.items.filter((item) => item.name?.startsWith?.("[PAcS] Chainmail")).length, 3);
+
+const chainShirtMismatchActor = actor([nativeArmorItem("chain-shirt", "Chain Shirt", {
+  armor: { value: 4, enh: 0, dex: 4, acp: 2 },
+  weight: 25,
+  price: 100
+})]);
+assert.equal(previewArmorSuitBreakdownForSlot(chainShirtMismatchActor, "torso", "chain-shirt").canBreak, false);
+assert.equal(previewArmorSuitBreakdownForSlot(chainShirtMismatchActor, "torso", "chain-shirt").reason, "notBreakdownSource");
+await assert.rejects(
+  () => breakDownArmorSuitForProfileSlot(chainShirtMismatchActor, "arms", "chain-shirt"),
+  /not a vanilla full armor suit/
+);
+
+const miscNamedChainmailActor = actor([nativeArmorItem("chainmail-polish", "Chainmail Polish", {
+  equipmentType: "misc",
+  armor: { value: 5, enh: 0, dex: null, acp: 0 },
+  weight: 1,
+  price: 5
+})]);
+assert.equal(previewArmorSuitBreakdownForSlot(miscNamedChainmailActor, "arms", "chainmail-polish").canBreak, false);
+assert.equal(previewArmorSuitBreakdownForSlot(miscNamedChainmailActor, "arms", "chainmail-polish").reason, "notBreakdownSource");
+
+const customNamedChainmailActor = actor([nativeArmorItem("custom-chainmail", "Chainmail Trophy", {
+  armor: { value: 1, enh: 0, dex: null, acp: 0 },
+  weight: 5,
+  price: 20
+})]);
+assert.equal(previewArmorSuitBreakdownForSlot(customNamedChainmailActor, "arms", "custom-chainmail").canBreak, false);
+assert.equal(previewArmorSuitBreakdownForSlot(customNamedChainmailActor, "arms", "custom-chainmail").reason, "notBreakdownSource");
 
 const chainmailBaseline = itemFromDocument(byName(documents, "[PAcS] Chainmail, Torso"), "chainmail-torso");
 const chainmailArms = itemFromDocument(byName(documents, "[PAcS] Chainmail, Arms"), "chainmail-arms");
