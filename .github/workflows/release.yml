@@ -73,9 +73,10 @@ jobs:
             echo "Missing release notes file: $notes_file" >&2
             exit 1
           fi
+          release_title="D35E Piecemeal Armor And Called Shots ${{ steps.release.outputs.tag }}"
           if gh release view "${{ steps.release.outputs.tag }}" >/dev/null 2>&1; then
             gh release edit "${{ steps.release.outputs.tag }}" \
-              --title "${{ steps.release.outputs.tag }}" \
+              --title "$release_title" \
               --notes-file "$notes_file"
             gh release upload "${{ steps.release.outputs.tag }}" \
               dist/module.json \
@@ -85,7 +86,7 @@ jobs:
             gh release create "${{ steps.release.outputs.tag }}" \
               dist/module.json \
               dist/d35e-piecemeal-armor-called-shots-${{ steps.release.outputs.tag }}.zip \
-              --title "${{ steps.release.outputs.tag }}" \
+              --title "$release_title" \
               --notes-file "$notes_file" \
               --verify-tag
           fi
