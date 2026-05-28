@@ -18,10 +18,10 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/late
 
 After installation, open a D35E world, go to **Game Settings > Manage Modules**, enable **D35E Piecemeal Armor And Called Shots**, and reload if Foundry asks.
 
-Versioned release assets are published on GitHub. For v1.4.0, the release manifest is:
+Versioned release assets are published on GitHub. For v1.4.1, the release manifest is:
 
 ```text
-https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.4.0/module.json
+https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/download/v1.4.1/module.json
 ```
 
 ## Features
@@ -31,7 +31,7 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 - Provides a D35E-calibrated starter catalog for common piecemeal armor mappings such as padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate.
 - Ships a `PAcS Armor Pieces` compendium with ready-to-use items such as `[PAcS] Studded Leather, Legs`, `[PAcS] Chainmail, Torso`, and `[PAcS] Full Plate, Arms`.
 - Keeps PAcS slots category-specific. Dropping a vanilla full armor suit such as leather, chainmail, or splint mail onto a PAcS slot asks whether to break that suit into matching `[PAcS]` pieces instead of silently treating the whole suit as one piece.
-- Keeps simple baseline-only armor native to D35E while using a hidden slotless D35E armor carrier only for composite piecemeal math.
+- Keeps simple baseline-only armor native to D35E while using a hidden zero-weight, zero-price, slotless D35E armor carrier only for composite piecemeal math.
 - Adds a `Called Shot` dropdown inside D35E's native attack/use dialog.
 - Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as `Called Shot: Ear -10` or `Called Shot Range/Reach: not adjacent -2`.
 - Can adjust D35E's native Apply Damage AC check for called shots that target weaker or stronger piecemeal armor locations.
@@ -40,7 +40,7 @@ https://github.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/releases/down
 - Enforces RAW-adapted Improved/Greater Called Shot full-attack limits by default, with GM-facing warn-only and no-requirement modes for house rules.
 - Ships `PAcS Armor Pieces`, `PAcS Called-Shot Feats`, and `PAcS Helmets` item compendia with convenience records for optional-rule setup.
 - Automates called-shot severity and outcomes after D35E Apply Damage, with a default GM confirmation step for critical or debilitating effects and a restore ledger for misclick recovery.
-- Prevents double-counting by marking profile source items as worn in the profile while the hidden zero-weight carrier contributes composite D35E armor math.
+- Prevents double-counting by marking profile source items as worn in the profile while the hidden zero-weight, zero-price carrier contributes composite D35E armor math.
 - Includes an in-Foundry profile editor for locations, penalties, coverage slot(s), and outcome effects.
 
 ## Screenshots

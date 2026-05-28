@@ -15,7 +15,7 @@ The native armor profile relies on D35E 3.0.2 equipment fields:
 - `system.equipmentSubtype`
 - `system.slot`
 
-Baseline-only armor remains ordinary D35E armor. Composite piecemeal armor uses a hidden zero-weight equipment carrier so D35E can calculate actor AC, armor check penalty, max Dexterity, arcane spell failure, and related derived values through its normal equipment pipeline.
+Baseline-only armor remains ordinary D35E armor. Composite piecemeal armor uses a hidden zero-weight, zero-price equipment carrier so D35E can calculate actor AC, armor check penalty, max Dexterity, arcane spell failure, inventory value, and related derived values through its normal equipment pipeline.
 
 The module calculates the profile values before handing them to D35E. D35E still owns the final actor preparation, but the hidden carrier uses worst-piece ACP/ASF/max Dex, complete-suit and mixed-suit adjustments, and D35E-representable material/magic results. Separately enchanted pieces use torso > legs > arms precedence, suit-bound magic requires a complete matching suit ID, and material benefits require all active selected pieces to share the same material. Source items are backed up and neutralized while the profile is active so armor is not counted twice.
 

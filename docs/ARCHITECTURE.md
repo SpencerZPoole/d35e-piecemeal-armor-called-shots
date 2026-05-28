@@ -14,7 +14,7 @@ When no overrides are active, D35E's native armor item remains the source of tru
 2. Calculates the final armor profile.
 3. Stores each source item's native D35E armor fields under a module backup flag.
 4. Neutralizes native armor fields on source items so D35E does not double count them.
-5. Creates or updates one hidden zero-weight, slotless D35E equipment carrier named `PAcS Armor Profile`.
+5. Creates or updates one hidden zero-weight, zero-price, slotless D35E equipment carrier named `PAcS Armor Profile`.
 
 Aggregate armor math follows the supplied Ultimate Combat reference as closely as D35E can represent: armor bonuses and weight/cost are summed, a complete arms+legs+torso suit gains `+1`, max Dex/ACP/ASF use worst-piece behavior, mixed complete suits add `+5%` ASF, separately enchanted pieces use the most protective category for masterwork/enhancement benefit, and suit-bound magic applies only when the complete active suit shares one suit ID. Special material automation is all-active-piece gated; mithral changes max Dex, ACP, ASF, and subtype only when every active selected piece is mithral. The bundled catalog is D35E-calibrated, so complete catalog suits close to normal D&D 3.5e armor bonuses after that `+1` instead of copying PF1e armor totals exactly. The old v1.0 summed ACP/ASF/enhancement behavior remains available only through internal compatibility helpers and tests.
 
