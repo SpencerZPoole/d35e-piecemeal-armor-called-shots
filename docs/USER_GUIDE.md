@@ -69,7 +69,7 @@ Settings:
 - `Called shots on full attacks`: controls whether full attacks ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections. See [Full Attacks](#full-attacks).
 - `Called-shot full-attack feat rules`: controls only whether the module blocks full-attack called shots when the attacker lacks the optional feats. `Require feats (RAW-adapted)` is the default. `Warn only` allows the full attack but warns about missing Improved or Greater Called Shot. `Do not require feats` allows the full attack without warnings. Feat bonuses still require the actor to actually have the feat.
 - Called-shot AC uses normal applicable AC by default. See [Called-Shot AC And Exposed Slots](#called-shot-ac-and-exposed-slots).
-- `Show location armor overlay`: adds the matching piecemeal armor coverage slot to called-shot chat cards as advisory information only.
+- `Show called-shot coverage overlay`: adds the matching piecemeal armor coverage slot to called-shot chat cards as advisory information only. It does not change called-shot AC.
 - GM-only source/profile metadata appears automatically to GM users; players still see the useful called-shot result information.
 
 ## Called Shots

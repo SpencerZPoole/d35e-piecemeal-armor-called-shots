@@ -79,7 +79,7 @@ assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).name
 assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).default, FULL_ATTACK_FEAT_RULE_MODES.require);
 assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).choices[FULL_ATTACK_FEAT_RULE_MODES.warnOnly], "Warn only");
 assert.equal(registeredSettings.get(SETTINGS.calledShotFullAttackFeatRules).config, true);
-assert.equal(registeredSettings.get(SETTINGS.locationArmorOverlay).name, "Show location armor overlay");
+assert.equal(registeredSettings.get(SETTINGS.locationArmorOverlay).name, "Show called-shot coverage overlay");
 assert.equal(registeredSettings.get(SETTINGS.locationArmorOverlay).default, false);
 assert.equal(registeredMenus.has("calledShotProfileEditor"), true);
 assert.match(registeredSettings.get(SETTINGS.enableArmor).hint, /hides the PAcS slots/);
