@@ -55,6 +55,19 @@ try {
   payload = { raw: text };
 }
 
+function isAlreadyPublishedVersionError(payload) {
+  const messages = payload?.errors?.__all__ ?? [];
+  return messages.some((entry) => (
+    entry?.code === "unique_together" &&
+    String(entry?.message ?? "").includes("Package Version with this Package and Version Number already exists")
+  ));
+}
+
+if (isAlreadyPublishedVersionError(payload)) {
+  console.log(`publish-foundry-release: ${manifest.id} v${manifest.version} is already published`);
+  process.exit(0);
+}
+
 if (!response.ok || payload.status === "error") {
   console.error(JSON.stringify(payload, null, 2));
   fail(`Foundry API returned HTTP ${response.status}.`);
