@@ -490,7 +490,7 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.enableExposedHeadshots, {
     name: "Enable exposed headshots",
-    hint: "Optional non-RAW house rule. Head, Eye, and Ear called shots remove the defender's armor bonus only when no equipped item occupies D35E's native Head slot.",
+    hint: "Optional non-RAW house rule. Head, Eye, and Ear called shots remove the defender's armor bonus only when no equipped equipment item occupies D35E's native Head slot; any equipped Head-slot equipment keeps the defender's full armor bonus.",
     scope: "world",
     config: true,
     type: Boolean,
@@ -499,7 +499,7 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.enableExposedHandShots, {
     name: "Enable exposed hand shots",
-    hint: "Optional non-RAW house rule. Hand called shots remove the defender's armor bonus only when no equipped item occupies D35E's native Hands slot.",
+    hint: "Optional non-RAW house rule. Hand called shots remove the defender's armor bonus only when no equipped equipment item occupies D35E's native Hands slot; any equipped Hands-slot equipment keeps the defender's full armor bonus.",
     scope: "world",
     config: true,
     type: Boolean,

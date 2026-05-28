@@ -60,8 +60,10 @@ assert.equal(registeredSettings.get(SETTINGS.enableArmor).name, "Enable piecemea
 assert.equal(registeredSettings.get(SETTINGS.enableCalledShots).name, "Enable called shots");
 assert.equal(registeredSettings.get(SETTINGS.enableExposedHeadshots).name, "Enable exposed headshots");
 assert.equal(registeredSettings.get(SETTINGS.enableExposedHeadshots).default, false);
+assert.match(registeredSettings.get(SETTINGS.enableExposedHeadshots).hint, /any equipped Head-slot equipment keeps the defender's full armor bonus/);
 assert.equal(registeredSettings.get(SETTINGS.enableExposedHandShots).name, "Enable exposed hand shots");
 assert.equal(registeredSettings.get(SETTINGS.enableExposedHandShots).default, false);
+assert.match(registeredSettings.get(SETTINGS.enableExposedHandShots).hint, /any equipped Hands-slot equipment keeps the defender's full armor bonus/);
 assert.equal(registeredSettings.get(SETTINGS.enableCalledShotLocalArmor).name, "Called shots use local armor piece AC");
 assert.equal(registeredSettings.get(SETTINGS.enableCalledShotLocalArmor).default, false);
 assert.match(registeredSettings.get(SETTINGS.enableCalledShotLocalArmor).hint, /almost always makes called shots easier/);

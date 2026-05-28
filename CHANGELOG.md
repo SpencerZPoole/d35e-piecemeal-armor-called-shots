@@ -5,6 +5,7 @@
 - Added disabled-by-default `Called shots use local armor piece AC`, an advanced house rule that replaces only the defender's armor/profile armor contribution with matching local piece armor for selected called-shot locations.
 - Added inline child toggles under `Called shots use local armor piece AC`, letting tables enable or disable the local armor piece AC rule per active called-shot profile location without opening a second settings window.
 - Preserved exposed head/hand shots as separate fallback house rules: local armor runs first when enabled for a location, and exposed head/hand does not double-apply to the same hit check.
+- Clarified exposed head/hand settings and docs: an empty native `Head` or `Hands` slot can lose armor AC, while any equipped item in that exact slot keeps the full armor bonus.
 - Added default helmet Spot and Listen penalty settings for ordinary equipped Head-slot items, while keeping explicit PAcS helmet skill values as overrides.
 - Documented the feature as a future v1.6.0-style optional house rule that partially helps issue #5's local-armor-by-location idea while leaving helmet family-cap inheritance open.
 

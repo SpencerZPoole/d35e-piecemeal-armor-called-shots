@@ -86,18 +86,18 @@ function nativeArmor(id, name, equipped = false, armorBonus = 0, enhancementBonu
   };
 }
 
-function nativeSlotItem(id, slot, equipped = true) {
+function nativeSlotItem(id, slot, equipped = true, options = {}) {
   return {
     id,
-    name: `${slot} item`,
-    type: "equipment",
+    name: options.name ?? `${slot} item`,
+    type: options.type ?? "equipment",
     system: {
-      carried: true,
+      carried: options.carried ?? true,
       equipped,
       equipmentType: "misc",
       armor: { value: 0, enh: 0 },
       slot,
-      melded: false
+      melded: options.melded ?? false
     },
     flags: {},
     getFlag: itemGetFlag
@@ -201,6 +201,30 @@ assert.equal(calculateLocalArmorAdjustment({
   ...aggregateActor,
   items: [aggregate(4, 1), nativeSlotItem("helmet", "head")]
 }, "ear"), null);
+assert.equal(calculateLocalArmorAdjustment({
+  ...aggregateActor,
+  items: [aggregate(4, 1), nativeSlotItem("pacs-helmet", "head", true, { name: "[PAcS] Leather Cap" })]
+}, "eye"), null);
+assert.equal(calculateLocalArmorAdjustment({
+  ...aggregateActor,
+  items: [aggregate(4, 1), nativeSlotItem("unequipped-helmet", "head", false)]
+}, "head").adjustment, -5);
+assert.equal(calculateLocalArmorAdjustment({
+  ...aggregateActor,
+  items: [aggregate(4, 1), nativeSlotItem("uncarried-helmet", "head", true, { carried: false })]
+}, "head").adjustment, -5);
+assert.equal(calculateLocalArmorAdjustment({
+  ...aggregateActor,
+  items: [aggregate(4, 1), nativeSlotItem("melded-helmet", "head", true, { melded: true })]
+}, "head").adjustment, -5);
+assert.equal(calculateLocalArmorAdjustment({
+  ...aggregateActor,
+  items: [aggregate(4, 1), nativeSlotItem("non-equipment-helmet", "head", true, { type: "loot" })]
+}, "head").adjustment, -5);
+assert.equal(calculateLocalArmorAdjustment({
+  ...aggregateActor,
+  items: [aggregate(4, 1), nativeSlotItem("headband", "headband", true)]
+}, "ear").adjustment, -5);
 
 const profileHead = calculateLocalArmorAdjustment(profileActor, "head");
 assert.equal(profileHead.aggregateTotal, 2);
@@ -228,6 +252,26 @@ assert.equal(calculateLocalArmorAdjustment({
   ...aggregateActor,
   items: [aggregate(4, 1), nativeSlotItem("gloves", "hands")]
 }, "hand"), null);
+assert.equal(calculateLocalArmorAdjustment({
+  ...aggregateActor,
+  items: [aggregate(4, 1), nativeSlotItem("pacs-gloves", "hands", true, { name: "[PAcS] Gloves" })]
+}, "hand"), null);
+assert.equal(calculateLocalArmorAdjustment({
+  ...aggregateActor,
+  items: [aggregate(4, 1), nativeSlotItem("unequipped-gloves", "hands", false)]
+}, "hand").adjustment, -5);
+assert.equal(calculateLocalArmorAdjustment({
+  ...aggregateActor,
+  items: [aggregate(4, 1), nativeSlotItem("uncarried-gloves", "hands", true, { carried: false })]
+}, "hand").adjustment, -5);
+assert.equal(calculateLocalArmorAdjustment({
+  ...aggregateActor,
+  items: [aggregate(4, 1), nativeSlotItem("melded-gloves", "hands", true, { melded: true })]
+}, "hand").adjustment, -5);
+assert.equal(calculateLocalArmorAdjustment({
+  ...aggregateActor,
+  items: [aggregate(4, 1), nativeSlotItem("ring", "ring", true)]
+}, "hand").adjustment, -5);
 localArmorEnabled = false;
 localArmorLocations = {};
 
@@ -278,12 +322,20 @@ const localHandApplied = applyLocalArmorAdjustment(profileActor, localHandAc, ha
 assert.equal(localHandApplied.source, "localArmor");
 assert.equal(localHandAc.ac, 19);
 assert.equal(localHandAc.acModifiers.at(-1).sourceName, "Called Shot Local Armor: Hand (profile 2 -> local piece 0)");
+exposedHandShots = true;
+const localBeforeExposedAc = { ac: 21, acModifiers: [{ sourceName: "AC", value: 21 }] };
+const localBeforeExposed = applyLocalArmorAdjustment(profileActor, localBeforeExposedAc, handPayload);
+assert.equal(localBeforeExposed.source, "localArmor");
+assert.equal(localBeforeExposedAc.ac, 19);
+assert.equal(localBeforeExposedAc.acModifiers.length, 2);
 localArmorLocations = { hand: false };
 const normalAc = { ac: 21, acModifiers: [{ sourceName: "AC", value: 21 }] };
-assert.equal(applyLocalArmorAdjustment(aggregateActor, normalAc, handPayload), null);
-assert.equal(normalAc.ac, 21);
-assert.equal(normalAc.acModifiers.length, 1);
+const fallbackExposed = applyLocalArmorAdjustment(aggregateActor, normalAc, handPayload);
+assert.equal(fallbackExposed.source, "exposed");
+assert.equal(normalAc.ac, 16);
+assert.equal(normalAc.acModifiers.at(-1).sourceName, "Called Shot Exposed Hand: no Hands-slot item (armor 5 -> 0)");
 localArmorEnabled = false;
+exposedHandShots = false;
 localArmorLocations = {};
 
 const coverAc = { ac: 25, acModifiers: [{ sourceName: "Cover", value: "+4" }] };

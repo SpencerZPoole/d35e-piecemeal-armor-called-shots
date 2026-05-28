@@ -41,7 +41,7 @@
   <li>Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as <code>Called Shot: Ear -10</code> or <code>Called Shot Range/Reach: not adjacent -2</code>.</li>
   <li>Keeps called-shot hit checks on normal applicable AC by default, while preserving RAW-adapted touch, cover, concealment, range/reach, DR, and outcome handling.</li>
   <li>Offers an advanced disabled-by-default local armor piece AC house rule with per-location toggles.</li>
-  <li>Offers optional exposed headshot and exposed hand-shot house rules based on D35E's native Head and Hands slots.</li>
+  <li>Offers optional exposed headshot and exposed hand-shot house rules: empty Head or Hands slots can lose armor AC, while any equipped equipment item in that slot keeps the full armor bonus.</li>
   <li>Enforces Improved/Greater Called Shot full-attack limits by default while offering table-facing warn-only and no-requirement options.</li>
   <li>Includes <code>PAcS Armor Pieces</code>, <code>PAcS Called-Shot Feats</code>, and <code>PAcS Helmets</code> compendia with convenience records for optional-rule setup.</li>
   <li>Automatically applies called-shot severity outcomes after D35E Apply Damage and records a GM restore ledger.</li>
@@ -72,7 +72,7 @@
 
 <h3>Automatic Outcomes And Restore</h3>
 
-<p>Called shots use the defender's normal applicable AC by default. D35E Apply Damage determines hit, crit, and post-DR damage; the module then determines normal, critical, or debilitating severity and applies, confirms, or leaves advisory outcomes based on the table setting. Severe outcomes such as death or permanent maiming are recorded in a called-shot ledger so a GM can restore them from the target actor sheet if needed. The advanced local armor piece AC setting can replace only the active armor/profile armor contribution with a matching local armor piece contribution for selected locations. Optional exposed headshot and exposed hand-shot settings can subtract only the active armor contribution when the relevant native Head or Hands slot is empty, but they do not stack on top of local armor for the same hit check.</p>
+<p>Called shots use the defender's normal applicable AC by default. D35E Apply Damage determines hit, crit, and post-DR damage; the module then determines normal, critical, or debilitating severity and applies, confirms, or leaves advisory outcomes based on the table setting. Severe outcomes such as death or permanent maiming are recorded in a called-shot ledger so a GM can restore them from the target actor sheet if needed. The advanced local armor piece AC setting is the grittier option: it can replace only the active armor/profile armor contribution with a matching local armor piece contribution for selected locations. Optional exposed headshot and exposed hand-shot settings are the softer fallback: they subtract only the active armor contribution when the relevant native Head or Hands slot is empty, any equipped slot item keeps the full armor bonus, and they do not stack on top of local armor for the same hit check.</p>
 
 <h3>Configuration</h3>
 
