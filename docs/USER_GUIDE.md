@@ -122,7 +122,7 @@ The optional exposed rules are separate non-RAW house rules:
 
 These settings remove only the armor contribution, including armor enhancement as part of armor AC. They do not remove shield, natural armor, Dexterity, deflection, dodge, size, or other AC sources. Any equipped item in the relevant native slot prevents the exposed adjustment; it can be native D35E gear, a PAcS item, magic gear, or custom gear. If local armor piece AC applies to the same hit check, exposed head/hand does not stack on top of it.
 
-In short, local armor piece AC is the grittier option: covered locations use only their matching piece contribution. Exposed head/hand is the softer compromise: the target loses armor only when the relevant native slot is empty, and any equipped slot item keeps the full armor bonus.
+In short, local armor piece AC is the grittier option: covered locations use only their matching piece contribution. Exposed head/hand is the softer compromise: the target loses armor only when the relevant native slot is empty, and any equipped slot equipment keeps the full armor bonus.
 
 Example: a target with chainmail contributing `5` armor AC and no equipped Head-slot item is attacked with a Head called shot. With exposed headshots disabled, the attack checks the target's normal AC. With exposed headshots enabled, the Apply Damage AC Details row shows `Called Shot Exposed Head: no Head-slot item (armor 5 -> 0) -5`.
 
@@ -184,7 +184,7 @@ These feat items are convenience records for this module. Their descriptions are
 
 Open Foundry's Compendium Packs sidebar and look for `PAcS Helmets`. The pack contains preconfigured Head-slot equipment with `[PAcS]` names for padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate helmet styles.
 
-These helmets are optional house-rule support items with editable weight, price, HP, and Spot/Listen penalty fields. They do not add normal AC, touch AC, flat-footed AC, max Dex limits, ACP, ASF, speed changes, suit bonuses, or armor-profile source rows. With exposed headshots enabled, any equipped Head-slot item can prevent exposed headshots, including these helmets and ordinary D35E headgear.
+These helmets are optional house-rule support items with editable weight, price, HP, and Spot/Listen penalty fields. They do not add normal AC, touch AC, flat-footed AC, max Dex limits, ACP, ASF, speed changes, suit bonuses, or armor-profile source rows. With exposed headshots enabled, any equipped Head-slot equipment can prevent exposed headshots, including these helmets and ordinary D35E headgear.
 
 ## Called-Shot Chat Cards
 
