@@ -8,6 +8,8 @@ export const SETTINGS = Object.freeze({
   armorWorkflowMode: "armorWorkflowMode",
   enableArmor: "enableArmorAutomation",
   enableCalledShots: "enableCalledShots",
+  enableExposedHeadshots: "enableExposedHeadshots",
+  enableExposedHandShots: "enableExposedHandShots",
   enableHelmetHeadCoverage: "enableHelmetHeadCoverage",
   enableHelmetSkillPenalties: "enableHelmetSkillPenalties",
   calledShotOutcomeMode: "calledShotOutcomeMode",

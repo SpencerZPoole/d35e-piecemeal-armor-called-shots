@@ -51,7 +51,11 @@ assert.equal(registeredSettings.get(SETTINGS.calledShotLocalArmorMode).config, f
 assert.equal(registeredSettings.get(SETTINGS.showGmOnlyDetails).config, false);
 assert.equal(registeredSettings.get(SETTINGS.enableArmor).name, "Enable piecemeal armor");
 assert.equal(registeredSettings.get(SETTINGS.enableCalledShots).name, "Enable called shots");
-assert.equal(registeredSettings.get(SETTINGS.enableHelmetHeadCoverage).name, "Enable helmet head coverage house rule");
+assert.equal(registeredSettings.get(SETTINGS.enableExposedHeadshots).name, "Enable exposed headshots");
+assert.equal(registeredSettings.get(SETTINGS.enableExposedHeadshots).default, false);
+assert.equal(registeredSettings.get(SETTINGS.enableExposedHandShots).name, "Enable exposed hand shots");
+assert.equal(registeredSettings.get(SETTINGS.enableExposedHandShots).default, false);
+assert.equal(registeredSettings.get(SETTINGS.enableHelmetHeadCoverage).config, false);
 assert.equal(registeredSettings.get(SETTINGS.enableHelmetHeadCoverage).default, false);
 assert.equal(registeredSettings.get(SETTINGS.enableHelmetSkillPenalties).name, "Apply helmet Spot/Listen penalties");
 assert.equal(registeredSettings.get(SETTINGS.enableHelmetSkillPenalties).default, false);
@@ -247,11 +251,11 @@ globalThis.document = originalDocument;
 assert.deepEqual(panel.querySelectorAll(".d35e-pacs-section").map((section) => section.dataset.d35ePacsPanelSection), [
   "Piecemeal armor",
   "Magic, material, and suit data",
-  "Helmet head coverage"
+  "Helmet skill penalties"
 ]);
 assert.deepEqual(panel.querySelectorAll("details").map((details) => details.querySelector("summary").textContent), [
   "Show magic and suit fields",
-  "Helmet coverage and skill penalties"
+  "Show helmet skill fields"
 ]);
 for (const fieldName of [
   `flags.${MODULE_ID}.${FLAGS.piecemeal}.catalogId`,
@@ -259,9 +263,7 @@ for (const fieldName of [
   `flags.${MODULE_ID}.${FLAGS.piecemeal}.coverageSlots`,
   `flags.${MODULE_ID}.${FLAGS.piecemeal}.suitId`,
   `flags.${MODULE_ID}.${FLAGS.piecemeal}.masterwork`,
-  `flags.${MODULE_ID}.${FLAGS.helmet}.armorFamily`,
-  `flags.${MODULE_ID}.${FLAGS.helmet}.localArmorBonus`,
-  `flags.${MODULE_ID}.${FLAGS.helmet}.coverageSlots`,
+  `flags.${MODULE_ID}.${FLAGS.helmet}.enabled`,
   `flags.${MODULE_ID}.${FLAGS.helmet}.spotPenalty`
 ]) {
   assert.ok(panel.querySelector(`[name="${fieldName}"]`), `Missing PAcS panel field: ${fieldName}`);

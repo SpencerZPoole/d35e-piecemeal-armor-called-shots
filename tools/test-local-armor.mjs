@@ -6,6 +6,7 @@ import {
   applyCalledShotConcealmentAdjustment,
   applyStagedCalledShotLocalArmor,
   attachCalledShotToDamageCard,
+  calculateActiveArmorContribution,
   calculateLocalArmorAdjustment,
   clearStagedCalledShotDamageApplication,
   extractCalledShotDamagePayloads,
@@ -17,6 +18,9 @@ import {
 
 const MODULE_ID = "d35e-piecemeal-armor-called-shots";
 
+let exposedHeadshots = false;
+let exposedHandShots = false;
+
 globalThis.game = {
   user: { id: "gm-1" },
   settings: {
@@ -27,6 +31,8 @@ globalThis.game = {
       if (key === "armorWorkflowMode") return "nativeProfile";
       if (key === "enableHelmetHeadCoverage") return false;
       if (key === "enableHelmetSkillPenalties") return false;
+      if (key === "enableExposedHeadshots") return exposedHeadshots;
+      if (key === "enableExposedHandShots") return exposedHandShots;
       return true;
     }
   }
@@ -36,61 +42,29 @@ function itemGetFlag(moduleId, key) {
   return this.flags?.[moduleId]?.[key];
 }
 
-function piece(id, slot, armorBonus, enhancementBonus = 0, options = {}) {
-  const magic = options.suit
-    ? {
-        magicMode: "suit",
-        suitId: "playtest-suit"
-      }
-    : enhancementBonus > 0
-      ? { magicMode: "separatePiece" }
-      : {};
-  return {
-    id,
-    name: `${slot} piece`,
-    type: "equipment",
-    system: {
-      carried: true,
-      melded: false,
-      armor: { value: 0, enh: 0 }
-    },
-    flags: {
-      [MODULE_ID]: {
-        piecemeal: {
-          enabled: true,
-          slot,
-          armorBonus,
-          enhancementBonus,
-          ...magic
-        }
-      }
-    },
-    getFlag: itemGetFlag
-  };
-}
-
 function aggregate(armorBonus, enhancementBonus = 0, equipped = true) {
   return {
     id: "aggregate",
-    name: "Piecemeal Armor Aggregate",
+    name: "PAcS Armor Profile",
     type: "equipment",
     system: {
       equipped,
-      armor: { value: armorBonus, enh: enhancementBonus }
+      armor: { value: armorBonus + enhancementBonus, enh: 0 }
     },
     flags: {
       [MODULE_ID]: {
         aggregate: {
           isAggregate: true,
           summary: { armorBonus, enhancementBonus }
-        }
+        },
+        internalArmor: { isInternal: true }
       }
     },
     getFlag: itemGetFlag
   };
 }
 
-function nativeArmor(id, name, equipped = false) {
+function nativeArmor(id, name, equipped = false, armorBonus = 0, enhancementBonus = 0) {
   return {
     id,
     name,
@@ -99,7 +73,8 @@ function nativeArmor(id, name, equipped = false) {
       carried: true,
       equipped,
       equipmentType: "armor",
-      armor: { value: 0, enh: 0 },
+      armor: { value: armorBonus, enh: enhancementBonus },
+      slot: "armor",
       melded: false
     },
     flags: {},
@@ -107,7 +82,25 @@ function nativeArmor(id, name, equipped = false) {
   };
 }
 
-const actor = {
+function nativeSlotItem(id, slot, equipped = true) {
+  return {
+    id,
+    name: `${slot} item`,
+    type: "equipment",
+    system: {
+      carried: true,
+      equipped,
+      equipmentType: "misc",
+      armor: { value: 0, enh: 0 },
+      slot,
+      melded: false
+    },
+    flags: {},
+    getFlag: itemGetFlag
+  };
+}
+
+const aggregateActor = {
   id: "target-actor",
   uuid: "Actor.target-actor",
   system: {
@@ -118,32 +111,12 @@ const actor = {
       }
     }
   },
-  items: [
-    aggregate(4, 1),
-    piece("legs", "legs", 3, 1, { suit: true }),
-    piece("head", "head", 6, 1, { suit: true }),
-    piece("arms", "arms", 1, 0, { suit: true })
-  ],
+  items: [aggregate(4, 1)],
   getActiveTokens() {
     return [{ document: { uuid: "Scene.scene.Token.target-token" } }];
   }
 };
 
-assert.equal(normalizeArmorSlot("Leg"), "legs");
-assert.equal(normalizeArmorSlot("Feet"), "legs");
-assert.equal(normalizeArmorSlot("Eye"), "head");
-assert.equal(normalizeArmorSlot("Vitals"), "torso");
-assert.deepEqual(parseArmorCoverageSlots("head; eyes, ears|face/neck"), ["head", "neck"]);
-assert.equal(armorCoverageOverlaps("head; eyes; ears", "ear"), true);
-assert.equal(armorCoverageOverlaps("legs", "head"), false);
-
-const legs = calculateLocalArmorAdjustment(actor, "legs");
-assert.equal(legs.aggregateTotal, 5);
-assert.equal(legs.localTotal, 4);
-assert.equal(legs.adjustment, -1);
-
-const head = calculateLocalArmorAdjustment(actor, "head");
-assert.equal(head.adjustment, 2);
 const profileActor = {
   id: "profile-target",
   uuid: "Actor.profile-target",
@@ -161,53 +134,59 @@ const profileActor = {
   ],
   getFlag: itemGetFlag
 };
-const profileLegs = calculateLocalArmorAdjustment(profileActor, "legs");
-assert.equal(profileLegs.aggregateTotal, 2);
-assert.equal(profileLegs.localTotal, 0);
-assert.equal(profileLegs.adjustment, -2);
+
+const nativeArmorActor = {
+  id: "native-target",
+  uuid: "Actor.native-target",
+  items: [nativeArmor("chainmail", "Chainmail", true, 5, 1)],
+  getFlag: itemGetFlag
+};
+
+assert.equal(normalizeArmorSlot("Leg"), "legs");
+assert.equal(normalizeArmorSlot("Feet"), "legs");
+assert.equal(normalizeArmorSlot("Eye"), "head");
+assert.equal(normalizeArmorSlot("Vitals"), "torso");
+assert.deepEqual(parseArmorCoverageSlots("head; eyes, ears|face/neck"), ["head", "neck"]);
+assert.equal(armorCoverageOverlaps("head; eyes; ears", "ear"), true);
+assert.equal(armorCoverageOverlaps("legs", "head"), false);
+
+assert.equal(calculateLocalArmorAdjustment(aggregateActor, "legs"), null);
+assert.equal(calculateLocalArmorAdjustment(aggregateActor, "hands"), null);
+assert.equal(calculateLocalArmorAdjustment(profileActor, "head"), null);
+assert.equal(calculateActiveArmorContribution(aggregateActor).total, 5);
+assert.equal(calculateActiveArmorContribution(nativeArmorActor).total, 6);
+
+exposedHeadshots = true;
+const exposedHead = calculateLocalArmorAdjustment(aggregateActor, "head");
+assert.equal(exposedHead.aggregateTotal, 5);
+assert.equal(exposedHead.localTotal, 0);
+assert.equal(exposedHead.adjustment, -5);
+assert.equal(exposedHead.source, "exposed");
+assert.equal(exposedHead.nativeSlot, "head");
+
+assert.equal(calculateLocalArmorAdjustment({
+  ...aggregateActor,
+  items: [aggregate(4, 1), nativeSlotItem("helmet", "head")]
+}, "ear"), null);
+
 const profileHead = calculateLocalArmorAdjustment(profileActor, "head");
 assert.equal(profileHead.aggregateTotal, 2);
-assert.equal(profileHead.localTotal, 1);
-assert.equal(profileHead.adjustment, -1);
-const multiCoverage = calculateLocalArmorAdjustment({
-  ...actor,
-  items: [
-    aggregate(5, 0),
-    piece("great-helm", "head; eyes; ears", 6, 1)
-  ]
-}, "ear");
-assert.equal(multiCoverage.localTotal, 7);
-assert.equal(multiCoverage.pieceCount, 1);
-assert.equal(multiCoverage.adjustment, 2);
-const dedupedCoverage = calculateLocalArmorAdjustment({
-  ...actor,
-  items: [
-    aggregate(5, 0),
-    piece("overlapping-helm", "head; eye", 6, 1)
-  ]
-}, "head; eye");
-assert.equal(dedupedCoverage.localTotal, 7);
-assert.equal(dedupedCoverage.pieceCount, 1);
-assert.equal(calculateLocalArmorAdjustment({ ...actor, items: actor.items.slice(1) }, "legs"), null);
-const uncoveredHands = calculateLocalArmorAdjustment(actor, "hands");
-assert.equal(uncoveredHands.aggregateTotal, 5);
-assert.equal(uncoveredHands.localTotal, 0);
-assert.equal(uncoveredHands.adjustment, -5);
-assert.equal(uncoveredHands.pieceCount, 0);
-assert.equal(uncoveredHands.source, "uncovered");
-const torsoOnlyHands = calculateLocalArmorAdjustment({
-  ...actor,
-  items: [
-    aggregate(4, 0),
-    piece("torso", "torso", 4, 0)
-  ]
-}, "hands");
-assert.equal(torsoOnlyHands.aggregateTotal, 4);
-assert.equal(torsoOnlyHands.localTotal, 0);
-assert.equal(torsoOnlyHands.adjustment, -4);
-assert.equal(torsoOnlyHands.source, "uncovered");
-assert.equal(calculateLocalArmorAdjustment({ id: "no-profile", items: [] }, "hands"), null);
-assert.equal(calculateLocalArmorAdjustment({ ...actor, items: [aggregate(5, 0, false), piece("legs", "legs", 4, 0)] }, "legs"), null);
+assert.equal(profileHead.adjustment, -2);
+
+const nativeHead = calculateLocalArmorAdjustment(nativeArmorActor, "eye");
+assert.equal(nativeHead.aggregateTotal, 6);
+assert.equal(nativeHead.adjustment, -6);
+
+exposedHeadshots = false;
+exposedHandShots = true;
+const exposedHand = calculateLocalArmorAdjustment(aggregateActor, "hands");
+assert.equal(exposedHand.aggregateTotal, 5);
+assert.equal(exposedHand.nativeSlot, "hands");
+assert.equal(exposedHand.adjustment, -5);
+assert.equal(calculateLocalArmorAdjustment({
+  ...aggregateActor,
+  items: [aggregate(4, 1), nativeSlotItem("gloves", "hands")]
+}, "hand"), null);
 
 const payload = sanitizeCalledShotDamagePayload({
   userId: "gm-1",
@@ -242,35 +221,45 @@ const handPayload = sanitizeCalledShotDamagePayload({
   coverageSlot: "hands"
 });
 const handAc = { ac: 21, acModifiers: [{ sourceName: "AC", value: 21 }] };
-const uncoveredApplied = applyLocalArmorAdjustment(actor, handAc, handPayload);
-assert.equal(uncoveredApplied.adjusted, true);
+const exposedApplied = applyLocalArmorAdjustment(aggregateActor, handAc, handPayload);
+assert.equal(exposedApplied.adjusted, true);
 assert.equal(handAc.ac, 16);
-assert.equal(handAc.acModifiers.at(-1).sourceName, "Called Shot Location Armor: Hand (profile 5 -> unarmored location 0)");
+assert.equal(handAc.acModifiers.at(-1).sourceName, "Called Shot Exposed Hand: no Hands-slot item (armor 5 -> 0)");
 assert.equal(handAc.acModifiers.at(-1).value, "-5");
 
-const finalAc = { ac: 21, acModifiers: [{ sourceName: "AC", value: 21 }] };
-const applied = applyLocalArmorAdjustment(actor, finalAc, payload);
-assert.equal(applied.adjusted, true);
-assert.equal(finalAc.ac, 20);
-assert.equal(finalAc.acModifiers.at(-1).sourceName, "Called Shot Location Armor: Leg (profile 5 -> location 4)");
-assert.equal(finalAc.acModifiers.at(-1).value, "-1");
-
-const displayAc = { ac: 21, acModifiers: [] };
-const displayed = applyLocalArmorAdjustment(actor, displayAc, payload, { mode: LOCAL_ARMOR_MODES.display });
-assert.equal(displayed.adjusted, false);
-assert.equal(displayAc.ac, 21);
-assert.match(displayAc.acModifiers.at(-1).sourceName, /advisory/);
+exposedHandShots = false;
+const normalAc = { ac: 21, acModifiers: [{ sourceName: "AC", value: 21 }] };
+assert.equal(applyLocalArmorAdjustment(aggregateActor, normalAc, handPayload), null);
+assert.equal(normalAc.ac, 21);
+assert.equal(normalAc.acModifiers.length, 1);
 
 const coverAc = { ac: 25, acModifiers: [{ sourceName: "Cover", value: "+4" }] };
-applyLocalArmorAdjustment(actor, coverAc, payload, { mode: LOCAL_ARMOR_MODES.display });
+applyLocalArmorAdjustment(aggregateActor, coverAc, payload, { mode: LOCAL_ARMOR_MODES.display });
 assert.equal(coverAc.ac, 29);
 assert.equal(coverAc.acModifiers.some((entry) => entry.sourceName === "Called Shot Cover"), true);
 
 const touchAc = { ac: 12, acModifiers: [{ sourceName: "AC", value: 12 }] };
-const touchCalledShot = applyLocalArmorAdjustment(actor, touchAc, payload);
-assert.equal(touchCalledShot.touchAdjustment.adjustment, 9);
-assert.equal(touchCalledShot.adjustment, -1);
-assert.equal(touchAc.ac, 20);
+const touchCalledShot = applyLocalArmorAdjustment(aggregateActor, touchAc, payload);
+assert.equal(touchCalledShot.adjustment, 9);
+assert.equal(touchAc.ac, 21);
+
+exposedHeadshots = true;
+const headPayload = sanitizeCalledShotDamagePayload({
+  userId: "gm-1",
+  actorId: "attacker",
+  itemId: "sword",
+  targetUuid: "Scene.scene.Token.target-token",
+  profileId: "profile",
+  locationId: "head",
+  locationLabel: "Head",
+  penalty: -5,
+  coverageSlot: "head"
+});
+const displayAc = { ac: 21, acModifiers: [] };
+const displayed = applyLocalArmorAdjustment(aggregateActor, displayAc, headPayload, { mode: LOCAL_ARMOR_MODES.display });
+assert.equal(displayed.adjusted, false);
+assert.equal(displayAc.ac, 21);
+assert.match(displayAc.acModifiers.at(-1).sourceName, /advisory/);
 
 clearStagedCalledShotDamageApplication("gm-1");
 stageCalledShotDamageApplication(payload, { userId: "gm-1", messageId: "msg-1" });
@@ -279,19 +268,15 @@ assert.equal(getStagedCalledShotDamageApplication("gm-1", Date.now() + 2 * 60 * 
 assert.equal(getStagedCalledShotDamageApplication("gm-1", Date.now() + 6 * 60 * 1000), null);
 stageCalledShotDamageApplication(payload, { userId: "gm-1", messageId: "msg-2" });
 const conceal = { concealTarget: 20 };
-assert.deepEqual(applyCalledShotConcealmentAdjustment(actor, conceal, "gm-1"), { original: 20, adjusted: 50 });
+assert.deepEqual(applyCalledShotConcealmentAdjustment(aggregateActor, conceal, "gm-1"), { original: 20, adjusted: 50 });
 assert.equal(conceal.concealTarget, 50);
-const stagedAc = { ac: 21, acModifiers: [] };
-const staged = applyStagedCalledShotLocalArmor(actor, stagedAc, "gm-1");
-assert.equal(staged.adjustment, -1);
-assert.equal(stagedAc.ac, 20);
-assert.equal(getStagedCalledShotDamageApplication("gm-1").localArmor.adjustment, -1);
+
 clearStagedCalledShotDamageApplication("gm-1");
-stageCalledShotDamageApplication(handPayload, { userId: "gm-1", messageId: "msg-hand" });
-const stagedHandAc = { ac: 21, acModifiers: [] };
-const stagedHand = applyStagedCalledShotLocalArmor(actor, stagedHandAc, "gm-1");
-assert.equal(stagedHand.adjustment, -5);
-assert.equal(stagedHandAc.ac, 16);
-assert.equal(stagedHandAc.acModifiers.at(-1).sourceName, "Called Shot Location Armor: Hand (profile 5 -> unarmored location 0)");
+stageCalledShotDamageApplication(headPayload, { userId: "gm-1", messageId: "msg-head" });
+const stagedHeadAc = { ac: 21, acModifiers: [] };
+const stagedHead = applyStagedCalledShotLocalArmor(aggregateActor, stagedHeadAc, "gm-1");
+assert.equal(stagedHead.adjustment, -5);
+assert.equal(stagedHeadAc.ac, 16);
+assert.equal(stagedHeadAc.acModifiers.at(-1).sourceName, "Called Shot Exposed Head: no Head-slot item (armor 5 -> 0)");
 
 console.log("test-local-armor: ok");

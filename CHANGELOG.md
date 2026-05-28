@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 1.5.0
+
+- Rebased called-shot AC behavior on the Ultimate Combat default: called shots now keep the defender's normal applicable AC instead of replacing armor AC with local piecemeal coverage.
+- Kept RAW-adapted defense hooks for called-shot touch attacks, non-soft cover, concealment, range/reach penalties, DR-negated no-effect behavior, full-attack feat rules, severity, and outcomes.
+- Added disabled-by-default `Enable exposed headshots` and `Enable exposed hand shots` settings. These house rules remove only active armor/profile armor AC when Head/Eye/Ear or Hand is targeted and the matching native D35E slot is empty.
+- Deprecated helmet local armor AC. `PAcS Helmets` remain useful Head-slot equipment and optional Spot/Listen penalty records, but helmet family/local armor values no longer change called-shot AC.
+- Updated public docs and release surfaces to distinguish RAW-adapted called-shot AC from optional exposed-slot house rules.
+
 ## 1.4.1
 
 - `PAcS-1.4.1-01`: Fixed hidden PAcS carriers and legacy aggregates so they stay zero-price as well as zero-weight, preventing composite profile inventory value from double-counting source armor.

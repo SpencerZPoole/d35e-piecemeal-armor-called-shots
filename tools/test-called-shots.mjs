@@ -21,7 +21,7 @@ import {
   stageCalledShotForEveryAttack,
   stageCalledShotQueue
 } from "../scripts/called-shots.js";
-import { canApplyCalledShotLocalArmor, resolveFullAttackFeatRuleDecision } from "../scripts/d35e-integration.js";
+import { canApplyCalledShotDefenseAdjustments, resolveFullAttackFeatRuleDecision } from "../scripts/d35e-integration.js";
 import {
   getActiveProfile,
   getDefaultCalledShotProfiles,
@@ -456,12 +456,12 @@ assert.equal(getCalledShotFullAttackFeatRuleMode(), FULL_ATTACK_FEAT_RULE_MODES.
 assert.equal(calledShotOutcomeNeedsConfirmation("normal"), false);
 assert.equal(calledShotOutcomeNeedsConfirmation("critical"), true);
 assert.equal(calledShotOutcomeNeedsConfirmation("debilitating"), true);
-assert.equal(canApplyCalledShotLocalArmor(), true);
+assert.equal(canApplyCalledShotDefenseAdjustments(), true);
 armorEnabled = false;
-assert.equal(canApplyCalledShotLocalArmor(), false);
+assert.equal(canApplyCalledShotDefenseAdjustments(), true);
 armorEnabled = true;
 calledShotsEnabled = false;
-assert.equal(canApplyCalledShotLocalArmor(), false);
+assert.equal(canApplyCalledShotDefenseAdjustments(), false);
 calledShotsEnabled = true;
 
 currentOutcomeMode = OUTCOME_MODES.advisory;

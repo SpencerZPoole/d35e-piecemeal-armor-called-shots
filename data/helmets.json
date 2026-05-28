@@ -6,7 +6,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>[PAcS] Padded Helmet is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +1, weight 1 lb., price 1 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Padded Helmet is an optional PAcS Head-slot equipment item. If exposed headshots are enabled, equipping this item in D35E's native Head slot prevents Head, Eye, and Ear called shots from treating the head as exposed.</p><p>Starter inventory values: weight 1 lb., price 1 gp, HP 10. Spot and Listen penalties default to 0 and are editable if your table enables helmet skill penalties.</p><p>This helmet does not add normal AC, touch AC, flat-footed AC, local armor AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -75,7 +75,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>[PAcS] Leather Helmet is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +2, weight 2 lb., price 1 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Leather Helmet is an optional PAcS Head-slot equipment item. If exposed headshots are enabled, equipping this item in D35E's native Head slot prevents Head, Eye, and Ear called shots from treating the head as exposed.</p><p>Starter inventory values: weight 2 lb., price 1 gp, HP 10. Spot and Listen penalties default to 0 and are editable if your table enables helmet skill penalties.</p><p>This helmet does not add normal AC, touch AC, flat-footed AC, local armor AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -144,7 +144,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>[PAcS] Studded Leather Helmet is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +3, weight 2 lb., price 3 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Studded Leather Helmet is an optional PAcS Head-slot equipment item. If exposed headshots are enabled, equipping this item in D35E's native Head slot prevents Head, Eye, and Ear called shots from treating the head as exposed.</p><p>Starter inventory values: weight 2 lb., price 3 gp, HP 10. Spot and Listen penalties default to 0 and are editable if your table enables helmet skill penalties.</p><p>This helmet does not add normal AC, touch AC, flat-footed AC, local armor AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -213,7 +213,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>[PAcS] Hide Helmet is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +3, weight 3 lb., price 2 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Hide Helmet is an optional PAcS Head-slot equipment item. If exposed headshots are enabled, equipping this item in D35E's native Head slot prevents Head, Eye, and Ear called shots from treating the head as exposed.</p><p>Starter inventory values: weight 3 lb., price 2 gp, HP 10. Spot and Listen penalties default to 0 and are editable if your table enables helmet skill penalties.</p><p>This helmet does not add normal AC, touch AC, flat-footed AC, local armor AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -282,7 +282,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>[PAcS] Scale Mail Helmet is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +4, weight 3 lb., price 5 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Scale Mail Helmet is an optional PAcS Head-slot equipment item. If exposed headshots are enabled, equipping this item in D35E's native Head slot prevents Head, Eye, and Ear called shots from treating the head as exposed.</p><p>Starter inventory values: weight 3 lb., price 5 gp, HP 10. Spot and Listen penalties default to 0 and are editable if your table enables helmet skill penalties.</p><p>This helmet does not add normal AC, touch AC, flat-footed AC, local armor AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -351,7 +351,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>[PAcS] Chain Shirt Coif is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +4, weight 3 lb., price 10 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Chain Shirt Coif is an optional PAcS Head-slot equipment item. If exposed headshots are enabled, equipping this item in D35E's native Head slot prevents Head, Eye, and Ear called shots from treating the head as exposed.</p><p>Starter inventory values: weight 3 lb., price 10 gp, HP 10. Spot and Listen penalties default to 0 and are editable if your table enables helmet skill penalties.</p><p>This helmet does not add normal AC, touch AC, flat-footed AC, local armor AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -420,7 +420,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>[PAcS] Chainmail Coif is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +5, weight 4 lb., price 15 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Chainmail Coif is an optional PAcS Head-slot equipment item. If exposed headshots are enabled, equipping this item in D35E's native Head slot prevents Head, Eye, and Ear called shots from treating the head as exposed.</p><p>Starter inventory values: weight 4 lb., price 15 gp, HP 10. Spot and Listen penalties default to 0 and are editable if your table enables helmet skill penalties.</p><p>This helmet does not add normal AC, touch AC, flat-footed AC, local armor AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -489,7 +489,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>[PAcS] Breastplate Helm is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +5, weight 3 lb., price 20 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Breastplate Helm is an optional PAcS Head-slot equipment item. If exposed headshots are enabled, equipping this item in D35E's native Head slot prevents Head, Eye, and Ear called shots from treating the head as exposed.</p><p>Starter inventory values: weight 3 lb., price 20 gp, HP 10. Spot and Listen penalties default to 0 and are editable if your table enables helmet skill penalties.</p><p>This helmet does not add normal AC, touch AC, flat-footed AC, local armor AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -558,7 +558,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>[PAcS] Banded Mail Helm is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +6, weight 4 lb., price 25 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Banded Mail Helm is an optional PAcS Head-slot equipment item. If exposed headshots are enabled, equipping this item in D35E's native Head slot prevents Head, Eye, and Ear called shots from treating the head as exposed.</p><p>Starter inventory values: weight 4 lb., price 25 gp, HP 10. Spot and Listen penalties default to 0 and are editable if your table enables helmet skill penalties.</p><p>This helmet does not add normal AC, touch AC, flat-footed AC, local armor AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -627,7 +627,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>[PAcS] Splint Mail Helm is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +6, weight 5 lb., price 20 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Splint Mail Helm is an optional PAcS Head-slot equipment item. If exposed headshots are enabled, equipping this item in D35E's native Head slot prevents Head, Eye, and Ear called shots from treating the head as exposed.</p><p>Starter inventory values: weight 5 lb., price 20 gp, HP 10. Spot and Listen penalties default to 0 and are editable if your table enables helmet skill penalties.</p><p>This helmet does not add normal AC, touch AC, flat-footed AC, local armor AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -696,7 +696,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>[PAcS] Half-Plate Helm is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +7, weight 5 lb., price 60 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Half-Plate Helm is an optional PAcS Head-slot equipment item. If exposed headshots are enabled, equipping this item in D35E's native Head slot prevents Head, Eye, and Ear called shots from treating the head as exposed.</p><p>Starter inventory values: weight 5 lb., price 60 gp, HP 10. Spot and Listen penalties default to 0 and are editable if your table enables helmet skill penalties.</p><p>This helmet does not add normal AC, touch AC, flat-footed AC, local armor AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },
@@ -765,7 +765,7 @@
     "img": "icons/equipment/head/helm-barbute-grey.webp",
     "system": {
       "description": {
-        "value": "<p>[PAcS] Full Plate Helm is an optional PAcS helmet house-rule item. When helmet head coverage is enabled and this item is equipped in D35E's Head slot, it provides local armor against Head, Eye, and Ear called shots only.</p><p>Starter values: local head armor +8, weight 5 lb., price 150 gp, HP 10. These editable house-rule inventory values are derived from the matching D35E-calibrated armor family.</p><p>This helmet does not add to normal AC, touch AC, flat-footed AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
+        "value": "<p>[PAcS] Full Plate Helm is an optional PAcS Head-slot equipment item. If exposed headshots are enabled, equipping this item in D35E's native Head slot prevents Head, Eye, and Ear called shots from treating the head as exposed.</p><p>Starter inventory values: weight 5 lb., price 150 gp, HP 10. Spot and Listen penalties default to 0 and are editable if your table enables helmet skill penalties.</p><p>This helmet does not add normal AC, touch AC, flat-footed AC, local armor AC, piecemeal suit math, max Dex, armor check penalty, arcane spell failure, speed, or armor profile weight.</p>",
         "chat": "",
         "unidentified": ""
       },

@@ -20,9 +20,11 @@ Aggregate armor math follows the supplied Ultimate Combat reference as closely a
 
 Clearing PAcS slots reverses backed-up fields and removes the hidden carrier when the actor returns to baseline-only or unarmored native behavior. The old visible `Piecemeal Armor Aggregate` path is retained only as migration and recovery support for older worlds.
 
-## Helmet Head Coverage
+## Exposed Slots And Helmet Skill Penalties
 
-Helmet coverage is a separate disabled-by-default house rule, not a fourth RAW armor category. Configured equipment in D35E's native `Head` slot can supply its own local armor value for Head/Eye/Ear called shots without joining the Torso/Arms/Legs profile, inheriting from torso armor, changing total AC, or appearing in the armor profile source breakdown. The `PAcS Helmets` Item compendium provides editable `[PAcS]` starter records whose local armor values use the matching D35E full armor bonus and whose weight/price values are house-rule inventory defaults.
+Called shots use normal applicable AC by default. The disabled-by-default exposed headshot and exposed hand-shot settings are separate house rules, not PF1e RAW and not a fourth piecemeal armor category. Exposed Head/Eye/Ear checks look only for an equipped native D35E `Head` slot item, and exposed Hand checks look only for an equipped native `Hands` slot item. If the relevant slot is empty, the pre-hit hook subtracts the active armor/profile armor contribution and leaves shield, natural armor, Dexterity, deflection, dodge, size, and other AC sources alone.
+
+The `PAcS Helmets` Item compendium provides editable `[PAcS]` Head-slot starter records with house-rule weight/price defaults. Those helmets can prevent exposed headshots because they occupy the native `Head` slot, but their old local armor value flags are ignored by runtime AC math.
 
 Optional Spot/Listen penalties use D35E's `D35E.preRollSkill` hook and append a named source row to `lis` and `spt` roll breakdowns. The module does not write permanent skill values for helmet penalties.
 

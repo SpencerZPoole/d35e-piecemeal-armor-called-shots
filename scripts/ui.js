@@ -11,7 +11,7 @@ import {
   setArmorProfileSlot
 } from "./armor-profile.js";
 import { getCalledShotLedger, restoreAllCalledShotLedgerEntries, restoreCalledShotLedgerEntry } from "./effects.js";
-import { DEFAULT_HELMET_COVERAGE, getHelmetFlag, HELMET_FAMILY_OPTIONS } from "./helmet.js";
+import { getHelmetFlag } from "./helmet.js";
 import { extractCalledShotDamagePayloads, stageCalledShotDamageApplication } from "./local-armor.js";
 
 function isEnabled(settingKey, fallback = true) {
@@ -676,7 +676,7 @@ export function createPiecemealItemPanel(item) {
   legend.textContent = "PAcS Armor Options";
   const help = document.createElement("p");
   help.classList.add("d35e-pacs-help");
-  help.textContent = "Configure PAcS armor-piece values or optional helmet local armor for this item.";
+  help.textContent = "Configure PAcS armor-piece values or optional helmet skill penalties for this item.";
   const armorSection = createPacsPanelSection("Piecemeal armor");
   const enabledLabel = document.createElement("label");
   enabledLabel.classList.add("d35e-pacs-checkbox");
@@ -753,35 +753,25 @@ export function createPiecemealItemPanel(item) {
   magicAdvanced.append(magicGrid);
   magicSection.append(magicAdvanced);
 
-  const helmetSection = createPacsPanelSection("Helmet head coverage");
+  const helmetSection = createPacsPanelSection("Helmet skill penalties");
   const helmetHelp = document.createElement("p");
   helmetHelp.classList.add("d35e-pacs-help");
-  helmetHelp.textContent = "Optional: configured Head-slot helmets protect Head, Eye, and Ear called shots only.";
+  helmetHelp.textContent = "Optional: configured Head-slot helmets can add table-defined Spot and Listen penalties.";
   const helmetEnabledLabel = document.createElement("label");
   helmetEnabledLabel.classList.add("d35e-pacs-checkbox");
   const helmetEnabled = document.createElement("input");
   helmetEnabled.type = "checkbox";
   helmetEnabled.name = `flags.${MODULE_ID}.${FLAGS.helmet}.enabled`;
   helmetEnabled.checked = helmetFlag.enabled === true;
-  helmetEnabledLabel.append(helmetEnabled, document.createTextNode(" Use as helmet head coverage"));
-  const helmetGrid = createPacsPanelGrid();
-  helmetGrid.append(
-    buildLabeledSelect("Helmet family ", `flags.${MODULE_ID}.${FLAGS.helmet}.armorFamily`, helmetFlag.armorFamily ?? helmetFlag.family ?? "", HELMET_FAMILY_OPTIONS),
-    buildLabeledInput("Head local armor bonus ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.localArmorBonus`, helmetFlag.localArmorBonus ?? "", {
-      placeholder: "blank = D35E full armor bonus"
-    })
-  );
-  const helmetAdvanced = createPacsAdvancedSection("Helmet coverage and skill penalties");
+  helmetEnabledLabel.append(helmetEnabled, document.createTextNode(" Use PAcS helmet skill penalties"));
+  const helmetAdvanced = createPacsAdvancedSection("Show helmet skill fields");
   const helmetAdvancedGrid = createPacsPanelGrid();
   helmetAdvancedGrid.append(
-    buildLabeledInput("Helmet coverage slot(s) ", "text", `flags.${MODULE_ID}.${FLAGS.helmet}.coverageSlots`, helmetFlag.coverageSlots ?? helmetFlag.coverageSlot ?? DEFAULT_HELMET_COVERAGE, {
-      placeholder: DEFAULT_HELMET_COVERAGE
-    }),
     buildLabeledInput("Spot penalty ", "number", `flags.${MODULE_ID}.${FLAGS.helmet}.spotPenalty`, helmetFlag.spotPenalty ?? 0),
     buildLabeledInput("Listen penalty ", "number", `flags.${MODULE_ID}.${FLAGS.helmet}.listenPenalty`, helmetFlag.listenPenalty ?? 0)
   );
   helmetAdvanced.append(helmetAdvancedGrid);
-  helmetSection.append(helmetHelp, helmetEnabledLabel, helmetGrid, helmetAdvanced);
+  helmetSection.append(helmetHelp, helmetEnabledLabel, helmetAdvanced);
   fieldset.append(legend, help, armorSection, magicSection, helmetSection);
   return fieldset;
 }

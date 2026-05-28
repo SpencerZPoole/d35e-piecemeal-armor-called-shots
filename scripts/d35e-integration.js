@@ -52,8 +52,8 @@ function settingEnabled(key, fallback = true) {
   }
 }
 
-export function canApplyCalledShotLocalArmor() {
-  return settingEnabled(SETTINGS.enableArmor, true) !== false && settingEnabled(SETTINGS.enableCalledShots, true) !== false;
+export function canApplyCalledShotDefenseAdjustments() {
+  return settingEnabled(SETTINGS.enableCalledShots, true) !== false;
 }
 
 function getUserId() {
@@ -263,7 +263,7 @@ function registerPreRollAllAttacksHook() {
 function registerPreHitCheckHook() {
   if (preHitCheckHookRegistered || !globalThis.Hooks?.on) return;
   Hooks.on("D35E.DamageRoll.preHitCheck", (actor, hookValues, userId) => {
-    if (!canApplyCalledShotLocalArmor()) return;
+    if (!canApplyCalledShotDefenseAdjustments()) return;
     applyStagedCalledShotLocalArmor(actor, hookValues?.finalAc, userId);
   });
   preHitCheckHookRegistered = true;

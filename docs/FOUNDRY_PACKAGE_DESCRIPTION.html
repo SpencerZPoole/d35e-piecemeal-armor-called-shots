@@ -39,8 +39,8 @@
   <li>Marks profile source items as worn in profile while preventing duplicate armor AC, weight, and inventory value.</li>
   <li>Adds a <code>Called Shot</code> dropdown inside D35E's native attack/use dialog.</li>
   <li>Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as <code>Called Shot: Ear -10</code> or <code>Called Shot Range/Reach: not adjacent -2</code>.</li>
-  <li>Can adjust D35E's native Apply Damage AC check for called shots that target covered, weaker, stronger, or exposed piecemeal armor locations.</li>
-  <li>Offers an optional helmet house rule for Head/Eye/Ear local armor without adding helmet armor to normal AC.</li>
+  <li>Keeps called-shot hit checks on normal applicable AC by default, while preserving RAW-adapted touch, cover, concealment, range/reach, DR, and outcome handling.</li>
+  <li>Offers optional exposed headshot and exposed hand-shot house rules based on D35E's native Head and Hands slots.</li>
   <li>Enforces Improved/Greater Called Shot full-attack limits by default while offering table-facing warn-only and no-requirement options.</li>
   <li>Includes <code>PAcS Armor Pieces</code>, <code>PAcS Called-Shot Feats</code>, and <code>PAcS Helmets</code> compendia with convenience records for optional-rule setup.</li>
   <li>Automatically applies called-shot severity outcomes after D35E Apply Damage and records a GM restore ledger.</li>
@@ -71,17 +71,17 @@
 
 <h3>Automatic Outcomes And Restore</h3>
 
-<p>When piecemeal armor and called shots are both enabled, location armor AC can change D35E's native Apply Damage hit and crit check. Covered locations use their matching piece value, and exposed locations show <code>unarmored location 0</code> in AC Details instead of silently keeping the full armor profile. D35E Apply Damage determines hit, crit, and post-DR damage; the module then determines normal, critical, or debilitating severity and applies, confirms, or leaves advisory outcomes based on the table setting. Severe outcomes such as death or permanent maiming are recorded in a called-shot ledger so a GM can restore them from the target actor sheet if needed.</p>
+<p>Called shots use the defender's normal applicable AC by default. D35E Apply Damage determines hit, crit, and post-DR damage; the module then determines normal, critical, or debilitating severity and applies, confirms, or leaves advisory outcomes based on the table setting. Severe outcomes such as death or permanent maiming are recorded in a called-shot ledger so a GM can restore them from the target actor sheet if needed. Optional exposed headshot and exposed hand-shot settings can subtract only the active armor contribution when the relevant native Head or Hands slot is empty.</p>
 
 <h3>Configuration</h3>
 
-<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, choose full-attack feat-gate behavior, enable optional helmet head coverage and Spot/Listen penalties, show location armor overlays, and edit called-shot profiles. Turning off <strong>Enable piecemeal armor</strong> hides the PAcS inventory slots and is the intended called-shots-only mode.</p>
+<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, choose full-attack feat-gate behavior, enable optional exposed headshots, enable optional exposed hand shots, enable optional helmet Spot/Listen penalties, show location overlays, and edit called-shot profiles. Turning off <strong>Enable piecemeal armor</strong> hides the PAcS inventory slots and is the intended called-shots-only mode.</p>
 
 <p>The <strong>PAcS Armor Pieces</strong> compendium ships the recommended override pieces for the native PAcS slots. The items are generated from the D35E-calibrated catalog, so their display names match the armor a user searched for while their flags preserve the correct piece category and armor-family math.</p>
 
 <p>The <strong>PAcS Called-Shot Feats</strong> compendium ships small D35E Item records for <code>Improved Called Shot</code> and <code>Greater Called Shot</code>. These are PF1e-derived optional-rule support items for D35E, not D&amp;D 3.5 RAW.</p>
 
-<p>The <strong>PAcS Helmets</strong> compendium ships editable <code>[PAcS]</code> Head-slot helmet records for the optional helmet house rule. Their starter local armor values use the matching D35E full armor bonus and apply only to Head, Eye, and Ear called-shot local armor. Their editable weight, price, and HP fields make them behave like normal inventory items, but they do not add to normal AC.</p>
+<p>The <strong>PAcS Helmets</strong> compendium ships editable <code>[PAcS]</code> Head-slot helmet records. They can prevent exposed headshots because they occupy D35E's native Head slot, and they can carry optional table-defined Spot/Listen penalties. They do not add normal AC or supply local armor AC.</p>
 
 <p>Profiles control location labels, attack penalties, enabled state, matching armor coverage slot(s), and outcome effects. Effect snippets are JSON because they map directly to the module's declarative effect engine.</p>
 
@@ -90,7 +90,7 @@
 <ul>
   <li>Foundry VTT: minimum 14, verified 14.363.</li>
   <li>D35E system: minimum 3.0.2, verified 3.0.2.</li>
-  <li>Module version: 1.4.1.</li>
+  <li>Module version: 1.5.0.</li>
 </ul>
 
 <h3>Documentation And Support</h3>

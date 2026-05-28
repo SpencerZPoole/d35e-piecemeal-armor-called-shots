@@ -308,7 +308,7 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.enableArmor, {
     name: "Enable piecemeal armor",
-    hint: "Adds the PAcS Torso, Arms, and Legs inventory slots, piecemeal armor math, hidden D35E carrier, and local armor data. Disabling this hides the PAcS slots and suspends armor automation, but does not disable called shots.",
+    hint: "Adds the PAcS Torso, Arms, and Legs inventory slots, piecemeal armor math, and hidden D35E carrier. Disabling this hides the PAcS slots and suspends armor automation, but does not disable called shots.",
     scope: "world",
     config: true,
     type: Boolean,
@@ -330,18 +330,36 @@ export function registerSettings() {
     }
   });
 
-  game.settings.register(MODULE_ID, SETTINGS.enableHelmetHeadCoverage, {
-    name: "Enable helmet head coverage house rule",
-    hint: "Optional non-RAW house rule. Equipped, configured helmets in D35E's Head slot protect Head, Eye, and Ear called shots through local armor AC without adding to total AC.",
+  game.settings.register(MODULE_ID, SETTINGS.enableExposedHeadshots, {
+    name: "Enable exposed headshots",
+    hint: "Optional non-RAW house rule. Head, Eye, and Ear called shots remove the defender's armor bonus only when no equipped item occupies D35E's native Head slot.",
     scope: "world",
     config: true,
     type: Boolean,
     default: false
   });
 
+  game.settings.register(MODULE_ID, SETTINGS.enableExposedHandShots, {
+    name: "Enable exposed hand shots",
+    hint: "Optional non-RAW house rule. Hand called shots remove the defender's armor bonus only when no equipped item occupies D35E's native Hands slot.",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
+  game.settings.register(MODULE_ID, SETTINGS.enableHelmetHeadCoverage, {
+    name: "Enable helmet head coverage house rule",
+    hint: "Compatibility setting retained for older worlds. Helmet local armor AC has been superseded by exposed headshots.",
+    scope: "world",
+    config: false,
+    type: Boolean,
+    default: false
+  });
+
   game.settings.register(MODULE_ID, SETTINGS.enableHelmetSkillPenalties, {
     name: "Apply helmet Spot/Listen penalties",
-    hint: "Optional non-RAW house rule. Configured helmets in D35E's Head slot can add their table-defined Spot and Listen penalties to native D35E skill rolls.",
+    hint: "Optional non-RAW house rule. Configured PAcS helmets in D35E's Head slot can add their table-defined Spot and Listen penalties to native D35E skill rolls.",
     scope: "world",
     config: true,
     type: Boolean,
@@ -393,7 +411,7 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.calledShotLocalArmorMode, {
     name: "Called-shot local armor AC",
-    hint: "Compatibility setting retained for older worlds. Normal runtime uses location armor automatically when piecemeal armor and called shots are both enabled.",
+    hint: "Compatibility setting retained for older worlds. Normal runtime uses RAW called-shot AC plus optional exposed head/hand settings.",
     scope: "world",
     config: false,
     type: String,

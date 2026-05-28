@@ -92,8 +92,8 @@ function assertHelmetMetadata(entry) {
   assert.equal(helmetFlag?.coverageSlots, "head; eyes; ears");
   assert.equal(helmetFlag?.spotPenalty, 0);
   assert.equal(helmetFlag?.listenPenalty, 0);
-  assert.match(entry.system?.description?.value ?? "", /editable house-rule inventory values/);
-  assert.match(entry.system?.description?.value ?? "", /does not add to normal AC/);
+  assert.match(entry.system?.description?.value ?? "", /prevents Head, Eye, and Ear called shots from treating the head as exposed/);
+  assert.match(entry.system?.description?.value ?? "", /does not add normal AC/);
 }
 for (const entry of helmetSource) assertHelmetMetadata(entry);
 
