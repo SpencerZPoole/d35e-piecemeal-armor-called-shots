@@ -9,6 +9,11 @@ on:
       tag:
         description: "Existing tag to publish, such as v1.0.1"
         required: true
+      publish_foundry:
+        description: "Publish the Foundry package version during manual dispatch"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -86,9 +91,14 @@ jobs:
           fi
 
       - name: Publish Foundry package version
-        if: env.FOUNDRY_PACKAGE_RELEASE_TOKEN != ''
+        if: env.FOUNDRY_PACKAGE_RELEASE_TOKEN != '' && (github.event_name != 'workflow_dispatch' || inputs.publish_foundry)
         run: npm run publish:foundry
 
       - name: Skip Foundry package publish
-        if: env.FOUNDRY_PACKAGE_RELEASE_TOKEN == ''
-        run: echo "FOUNDRY_PACKAGE_RELEASE_TOKEN is not configured; update the Foundry package listing manually."
+        if: env.FOUNDRY_PACKAGE_RELEASE_TOKEN == '' || (github.event_name == 'workflow_dispatch' && !inputs.publish_foundry)
+        run: |
+          if [ "${{ env.FOUNDRY_PACKAGE_RELEASE_TOKEN }}" = "" ]; then
+            echo "FOUNDRY_PACKAGE_RELEASE_TOKEN is not configured; update the Foundry package listing manually."
+          else
+            echo "Manual dispatch skipped Foundry package publish; use publish_foundry=true to run it."
+          fi
