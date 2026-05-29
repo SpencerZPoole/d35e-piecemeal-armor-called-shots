@@ -2,6 +2,7 @@ import {
   ARMOR_WORKFLOW_MODES,
   FULL_ATTACK_FEAT_RULE_MODES,
   FULL_ATTACK_MODES,
+  LOCAL_ARMOR_AGGREGATION_MODES,
   LOCAL_ARMOR_MODES,
   MODULE_ID,
   MODULE_TITLE,
@@ -9,6 +10,14 @@ import {
   RULES_MODES,
   SETTINGS
 } from "./constants.js";
+import {
+  calledShotLocalArmorCoverageSourceOptions,
+  calledShotLocalArmorProtectionForLocation,
+  calledShotLocalArmorProtectionLabel,
+  defaultCalledShotLocalArmorProtectionForLocation,
+  normalizeCalledShotLocalArmorAggregationMap,
+  normalizeCalledShotLocalArmorCoverageMap
+} from "./local-armor.js";
 import { getDefaultCalledShotProfiles, normalizeCalledShotProfiles } from "./profiles.js";
 
 const HandlebarsApplication = globalThis.foundry?.applications?.api?.HandlebarsApplicationMixin?.(
@@ -164,6 +173,7 @@ export function buildLocalArmorLocationSettingsContext(profiles, locationSetting
         id: location.id,
         label: location.label,
         coverageSlot: location.coverageSlot ?? "",
+        protectionLabel: calledShotLocalArmorProtectionLabel(location),
         difficulty: location.difficulty ?? "",
         enabled: settings[location.id] !== false
       }))
@@ -178,6 +188,131 @@ export function updateLocalArmorLocationSettings(currentSettings, formData, prof
       formData[`location.${location.id}.enabled`] === "on";
   }
   return current;
+}
+
+function arraysEqual(left = [], right = []) {
+  const leftValues = Array.from(new Set(left)).sort();
+  const rightValues = Array.from(new Set(right)).sort();
+  if (leftValues.length !== rightValues.length) return false;
+  return leftValues.every((entry, index) => entry === rightValues[index]);
+}
+
+function protectionEntryEquals(left = {}, right = {}) {
+  return arraysEqual(left.pacs ?? [], right.pacs ?? []) && arraysEqual(left.native ?? [], right.native ?? []);
+}
+
+function formDataCheckedValues(formData, prefix) {
+  const values = [];
+  for (const [key, value] of Object.entries(formData ?? {})) {
+    if (!key.startsWith(prefix) || !(value === true || value === "on")) continue;
+    values.push(key.slice(prefix.length));
+  }
+  return values;
+}
+
+function activeCalledShotProfile(profiles) {
+  const normalized = normalizeCalledShotProfiles(profiles);
+  return normalized.profiles.find((profile) => profile.id === normalized.activeProfileId) ?? normalized.profiles[0];
+}
+
+function activeCalledShotLocations(profiles) {
+  return (activeCalledShotProfile(profiles)?.locations ?? []).filter((location) => location.enabled !== false);
+}
+
+function localArmorCoverageLocationKey(location) {
+  const normalized = normalizeCalledShotLocalArmorCoverageMap({
+    [location?.id ?? ""]: { pacs: [], native: [] }
+  });
+  return Object.keys(normalized)[0] ?? String(location?.id ?? "").trim();
+}
+
+export function buildLocalArmorCoverageEditorContext(profiles, coverageMap = {}, aggregationMap = {}) {
+  const profile = activeCalledShotProfile(profiles);
+  const normalizedMap = normalizeCalledShotLocalArmorCoverageMap(coverageMap);
+  const normalizedAggregationMap = normalizeCalledShotLocalArmorAggregationMap(aggregationMap);
+  const options = calledShotLocalArmorCoverageSourceOptions();
+  const decorateOptions = (entries, selected) => entries.map((entry) => ({
+    ...entry,
+    checked: selected.includes(entry.value)
+  }));
+  const aggregationOptionsFor = (selected) => [
+    {
+      value: LOCAL_ARMOR_AGGREGATION_MODES.sum,
+      label: "Sum applicable local armor AC",
+      selected: selected !== LOCAL_ARMOR_AGGREGATION_MODES.highest
+    },
+    {
+      value: LOCAL_ARMOR_AGGREGATION_MODES.highest,
+      label: "Use highest applicable bonus",
+      selected: selected === LOCAL_ARMOR_AGGREGATION_MODES.highest
+    }
+  ];
+  return {
+    profileLabel: profile.label,
+    pacsSources: options.pacs,
+    nativeSources: options.native,
+    locations: (profile.locations ?? [])
+      .filter((location) => location.enabled !== false)
+      .map((location) => {
+        const current = calledShotLocalArmorProtectionForLocation(location, normalizedMap);
+        const defaults = defaultCalledShotLocalArmorProtectionForLocation(location);
+        const locationKey = localArmorCoverageLocationKey(location);
+        const override = Object.prototype.hasOwnProperty.call(normalizedMap, locationKey);
+        const aggregation = normalizedAggregationMap[locationKey] === LOCAL_ARMOR_AGGREGATION_MODES.highest
+          ? LOCAL_ARMOR_AGGREGATION_MODES.highest
+          : LOCAL_ARMOR_AGGREGATION_MODES.sum;
+        return {
+          id: location.id,
+          label: location.label,
+          defaultLabel: defaults.displayLabel,
+          protectionLabel: current.displayLabel,
+          overridden: override,
+          aggregation,
+          aggregationLabel: aggregation === LOCAL_ARMOR_AGGREGATION_MODES.highest
+            ? "Use highest applicable bonus"
+            : "Sum applicable local armor AC",
+          aggregationOverridden: Object.prototype.hasOwnProperty.call(normalizedAggregationMap, locationKey),
+          aggregationOptions: aggregationOptionsFor(aggregation),
+          pacsOptions: decorateOptions(options.pacs, current.pacsCategories),
+          nativeOptions: decorateOptions(options.native, current.nativeSlots)
+        };
+      })
+  };
+}
+
+export function updateLocalArmorCoverageMap(currentMap, formData, profiles) {
+  const current = normalizeCalledShotLocalArmorCoverageMap(currentMap);
+  const updated = { ...current };
+  for (const location of activeCalledShotLocations(profiles)) {
+    if (!(formData[`coverage.${location.id}.present`] === "1" || formData[`coverage.${location.id}.present`] === 1)) continue;
+    const pacs = formDataCheckedValues(formData, `coverage.${location.id}.pacs.`);
+    const native = formDataCheckedValues(formData, `coverage.${location.id}.native.`);
+    const defaults = defaultCalledShotLocalArmorProtectionForLocation(location);
+    const locationKey = localArmorCoverageLocationKey(location);
+    const next = normalizeCalledShotLocalArmorCoverageMap({ [locationKey]: { pacs, native } })[locationKey] ?? {
+      pacs: [],
+      native: []
+    };
+    const defaultEntry = { pacs: defaults.pacsCategories, native: defaults.nativeSlots };
+    if (protectionEntryEquals(next, defaultEntry)) delete updated[locationKey];
+    else updated[locationKey] = next;
+  }
+  return updated;
+}
+
+export function updateLocalArmorAggregationMap(currentMap, formData, profiles) {
+  const current = normalizeCalledShotLocalArmorAggregationMap(currentMap);
+  const updated = { ...current };
+  for (const location of activeCalledShotLocations(profiles)) {
+    if (!(formData[`coverage.${location.id}.present`] === "1" || formData[`coverage.${location.id}.present`] === 1)) continue;
+    const locationKey = localArmorCoverageLocationKey(location);
+    const mode = formData[`aggregation.${location.id}`] === LOCAL_ARMOR_AGGREGATION_MODES.highest
+      ? LOCAL_ARMOR_AGGREGATION_MODES.highest
+      : LOCAL_ARMOR_AGGREGATION_MODES.sum;
+    if (mode === LOCAL_ARMOR_AGGREGATION_MODES.sum) delete updated[locationKey];
+    else updated[locationKey] = mode;
+  }
+  return updated;
 }
 
 function setName(element, name) {
@@ -207,6 +342,13 @@ function prepareLocalArmorMasterRow(row) {
   return row;
 }
 
+function prepareLocalArmorAggregationRow(row) {
+  if (!row) return null;
+  row.classList?.add?.("d35e-pacs-settings-aggregation-row");
+  row.dataset.d35ePacsSettingsAggregation = "called-shot-local-armor";
+  return row;
+}
+
 export function createLocalArmorLocationSettingsElement(context, documentRef = globalThis.document, options = {}) {
   const section = documentRef.createElement("section");
   section.classList.add("d35e-pacs-settings-child-block");
@@ -229,6 +371,25 @@ export function createLocalArmorLocationSettingsElement(context, documentRef = g
   note.textContent = `Choose which called-shot locations use local armor piece AC when this house rule is enabled. Active profile: ${context.profileLabel}. New locations default to enabled.`;
   section.appendChild(note);
 
+  const lockNotice = documentRef.createElement("p");
+  lockNotice.classList.add("notes", "d35e-pacs-settings-lock-notice");
+  lockNotice.dataset.d35ePacsSettingsLockNotice = "called-shot-local-armor";
+  lockNotice.textContent = options.lockReason ?? "";
+  lockNotice.hidden = !options.lockReason;
+  section.appendChild(lockNotice);
+
+  const tools = documentRef.createElement("div");
+  tools.classList.add("d35e-pacs-settings-child-tools");
+  const editCoverage = documentRef.createElement("button");
+  editCoverage.type = "button";
+  editCoverage.dataset.action = "edit-local-armor-coverage";
+  editCoverage.textContent = "Edit coverage map";
+  tools.appendChild(editCoverage);
+  section.appendChild(tools);
+
+  const aggregationRow = prepareLocalArmorAggregationRow(options.aggregationRow);
+  if (aggregationRow) section.appendChild(aggregationRow);
+
   const grid = documentRef.createElement("div");
   grid.classList.add("d35e-pacs-settings-child-grid");
   section.appendChild(grid);
@@ -248,14 +409,9 @@ export function createLocalArmorLocationSettingsElement(context, documentRef = g
     const strong = documentRef.createElement("strong");
     strong.textContent = location.label;
     text.appendChild(strong);
-    const slot = documentRef.createElement("small");
-    slot.textContent = `Armor/equipment slot: ${location.id}`;
-    text.appendChild(slot);
-    if (location.coverageSlot) {
-      const small = documentRef.createElement("small");
-      small.textContent = `Coverage: ${location.coverageSlot}`;
-      text.appendChild(small);
-    }
+    const protection = documentRef.createElement("small");
+    protection.textContent = `Location is covered by: ${location.protectionLabel}`;
+    text.appendChild(protection);
     label.appendChild(text);
     grid.appendChild(label);
   }
@@ -272,6 +428,83 @@ function findSettingRow(root, settingKey) {
     root?.querySelector?.(`[name="${settingKey}"]`);
   if (!input) return null;
   return input.closest?.(".form-group") ?? input.parentElement?.closest?.(".form-group") ?? input.parentElement ?? null;
+}
+
+function findSettingInput(root, settingKey) {
+  return root?.querySelector?.(`[name="${MODULE_ID}.${settingKey}"]`) ??
+    root?.querySelector?.(`[name="${settingKey}"]`) ??
+    null;
+}
+
+function checkedSettingInput(root, settingKey, fallback = true) {
+  const input = findSettingInput(root, settingKey);
+  return input ? input.checked === true : fallback;
+}
+
+function setSettingControlsLocked(container, locked) {
+  for (const control of container?.querySelectorAll?.("input, select, textarea, button") ?? []) {
+    control.disabled = locked === true;
+    if (locked) control.setAttribute?.("aria-disabled", "true");
+    else control.removeAttribute?.("aria-disabled");
+  }
+}
+
+function setSettingRowLocked(row, locked, reason = "") {
+  if (!row) return;
+  row.classList?.toggle?.("d35e-pacs-settings-dependent-locked", locked === true);
+  row.dataset.d35ePacsSettingsLocked = locked ? "true" : "false";
+  if (reason) row.dataset.d35ePacsSettingsLockReason = reason;
+  else delete row.dataset.d35ePacsSettingsLockReason;
+  setSettingControlsLocked(row, locked);
+}
+
+function localArmorLockReason({ armorEnabled, calledShotsEnabled } = {}) {
+  if (!armorEnabled && !calledShotsEnabled) return "Enable piecemeal armor and Enable called shots above to use local armor piece AC.";
+  if (!armorEnabled) return "Enable piecemeal armor above to use local armor piece AC.";
+  if (!calledShotsEnabled) return "Enable called shots above to use local armor piece AC.";
+  return "";
+}
+
+function refreshLocalArmorLockedState(section, state) {
+  if (!section) return;
+  const reason = localArmorLockReason(state);
+  const locked = Boolean(reason);
+  section.classList?.toggle?.("d35e-pacs-settings-panel-locked", locked);
+  section.dataset.d35ePacsSettingsLocked = locked ? "true" : "false";
+  section.dataset.d35ePacsSettingsLockReason = reason;
+  const notice = section.querySelector?.("[data-d35e-pacs-settings-lock-notice]");
+  if (notice) {
+    notice.textContent = reason;
+    notice.hidden = !locked;
+  }
+  setSettingControlsLocked(section, locked);
+}
+
+function applySettingsDependencyState(root) {
+  const element = rootElement(root);
+  if (!element?.querySelector) return false;
+  const armorEnabled = checkedSettingInput(element, SETTINGS.enableArmor, true);
+  const calledShotsEnabled = checkedSettingInput(element, SETTINGS.enableCalledShots, true);
+  const calledShotKeys = [
+    SETTINGS.enableExposedHeadshots,
+    SETTINGS.enableExposedHandShots,
+    SETTINGS.calledShotOutcomeMode,
+    SETTINGS.calledShotFullAttackMode,
+    SETTINGS.calledShotFullAttackFeatRules,
+    SETTINGS.locationArmorOverlay
+  ];
+  for (const key of calledShotKeys) {
+    setSettingRowLocked(
+      findSettingRow(element, key),
+      !calledShotsEnabled,
+      calledShotsEnabled ? "" : "Enable called shots above to edit this called-shot option."
+    );
+  }
+  refreshLocalArmorLockedState(
+    element.querySelector?.("[data-d35e-pacs-settings-child='called-shot-local-armor']"),
+    { armorEnabled, calledShotsEnabled }
+  );
+  return true;
 }
 
 function readLocalArmorSettingsFromElement(section) {
@@ -298,19 +531,24 @@ export function injectLocalArmorLocationSettings(root) {
   const existing = element.querySelector?.("[data-d35e-pacs-settings-child='called-shot-local-armor']");
   const row = findSettingRow(element, SETTINGS.enableCalledShotLocalArmor);
   if (!row) return false;
+  const aggregationRow = findSettingRow(element, SETTINGS.calledShotLocalArmorAggregation);
   const parent = existing?.parentElement ?? row.parentElement;
   if (!parent) return false;
-  const anchor = existing?.nextSibling ?? row.nextSibling;
+  const anchor = existing?.nextSibling ?? aggregationRow?.nextSibling ?? row.nextSibling;
   const input = row.querySelector?.(`[name="${MODULE_ID}.${SETTINGS.enableCalledShotLocalArmor}"]`) ??
     row.querySelector?.(`[name="${SETTINGS.enableCalledShotLocalArmor}"]`);
   existing?.remove?.();
+  const armorEnabled = checkedSettingInput(element, SETTINGS.enableArmor, true);
+  const calledShotsEnabled = checkedSettingInput(element, SETTINGS.enableCalledShots, true);
 
   const section = createLocalArmorLocationSettingsElement(buildLocalArmorLocationSettingsContext(
     game.settings.get(MODULE_ID, SETTINGS.calledShotProfiles),
     game.settings.get(MODULE_ID, SETTINGS.calledShotLocalArmorLocations)
   ), globalThis.document, {
     masterEnabled: input?.checked === true,
-    masterRow: row
+    masterRow: row,
+    aggregationRow,
+    lockReason: localArmorLockReason({ armorEnabled, calledShotsEnabled })
   });
   input?.addEventListener?.("change", () => {
     setLocalArmorLocationVisualState(section, input.checked === true);
@@ -323,9 +561,18 @@ export function injectLocalArmorLocationSettings(root) {
       globalThis.ui?.notifications?.error?.("Could not save called-shot local armor locations. Check the console for details.");
     });
   });
+  section.addEventListener?.("click", (event) => {
+    if (!event.target?.closest?.("[data-action='edit-local-armor-coverage']")) return;
+    event.preventDefault?.();
+    new LocalArmorCoverageEditor().render({ force: true });
+  });
 
-  if (anchor) parent.insertBefore?.(section, anchor);
+  if (anchor?.parentElement === parent) parent.insertBefore?.(section, anchor);
   else parent.appendChild?.(section);
+  applySettingsDependencyState(element);
+  for (const key of [SETTINGS.enableArmor, SETTINGS.enableCalledShots]) {
+    findSettingInput(element, key)?.addEventListener?.("change", () => applySettingsDependencyState(element));
+  }
   return true;
 }
 
@@ -475,6 +722,112 @@ export class CalledShotProfileEditor extends HandlebarsApplication {
   }
 }
 
+function localArmorCoverageEditorLocation(profiles, locationId) {
+  return activeCalledShotLocations(profiles).find((location) => location.id === locationId) ?? null;
+}
+
+function setCoverageEditorLocationValues(root, location, protection) {
+  if (!root || !location) return false;
+  const pacs = new Set(protection.pacsCategories ?? []);
+  const native = new Set(protection.nativeSlots ?? []);
+  for (const input of root.querySelectorAll?.(`[data-location-id="${location.id}"] input[type='checkbox'][name]`) ?? []) {
+    const pacsPrefix = `coverage.${location.id}.pacs.`;
+    const nativePrefix = `coverage.${location.id}.native.`;
+    if (input.name.startsWith(pacsPrefix)) input.checked = pacs.has(input.name.slice(pacsPrefix.length));
+    if (input.name.startsWith(nativePrefix)) input.checked = native.has(input.name.slice(nativePrefix.length));
+  }
+  const currentLabel = root.querySelector?.(`[data-location-id="${location.id}"] [data-coverage-current]`);
+  if (currentLabel) currentLabel.textContent = `Location is covered by: ${protection.displayLabel}`;
+  const aggregationSelect = root.querySelector?.(`[name="aggregation.${location.id}"]`);
+  if (aggregationSelect) aggregationSelect.value = LOCAL_ARMOR_AGGREGATION_MODES.sum;
+  return true;
+}
+
+export class LocalArmorCoverageEditor extends HandlebarsApplication {
+  static DEFAULT_OPTIONS = {
+    id: `${MODULE_ID}-local-armor-coverage-editor`,
+    tag: "form",
+    classes: ["standard-form", "d35e-pacs", "local-armor-coverage-editor"],
+    window: {
+      title: `${MODULE_TITLE}: Local Armor Coverage Map`,
+      icon: "fa-solid fa-map"
+    },
+    position: {
+      width: 860,
+      height: 700
+    }
+  };
+
+  static PARTS = {
+    body: {
+      template: `modules/${MODULE_ID}/templates/local-armor-coverage-editor.hbs`,
+      scrollable: [".d35e-pacs-coverage-locations"]
+    }
+  };
+
+  async _prepareContext(options = {}) {
+    return {
+      ...(await super._prepareContext(options)),
+      ...buildLocalArmorCoverageEditorContext(
+        game.settings.get(MODULE_ID, SETTINGS.calledShotProfiles),
+        game.settings.get(MODULE_ID, SETTINGS.calledShotLocalArmorCoverageMap),
+        game.settings.get(MODULE_ID, SETTINGS.calledShotLocalArmorAggregationMap)
+      )
+    };
+  }
+
+  async _onRender(context, options) {
+    await super._onRender(context, options);
+    const root = this.element;
+    if (!root) return;
+    root.addEventListener("submit", (event) => {
+      event.preventDefault();
+      this.saveCoverageMap().catch((error) => {
+        console.error(`${MODULE_ID} | Failed to save called-shot local armor coverage map.`, error);
+        ui.notifications.error(error.message ?? String(error));
+      });
+    });
+    root.querySelector("[data-action='reset-all-coverage']")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      for (const location of activeCalledShotLocations(game.settings.get(MODULE_ID, SETTINGS.calledShotProfiles))) {
+        setCoverageEditorLocationValues(root, location, defaultCalledShotLocalArmorProtectionForLocation(location));
+      }
+    });
+    root.querySelector("[data-action='cancel-coverage']")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      this.close?.();
+    });
+    for (const button of root.querySelectorAll("[data-action='reset-location-coverage']") ?? []) {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        const locationId = event.currentTarget?.dataset?.locationId;
+        const location = localArmorCoverageEditorLocation(game.settings.get(MODULE_ID, SETTINGS.calledShotProfiles), locationId);
+        setCoverageEditorLocationValues(root, location, defaultCalledShotLocalArmorProtectionForLocation(location));
+      });
+    }
+  }
+
+  async saveCoverageMap() {
+    const formData = new FormData(this.element);
+    const data = Object.fromEntries(formData.entries());
+    const updated = updateLocalArmorCoverageMap(
+      game.settings.get(MODULE_ID, SETTINGS.calledShotLocalArmorCoverageMap),
+      data,
+      game.settings.get(MODULE_ID, SETTINGS.calledShotProfiles)
+    );
+    const updatedAggregation = updateLocalArmorAggregationMap(
+      game.settings.get(MODULE_ID, SETTINGS.calledShotLocalArmorAggregationMap),
+      data,
+      game.settings.get(MODULE_ID, SETTINGS.calledShotProfiles)
+    );
+    await game.settings.set(MODULE_ID, SETTINGS.calledShotLocalArmorCoverageMap, updated);
+    await game.settings.set(MODULE_ID, SETTINGS.calledShotLocalArmorAggregationMap, updatedAggregation);
+    ui.notifications.info("Local armor coverage map saved.");
+    this.close?.();
+    globalThis.setTimeout?.(() => injectLocalArmorLocationSettings(globalThis.document), 0);
+  }
+}
+
 export function registerSettings() {
   game.settings.register(MODULE_ID, SETTINGS.rulesMode, {
     name: "Rules mode",
@@ -528,7 +881,7 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.enableExposedHeadshots, {
     name: "Enable exposed headshots",
-    hint: "Optional non-RAW house rule. Head, Eye, and Ear called shots remove the defender's armor bonus only when no equipped equipment item occupies D35E's native Head slot; any equipped Head-slot equipment keeps the defender's full armor bonus.",
+    hint: "Optional non-RAW house rule. Head, Eye, and Ear called shots remove the defender's armor bonus only when no equipped equipment occupies the mapped native headgear slots; mapped equipment such as Eyes, Head, or Headband keeps the defender's full armor bonus.",
     scope: "world",
     config: true,
     type: Boolean,
@@ -537,7 +890,7 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.enableExposedHandShots, {
     name: "Enable exposed hand shots",
-    hint: "Optional non-RAW house rule. Hand called shots remove the defender's armor bonus only when no equipped equipment item occupies D35E's native Hands slot; any equipped Hands-slot equipment keeps the defender's full armor bonus.",
+    hint: "Optional non-RAW house rule. Hand called shots remove the defender's armor bonus only when no equipped equipment occupies the mapped native handgear slots; mapped equipment such as Hands or Wrists keeps the defender's full armor bonus.",
     scope: "world",
     config: true,
     type: Boolean,
@@ -553,6 +906,36 @@ export function registerSettings() {
     default: false
   });
 
+  game.settings.register(MODULE_ID, SETTINGS.calledShotLocalArmorAggregation, {
+    name: "Local armor AC source handling",
+    hint: "Controls how multiple mapped local armor sources are combined for one called-shot location. Sum is grittier but lets layered slot gear matter; highest avoids stacking; per-location uses each location's coverage-editor choice.",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: {
+      [LOCAL_ARMOR_AGGREGATION_MODES.sum]: "Sum applicable local armor AC",
+      [LOCAL_ARMOR_AGGREGATION_MODES.highest]: "Use highest applicable bonus",
+      [LOCAL_ARMOR_AGGREGATION_MODES.perLocation]: "Use per-location overrides"
+    },
+    default: LOCAL_ARMOR_AGGREGATION_MODES.sum
+  });
+
+  game.settings.register(MODULE_ID, SETTINGS.calledShotLocalArmorAggregationMap, {
+    name: "Called-shot local armor aggregation overrides",
+    scope: "world",
+    config: false,
+    type: Object,
+    default: {}
+  });
+
+  game.settings.register(MODULE_ID, SETTINGS.calledShotLocalArmorCoverageMap, {
+    name: "Called-shot local armor coverage map",
+    scope: "world",
+    config: false,
+    type: Object,
+    default: {}
+  });
+
   game.settings.register(MODULE_ID, SETTINGS.enableHelmetHeadCoverage, {
     name: "Enable helmet head coverage house rule",
     hint: "Compatibility setting retained for older worlds. Helmet local armor AC has been superseded by exposed headshots.",
@@ -564,7 +947,7 @@ export function registerSettings() {
 
   game.settings.register(MODULE_ID, SETTINGS.enableHelmetSkillPenalties, {
     name: "Apply helmet Spot/Listen penalties",
-    hint: "Optional non-RAW house rule. Configured PAcS helmets can use per-item values, and ordinary equipped D35E Head-slot items can use the default Spot and Listen penalties below.",
+    hint: "Optional non-RAW house rule. This stays available even when piecemeal armor or called shots are off; it only needs an equipped D35E Head-slot item. Configured PAcS helmets can use per-item values, and ordinary Head-slot items can use the default Spot and Listen penalties below.",
     scope: "world",
     config: true,
     type: Boolean,

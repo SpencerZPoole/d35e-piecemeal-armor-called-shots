@@ -11,6 +11,9 @@ export const SETTINGS = Object.freeze({
   enableExposedHeadshots: "enableExposedHeadshots",
   enableExposedHandShots: "enableExposedHandShots",
   enableCalledShotLocalArmor: "enableCalledShotLocalArmor",
+  calledShotLocalArmorAggregation: "calledShotLocalArmorAggregation",
+  calledShotLocalArmorAggregationMap: "calledShotLocalArmorAggregationMap",
+  calledShotLocalArmorCoverageMap: "calledShotLocalArmorCoverageMap",
   enableHelmetHeadCoverage: "enableHelmetHeadCoverage",
   enableHelmetSkillPenalties: "enableHelmetSkillPenalties",
   defaultHelmetSpotPenalty: "defaultHelmetSpotPenalty",
@@ -58,6 +61,12 @@ export const LOCAL_ARMOR_MODES = Object.freeze({
   adjust: "adjust",
   display: "display",
   disabled: "disabled"
+});
+
+export const LOCAL_ARMOR_AGGREGATION_MODES = Object.freeze({
+  sum: "sum",
+  highest: "highest",
+  perLocation: "perLocation"
 });
 
 export const FLAGS = Object.freeze({

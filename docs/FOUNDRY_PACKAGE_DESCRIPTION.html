@@ -18,13 +18,15 @@
 
 <h3>Screenshots</h3>
 
-<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/native-called-shot-dropdown.png" alt="Native D35E attack dialog with Called Shot dropdown" /></p>
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/screenshots/v1.7-called-shot-selector.png" alt="Native D35E attack dialog with the PAcS Called Shot selector" /></p>
 
-<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/full-attack-picker.png" alt="Full attack called-shot picker" /></p>
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/screenshots/v1.7-apply-damage-ac-details.png" alt="D35E Apply Damage card showing called-shot AC details" /></p>
 
-<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/module-settings.png" alt="Module settings for D35E Piecemeal Armor And Called Shots" /></p>
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/screenshots/v1.7-actor-pacs-inventory.png" alt="Actor inventory showing native Armor and PAcS armor-piece slots" /></p>
 
-<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/profile-editor.png" alt="Called-shot profile editor" /></p>
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/screenshots/v1.7-local-armor-settings.png" alt="Local armor piece AC settings with source handling and coverage summaries" /></p>
+
+<p><img src="https://raw.githubusercontent.com/SpencerZPoole/d35e-piecemeal-armor-called-shots/main/docs/assets/screenshots/v1.7-coverage-map-editor.png" alt="Coverage map editor with PAcS and native D35E slot choices" /></p>
 
 <h3>What It Adds</h3>
 
@@ -40,8 +42,8 @@
   <li>Adds a <code>Called Shot</code> dropdown inside D35E's native attack/use dialog.</li>
   <li>Injects called-shot penalties into D35E attack math, so expanded rolls show entries such as <code>Called Shot: Ear -10</code> or <code>Called Shot Range/Reach: not adjacent -2</code>.</li>
   <li>Keeps called-shot hit checks on normal applicable AC by default, while preserving RAW-adapted touch, cover, concealment, range/reach, DR, and outcome handling.</li>
-  <li>Offers an advanced disabled-by-default local armor piece AC house rule with per-location toggles.</li>
-  <li>Offers optional exposed headshot and exposed hand-shot house rules: empty Head or Hands slots can lose armor AC, while any equipped equipment item in that slot keeps the full armor bonus.</li>
+  <li>Offers an advanced disabled-by-default local armor piece AC house rule with per-location toggles, editable coverage mapping, and sum/highest handling for multiple mapped sources.</li>
+  <li>Offers optional exposed headshot and exposed hand-shot house rules: empty mapped native headgear or handgear slots can lose armor AC, while any equipped equipment item in a mapped slot keeps the full armor bonus.</li>
   <li>Enforces Improved/Greater Called Shot full-attack limits by default while offering table-facing warn-only and no-requirement options.</li>
   <li>Includes <code>PAcS Armor Pieces</code>, <code>PAcS Called-Shot Feats</code>, and <code>PAcS Helmets</code> compendia with convenience records for optional-rule setup.</li>
   <li>Automatically applies called-shot severity outcomes after D35E Apply Damage and records a GM restore ledger.</li>
@@ -72,11 +74,11 @@
 
 <h3>Automatic Outcomes And Restore</h3>
 
-<p>Called shots use the defender's normal applicable AC by default. D35E Apply Damage determines hit, crit, and post-DR damage; the module then determines normal, critical, or debilitating severity and applies, confirms, or leaves advisory outcomes based on the table setting. Severe outcomes such as death or permanent maiming are recorded in a called-shot ledger so a GM can restore them from the target actor sheet if needed. The advanced local armor piece AC setting is the grittier option: it can replace only the active armor/profile armor contribution with a matching local armor piece contribution for selected locations. Optional exposed headshot and exposed hand-shot settings are the softer fallback: they subtract only the active armor contribution when the relevant native Head or Hands slot is empty, any equipped slot equipment keeps the full armor bonus, and they do not stack on top of local armor for the same hit check.</p>
+<p>Called shots use the defender's normal applicable AC by default. D35E Apply Damage determines hit, crit, and post-DR damage; the module then determines normal, critical, or debilitating severity and applies, confirms, or leaves advisory outcomes based on the table setting. Severe outcomes such as death or permanent maiming are recorded in a called-shot ledger so a GM can restore them from the target actor sheet if needed. The advanced local armor piece AC setting is the grittier option: it can replace only the active armor/profile armor contribution with mapped local protection for selected locations, using summed applicable values, the highest applicable value, or per-location sum/highest overrides from the coverage editor. GMs can edit which PAcS pieces and native D35E slots cover each location from the local armor settings panel, with resettable module defaults. Optional exposed headshot and exposed hand-shot settings are the softer fallback: they subtract only the active armor contribution when the mapped native headgear or handgear slots are empty, any equipped mapped-slot equipment keeps the full armor bonus, and they do not stack on top of local armor for the same hit check.</p>
 
 <h3>Configuration</h3>
 
-<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, choose full-attack feat-gate behavior, enable optional local armor piece AC, choose local-armor locations from inline child toggles under that setting, enable optional exposed headshots, enable optional exposed hand shots, enable optional helmet Spot/Listen penalties, show called-shot coverage overlays, and edit called-shot profiles. Turning off <strong>Enable piecemeal armor</strong> hides the PAcS inventory slots and is the intended called-shots-only mode.</p>
+<p>Module settings live under <strong>Game Settings &gt; D35E Piecemeal Armor And Called Shots</strong>. GMs can enable or disable piecemeal armor, enable or disable called shots, choose called-shot effect automation, choose full-attack handling, choose full-attack feat-gate behavior, enable optional local armor piece AC, choose global or per-location local-armor source handling, choose local-armor locations from inline child toggles under that setting, edit the local armor coverage map, enable optional exposed headshots, enable optional exposed hand shots, enable optional helmet Spot/Listen penalties, show called-shot coverage overlays, and edit called-shot profiles. Turning off <strong>Enable piecemeal armor</strong> hides the PAcS inventory slots and is the intended called-shots-only mode. Dependent settings visually lock when their parent feature is off, but their saved values are preserved. Helmet Spot/Listen penalties remain independently editable because they only need equipped D35E Head-slot gear.</p>
 
 <p>The <strong>PAcS Armor Pieces</strong> compendium ships the recommended override pieces for the native PAcS slots. The items are generated from the D35E-calibrated catalog, so their display names match the armor a user searched for while their flags preserve the correct piece category and armor-family math.</p>
 
@@ -91,7 +93,7 @@
 <ul>
   <li>Foundry VTT: minimum 14, verified 14.363.</li>
   <li>D35E system: minimum 3.0.2, verified 3.0.2.</li>
-  <li>Module version: 1.6.0.</li>
+  <li>Module version: 1.7.0.</li>
 </ul>
 
 <h3>Documentation And Support</h3>

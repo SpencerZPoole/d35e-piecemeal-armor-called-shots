@@ -34,6 +34,7 @@ The module has two main workflows:
 | Called Shot Effects | Actor sheet header after an applied outcome | Lets a GM restore called-shot effects if the wrong damage card or target was used. |
 | Profile editor | Module settings | Edits locations, penalties, coverage slots, and outcome effects. |
 | Local armor locations | Module settings | Chooses which called-shot locations may use the advanced local armor piece AC house rule. |
+| Local armor coverage map | Module settings, inside the local armor panel | Edits which PAcS pieces and native D35E slots can cover each called-shot location, plus per-location sum/highest handling when that mode is selected. |
 
 ## Armor Piece Pack
 
@@ -46,6 +47,8 @@ The easiest way to build a piecemeal outfit is to use the bundled `PAcS Armor Pi
 
 The normal D35E armor item still belongs in the native `Armor` slot when it is the baseline suit. The `[PAcS]` piece items are for overrides: torso, arms, and legs. Importing a `[PAcS]` item into inventory by itself does not change AC. The item changes armor math only after it is assigned to the matching `PAcS: Torso`, `PAcS: Arms`, or `PAcS: Legs` slot.
 
+![Actor inventory showing native Armor and PAcS armor-piece slots](assets/screenshots/v1.7-actor-pacs-inventory.png)
+
 The pack uses the module's D35E-calibrated PF1e piecemeal adaptation. For example, `[PAcS] Chainmail, Torso` is a chainmail-labeled item that carries the calibrated chain torso values, while `[PAcS] Half-Plate, Legs` is a half-plate-labeled item whose flags use the chain leg piece needed by the half-plate suit mapping. The display name matches what users search for; the hidden flags preserve the correct category and family math.
 
 If a `[PAcS]` item says `Legs`, drop it on `PAcS: Legs`. The module rejects explicit pack pieces dropped onto the wrong PAcS category instead of silently turning them into a different piece.
@@ -56,18 +59,20 @@ Ordinary D35E armor items belong in the native `Armor` slot as the baseline suit
 
 Open Foundry's right sidebar, click the gear icon, choose `Game Settings`, then select `D35E Piecemeal Armor And Called Shots` from the category list on the left.
 
-![D35E Piecemeal Armor And Called Shots module settings](assets/module-settings.png)
+![Local armor piece AC settings with source handling and coverage summaries](assets/screenshots/v1.7-local-armor-settings.png)
 
 Settings:
 
 - `Edit called shot profiles`: opens the profile editor for locations, attack penalties, severity tiers, coverage slots, and outcome effects.
-- `Enable piecemeal armor`: adds the PAcS inventory slots, item piece fields, piecemeal armor math, and hidden D35E carrier. Turning it off hides the PAcS slots and suspends piecemeal armor automation without disabling called shots. This is the intended called-shots-only mode.
-- `Enable called shots`: adds the `Called Shot` selector to D35E's native attack dialog, applies the configured attack penalty to the native roll breakdown, carries context into Apply Damage, and posts outcome cards. Turning it off does not disable piecemeal armor.
-- `Called shots use local armor piece AC`: advanced, optional, and disabled by default. Selected called-shot locations replace only the defender's armor/profile armor contribution with the matching local armor piece contribution. This usually makes called shots easier for the attacker.
+- `Enable piecemeal armor`: adds the PAcS inventory slots, item piece fields, piecemeal armor math, and hidden D35E carrier. Turning it off hides the PAcS slots and suspends piecemeal armor automation without disabling called shots. This is the intended called-shots-only mode. Local armor piece AC is visually locked while piecemeal armor is off, but its saved choices are preserved.
+- `Enable called shots`: adds the `Called Shot` selector to D35E's native attack dialog, applies the configured attack penalty to the native roll breakdown, carries context into Apply Damage, and posts outcome cards. Turning it off does not disable piecemeal armor. Called-shot-only settings are visually locked while called shots are off, but their saved choices are preserved.
+- `Called shots use local armor piece AC`: advanced, optional, and disabled by default. Selected called-shot locations replace only the defender's armor/profile armor contribution with the matching local armor piece contribution. This usually makes called shots easier for the attacker. It requires both piecemeal armor and called shots to be enabled.
+- `Local armor AC source handling`: chooses whether multiple mapped local armor sources are summed, whether only the highest applicable bonus is used, or whether each location uses its own sum/highest choice from the coverage map editor.
 - Local armor location toggles: appear inline under `Called shots use local armor piece AC` in a tinted child section. They control which active profile locations may use local armor piece AC when the advanced master setting is on. New or missing locations default to enabled under the disabled master switch.
-- `Enable exposed headshots`: optional and disabled by default. Head, Eye, and Ear called shots remove the defender's active armor bonus only when the target has no equipped item in D35E's native `Head` slot; any equipped Head-slot equipment keeps the defender's full armor bonus.
-- `Enable exposed hand shots`: optional and disabled by default. Hand called shots remove the defender's active armor bonus only when the target has no equipped item in D35E's native `Hands` slot; any equipped Hands-slot equipment keeps the defender's full armor bonus.
-- `Apply helmet Spot/Listen penalties`: optional and disabled by default. Configured PAcS helmets can use per-item Spot and Listen values, while ordinary equipped D35E `Head`-slot items can use the default penalty fields below this setting.
+- `Edit coverage map`: opens the advanced local armor coverage editor. Use it when your table disagrees with the default map of which PAcS pieces and native D35E slots protect each called-shot location.
+- `Enable exposed headshots`: optional and disabled by default. Head, Eye, and Ear called shots remove the defender's active armor bonus only when the target has no equipped item in the mapped native headgear slots; mapped Eyes, Head, or Headband equipment keeps the defender's full armor bonus.
+- `Enable exposed hand shots`: optional and disabled by default. Hand called shots remove the defender's active armor bonus only when the target has no equipped item in the mapped native handgear slots; mapped Hands or Wrists equipment keeps the defender's full armor bonus.
+- `Apply helmet Spot/Listen penalties`: optional and disabled by default. This setting remains independent of piecemeal armor and called-shot automation because it only checks equipped D35E `Head`-slot gear. Configured PAcS helmets can use per-item Spot and Listen values, while ordinary equipped D35E `Head`-slot items can use the default penalty fields below this setting.
 - `Called-shot effect automation`: controls actor changes after Apply Damage. `GM confirms severe effects` is the default: normal outcomes apply automatically, while critical and debilitating outcomes ask the GM first. `Apply effects automatically` applies all resolved outcomes. `Advisory only` never changes actor data unless the GM clicks a chat-card severity button.
 - `Called shots on full attacks`: controls whether full attacks ask per attack, apply to the first attack only, apply to every attack, or ignore called-shot selections. See [Full Attacks](#full-attacks).
 - `Called-shot full-attack feat rules`: controls only whether the module blocks full-attack called shots when the attacker lacks the optional feats. `Require feats (RAW-adapted)` is the default. `Warn only` allows the full attack but warns about missing Improved or Greater Called Shot. `Do not require feats` allows the full attack without warnings. Feat bonuses still require the actor to actually have the feat.
@@ -79,7 +84,7 @@ Settings:
 
 Click the normal D35E use or attack control for a weapon or attack item. The native D35E attack dialog gains a `Called Shot` dropdown near the rest of the roll options.
 
-![Native D35E attack dialog with Called Shot dropdown](assets/native-called-shot-dropdown.png)
+![Native D35E attack dialog with the PAcS Called Shot selector](assets/screenshots/v1.7-called-shot-selector.png)
 
 Leave the selector on `None` for a normal attack. Choose a location when the attack is meant to be a called shot. The penalty is injected into D35E's normal attack calculation, so the expanded attack roll can show entries such as `Called Shot: Ear -10` alongside native modifiers.
 
@@ -108,23 +113,41 @@ The module still applies the Ultimate Combat called-shot defense rules that D35E
 
 The optional local armor piece AC rule is an advanced non-RAW house rule:
 
-- `Called shots use local armor piece AC`: selected locations replace the defender's armor/profile armor contribution with the matching local armor piece contribution.
+- `Called shots use local armor piece AC`: selected locations replace the defender's armor/profile armor contribution with mapped local protection.
 - Local armor location toggles: live directly beneath the master setting and let the GM turn local armor replacement on or off per called-shot location. The location defaults are all enabled, but they do nothing while the master setting is off.
+- `Local armor AC source handling`: defaults to summing every applicable mapped source. GMs can switch every location to the highest applicable bonus if they do not want native slot gear and PAcS pieces to stack, or select `Use per-location overrides`.
+- `Edit coverage map`: opens a focused editor where each called-shot location can check or uncheck PAcS pieces and native D35E equipment slots. The editor also lets each location choose summed or highest-source handling when the global setting is `Use per-location overrides`. `Reset Location` and `Reset All Defaults` reset both coverage and per-location handling so a table can experiment without losing the module's recommended defaults.
 
-Only the armor contribution changes. Shield, natural armor, Dexterity, deflection, dodge, size, and other AC sources remain intact. PAcS resolves local armor from active PAcS profiles and recognized native Armor-slot baseline suits. It does not guess custom armor that cannot resolve through the catalog or explicit piece data.
+![Coverage map editor with PAcS and native D35E slot choices](assets/screenshots/v1.7-coverage-map-editor.png)
 
-Example: a target's active profile contributes `7` armor AC, but the called location matches only a `1` point arm piece. With local armor piece AC enabled for that location, the Apply Damage AC Details row shows `Called Shot Local Armor: Arm (profile 7 -> local piece 1) -6`. With the setting disabled, the attack checks the target's normal applicable AC.
+Only the armor contribution changes. Shield, natural armor, Dexterity, deflection, dodge, size, and other AC sources remain intact. PAcS resolves local armor from active PAcS profiles, recognized native Armor-slot baseline suits, and explicit armor-like values on mapped D35E native slot items. Ordinary mapped slot gear with no armor value contributes `0` to local armor AC, but it can still block the softer exposed-slot fallback.
+
+The default protection map is:
+
+| Called-shot location | Local armor sources |
+| --- | --- |
+| Arm or Wing | PAcS Arms, Wrists, Shoulders |
+| Hand | Hands, Wrists |
+| Eye | Eyes, Head, Headband |
+| Ear, Head | Head, Headband |
+| Neck | Neck |
+| Chest, Heart, Vitals | PAcS Torso, Chest, Body |
+| Leg | PAcS Legs, Feet |
+
+These are defaults, not locked rules. `Edit coverage map` stores only table overrides, so reset buttons return a location or the whole editor to the module defaults. If a GM removes every coverage source from a location, that location resolves as local armor `0` when local armor piece AC is enabled for it. The same effective map controls exposed head/hand fallback for mapped native slots, so changing Eye from `Eyes, Head, Headband` to only `Head` also changes which native items can prevent Eye exposure.
+
+Example: a target's active profile contributes `7` armor AC, but the called location matches only `1` point of mapped arm protection. With local armor piece AC enabled for that location, the Apply Damage AC Details row shows `Called Shot Local Armor: Arm (profile 7 -> local sources 1) -6`. With the setting disabled, the attack checks the target's normal applicable AC.
 
 The optional exposed rules are separate non-RAW house rules:
 
-- `Enable exposed headshots`: Head, Eye, and Ear called shots remove the target's active armor/profile armor contribution only if the target has no equipped item in D35E's native `Head` slot.
-- `Enable exposed hand shots`: Hand called shots remove the target's active armor/profile armor contribution only if the target has no equipped item in D35E's native `Hands` slot.
+- `Enable exposed headshots`: Head, Eye, and Ear called shots remove the target's active armor/profile armor contribution only if the target has no equipped item in the mapped native headgear slots.
+- `Enable exposed hand shots`: Hand called shots remove the target's active armor/profile armor contribution only if the target has no equipped item in the mapped native handgear slots.
 
-These settings remove only the armor contribution, including armor enhancement as part of armor AC. They do not remove shield, natural armor, Dexterity, deflection, dodge, size, or other AC sources. Any equipped item in the relevant native slot prevents the exposed adjustment; it can be native D35E gear, a PAcS item, magic gear, or custom gear. If local armor piece AC applies to the same hit check, exposed head/hand does not stack on top of it.
+These settings remove only the armor contribution, including armor enhancement as part of armor AC. They do not remove shield, natural armor, Dexterity, deflection, dodge, size, or other AC sources. Any equipped item in a mapped native slot prevents the exposed adjustment; it can be native D35E gear, a PAcS item, magic gear, or custom gear. If local armor piece AC applies to the same hit check, exposed head/hand does not stack on top of it.
 
-In short, local armor piece AC is the grittier option: covered locations use only their matching piece contribution. Exposed head/hand is the softer compromise: the target loses armor only when the relevant native slot is empty, and any equipped slot equipment keeps the full armor bonus.
+In short, local armor piece AC is the grittier option: covered locations use only mapped local protection. Exposed head/hand is the softer compromise: the target loses armor only when the mapped native slots are empty, and any equipped mapped-slot equipment keeps the full armor bonus.
 
-Example: a target with chainmail contributing `5` armor AC and no equipped Head-slot item is attacked with a Head called shot. With exposed headshots disabled, the attack checks the target's normal AC. With exposed headshots enabled, the Apply Damage AC Details row shows `Called Shot Exposed Head: no Head-slot item (armor 5 -> 0) -5`.
+Example: a target with chainmail contributing `5` armor AC and no equipped Head or Headband item is attacked with a Head called shot. With exposed headshots disabled, the attack checks the target's normal AC. With exposed headshots enabled, the Apply Damage AC Details row shows `Called Shot Exposed Head: no Head/Headband item (armor 5 -> 0) -5`.
 
 ## Helmet Skill Penalties
 
@@ -134,7 +157,7 @@ Workflow:
 
 1. Open Foundry's Compendium Packs sidebar and drag a `[PAcS]` helmet from `PAcS Helmets` to the actor, or use any other D35E item that can occupy the native `Head` slot.
 2. Equip the item in D35E's native `Head` slot.
-3. If your table uses exposed headshots, that equipped Head-slot item is enough to prevent the exposed armor-loss adjustment.
+3. If your table uses exposed headshots, that equipped Head-slot item is enough to prevent exposed Head and Ear armor loss. Eye called shots can also be covered by mapped Eyes or Headband items.
 4. If your table also wants helmet skill penalties, enable `Apply helmet Spot/Listen penalties`. Ordinary equipped Head-slot items use the default Spot and Listen penalties from module settings. For a `[PAcS]` helmet, open the helmet item sheet, check `Use PAcS helmet skill penalties`, and enter per-item Spot and Listen values if that helmet should override the defaults.
 
 Spot and Listen penalties are table-defined. The module defaults ordinary headgear to `-2` Spot and `-2` Listen, and a GM can change either default to `0` or any other integer. Explicit `[PAcS]` helmet values take priority; an explicit per-item `0` means no penalty for that skill. The penalties appear as a `Helmet (...)` row in native D35E Spot and Listen roll breakdowns and do not permanently change actor skill values.
@@ -142,8 +165,6 @@ Spot and Listen penalties are table-defined. The module defaults ordinary headge
 ## Full Attacks
 
 The `Called shots on full attacks` setting controls what happens when a location is selected and the native D35E `Full Attack` button is used. By default, those choices are still gated by the attacker feats. A GM can loosen only the permission check with `Called-shot full-attack feat rules`.
-
-![Full attack called-shot picker](assets/full-attack-picker.png)
 
 Modes:
 
@@ -184,11 +205,13 @@ These feat items are convenience records for this module. Their descriptions are
 
 Open Foundry's Compendium Packs sidebar and look for `PAcS Helmets`. The pack contains preconfigured Head-slot equipment with `[PAcS]` names for padded, leather, studded leather, hide, scale mail, chain shirt, chainmail, breastplate, banded mail, splint mail, half-plate, and full plate helmet styles.
 
-These helmets are optional house-rule support items with editable weight, price, HP, and Spot/Listen penalty fields. They do not add normal AC, touch AC, flat-footed AC, max Dex limits, ACP, ASF, speed changes, suit bonuses, or armor-profile source rows. With exposed headshots enabled, any equipped Head-slot equipment can prevent exposed headshots, including these helmets and ordinary D35E headgear.
+These helmets are optional house-rule support items with editable weight, price, HP, and Spot/Listen penalty fields. They do not add normal AC, touch AC, flat-footed AC, max Dex limits, ACP, ASF, speed changes, suit bonuses, or armor-profile source rows. With exposed headshots enabled, mapped equipped headgear can prevent exposed headshots, including these helmets and ordinary D35E headgear.
 
 ## Called-Shot Chat Cards
 
 After a called-shot roll, the module posts a chat card. Use D35E's native Apply Damage button, and the module resolves hit state, post-DR damage, severity, saves, and outcomes after D35E finishes its damage workflow.
+
+![D35E Apply Damage card showing called-shot AC details](assets/screenshots/v1.7-apply-damage-ac-details.png)
 
 Severity rules:
 
@@ -262,8 +285,6 @@ When you hover an AC value on the D35E sheet, the source breakdown expands the h
 ## Profile Editor
 
 Open the right sidebar gear tab, choose `Game Settings`, select `D35E Piecemeal Armor And Called Shots`, then click `Open Profile Editor` next to `Edit called shot profiles`.
-
-![Called-shot profile editor](assets/profile-editor.png)
 
 Profiles control:
 

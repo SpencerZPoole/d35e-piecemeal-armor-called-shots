@@ -1,12 +1,24 @@
 # Changelog
 
+## 1.7.0
+
+- Added `Local armor AC source handling` modes for summed local protection, highest applicable protection, or per-location overrides.
+- Added the `Edit coverage map` editor for local armor piece AC, letting GMs customize which PAcS pieces and native D35E equipment slots cover each called-shot location while preserving resettable module defaults.
+- Expanded local armor coverage to include relevant native D35E equipment slots: Wrists/Shoulders for arms, Hands/Wrists for hands, Eyes/Head/Headband for eyes, Head/Headband for head and ears, Chest/Body for torso locations, Feet for legs, and Neck for neck.
+- Added per-location sum/highest source handling inside the coverage map editor when the global setting is `Use per-location overrides`.
+- Updated exposed head/hand fallback so it uses the effective native-slot coverage map and still never double-applies when local armor piece AC already handled the hit check.
+- Polished module settings dependencies so piecemeal-off locks local armor options, called-shots-off locks called-shot options, and helmet Spot/Listen penalties remain independently editable.
+- Refined the local armor settings UI with an inline summary panel, compact master toggle, friendly `Location is covered by` summaries, and a focused coverage editor instead of noisy per-row controls.
+- Refreshed public screenshots with five cropped, live Foundry captures for the attack dialog, Apply Damage AC details, actor inventory workflow, local armor settings, and coverage map editor. Removed the old screenshot files from the public repo surface.
+- Updated README, user guide, Foundry package description, listing packet, architecture notes, integration notes, and RAW coverage documentation for the v1.7 local-armor coverage workflow.
+
 ## 1.6.0
 
-- Added disabled-by-default `Called shots use local armor piece AC`, an advanced house rule that replaces only the defender's armor/profile armor contribution with matching local piece armor for selected called-shot locations.
+- Added disabled-by-default `Called shots use local armor piece AC`, an advanced house rule that replaces only the defender's armor/profile armor contribution with mapped local protection for selected called-shot locations.
 - Added inline child toggles under `Called shots use local armor piece AC`, letting tables enable or disable the local armor piece AC rule per active called-shot profile location without opening a second settings window.
-- Preserved exposed head/hand shots as separate fallback house rules: local armor runs first when enabled for a location, and exposed head/hand does not double-apply to the same hit check.
-- Clarified exposed head/hand settings and docs: an empty native `Head` or `Hands` slot can lose armor AC, while any equipped item in that exact slot keeps the full armor bonus.
-- Added default helmet Spot and Listen penalty settings for ordinary equipped Head-slot items, while keeping explicit PAcS helmet skill values as overrides.
+- Added editable default Spot and Listen penalties for ordinary equipped Head-slot items when helmet skill penalties are enabled.
+- Kept the v1.5.0 RAW-rebaseline default: called shots use normal applicable AC unless a GM enables a house rule.
+- Preserved exposed head/hand shots as separate fallback house rules. Local armor applies first when enabled for a location, and exposed head/hand never double-applies to the same hit check.
 - Documented the feature as an optional house rule that partially helps issue #5's local-armor-by-location idea while leaving helmet family-cap inheritance open.
 
 ## 1.5.0

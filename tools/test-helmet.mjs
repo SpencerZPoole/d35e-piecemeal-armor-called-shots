@@ -18,11 +18,14 @@ globalThis.game = {
       if (key === "enableExposedHeadshots") return exposedHeadshotsEnabled;
       if (key === "enableExposedHandShots") return false;
       if (key === "enableCalledShotLocalArmor") return false;
+      if (key === "calledShotLocalArmorAggregation") return "sum";
+      if (key === "calledShotLocalArmorAggregationMap") return {};
       if (key === "calledShotLocalArmorLocations") return {};
       if (key === "enableHelmetSkillPenalties") return helmetSkillPenaltiesEnabled;
       if (key === "defaultHelmetSpotPenalty") return defaultSpotPenalty;
       if (key === "defaultHelmetListenPenalty") return defaultListenPenalty;
       if (key === "enableArmorAutomation") return true;
+      if (key === "enableCalledShots") return true;
       if (key === "armorWorkflowMode") return "nativeProfile";
       if (key === "rulesMode") return "rawAdapted";
       return true;
@@ -168,7 +171,7 @@ assert.equal(disabledFlagHelmet, null);
 const noHelmetAc = { ac: 19, acModifiers: [] };
 applyLocalArmorAdjustment(profileActor(), noHelmetAc, { locationLabel: "Head", coverageSlot: "head" });
 assert.equal(noHelmetAc.ac, 17);
-assert.equal(noHelmetAc.acModifiers.at(-1).sourceName, "Called Shot Exposed Head: no Head-slot item (armor 2 -> 0)");
+assert.equal(noHelmetAc.acModifiers.at(-1).sourceName, "Called Shot Exposed Head: no Head/Headband item (armor 2 -> 0)");
 
 const helmetAc = { ac: 19, acModifiers: [] };
 assert.equal(applyLocalArmorAdjustment(actorWithHelmet, helmetAc, { locationLabel: "Head", coverageSlot: "head" }), null);

@@ -1,6 +1,12 @@
-import { FLAGS, LOCAL_ARMOR_MODES, MODULE_ID, SETTINGS } from "./constants.js";
 import {
-  armorCoverageOverlaps,
+  FLAGS,
+  LOCAL_ARMOR_AGGREGATION_MODES,
+  LOCAL_ARMOR_MODES,
+  MODULE_ID,
+  PIECE_CATEGORIES,
+  SETTINGS
+} from "./constants.js";
+import {
   calculateArmorPieceLocalTotal,
   isAggregateArmorItem,
   isInternalArmorProfileItem,
@@ -17,6 +23,97 @@ export { normalizeArmorSlot };
 // click-to-roll interaction.
 const DAMAGE_CONTEXT_TTL_MS = 5 * 60 * 1000;
 const damageContexts = new Map();
+
+const NATIVE_SLOT_LABELS = Object.freeze({
+  eyes: "Eyes",
+  head: "Head",
+  headband: "Headband",
+  shoulders: "Shoulders",
+  neck: "Neck",
+  chest: "Chest",
+  body: "Body",
+  hands: "Hands",
+  wrists: "Wrists",
+  feet: "Feet"
+});
+
+const PACS_CATEGORY_LABELS = Object.freeze({
+  [PIECE_CATEGORIES.arms]: "PAcS Arms",
+  [PIECE_CATEGORIES.legs]: "PAcS Legs",
+  [PIECE_CATEGORIES.torso]: "PAcS Torso"
+});
+
+export const LOCAL_ARMOR_PACS_SOURCES = Object.freeze([
+  PIECE_CATEGORIES.torso,
+  PIECE_CATEGORIES.arms,
+  PIECE_CATEGORIES.legs
+]);
+
+export const LOCAL_ARMOR_NATIVE_SOURCES = Object.freeze(Object.keys(NATIVE_SLOT_LABELS));
+
+const DEFAULT_LOCAL_ARMOR_PROTECTION_MAP = Object.freeze({
+  arm: Object.freeze({ pacs: Object.freeze([PIECE_CATEGORIES.arms]), native: Object.freeze(["wrists", "shoulders"]) }),
+  hand: Object.freeze({ pacs: Object.freeze([]), native: Object.freeze(["hands", "wrists"]) }),
+  eye: Object.freeze({ pacs: Object.freeze([]), native: Object.freeze(["eyes", "head", "headband"]) }),
+  ear: Object.freeze({ pacs: Object.freeze([]), native: Object.freeze(["head", "headband"]) }),
+  head: Object.freeze({ pacs: Object.freeze([]), native: Object.freeze(["head", "headband"]) }),
+  neck: Object.freeze({ pacs: Object.freeze([]), native: Object.freeze(["neck"]) }),
+  chest: Object.freeze({ pacs: Object.freeze([PIECE_CATEGORIES.torso]), native: Object.freeze(["chest", "body"]) }),
+  heart: Object.freeze({ pacs: Object.freeze([PIECE_CATEGORIES.torso]), native: Object.freeze(["chest", "body"]) }),
+  vitals: Object.freeze({ pacs: Object.freeze([PIECE_CATEGORIES.torso]), native: Object.freeze(["chest", "body"]) }),
+  leg: Object.freeze({ pacs: Object.freeze([PIECE_CATEGORIES.legs]), native: Object.freeze(["feet"]) })
+});
+
+const LOCATION_ALIASES = Object.freeze({
+  arms: "arm",
+  arm: "arm",
+  wing: "arm",
+  wings: "arm",
+  hand: "hand",
+  hands: "hand",
+  eye: "eye",
+  eyes: "eye",
+  ear: "ear",
+  ears: "ear",
+  head: "head",
+  neck: "neck",
+  throat: "neck",
+  chest: "chest",
+  torso: "chest",
+  body: "chest",
+  heart: "heart",
+  vitals: "vitals",
+  vital: "vitals",
+  leg: "leg",
+  legs: "leg",
+  foot: "leg",
+  feet: "leg"
+});
+
+const NATIVE_SLOT_ALIASES = Object.freeze({
+  eye: "eyes",
+  eyes: "eyes",
+  head: "head",
+  helm: "head",
+  helmet: "head",
+  headband: "headband",
+  shoulders: "shoulders",
+  shoulder: "shoulders",
+  neck: "neck",
+  throat: "neck",
+  chest: "chest",
+  body: "body",
+  torso: "body",
+  hands: "hands",
+  hand: "hands",
+  gloves: "hands",
+  wrists: "wrists",
+  wrist: "wrists",
+  bracers: "wrists",
+  feet: "feet",
+  foot: "feet",
+  boots: "feet"
+});
 
 function getProperty(source, path) {
   if (!source || !path) return undefined;
@@ -109,35 +206,228 @@ function formatSigned(value) {
   return number >= 0 ? `+${number}` : String(number);
 }
 
-function exposedSlotForCoverage(coverageSlot) {
+function compactKey(value) {
+  return String(value ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function normalizeCalledShotLocationId(value) {
+  const key = compactKey(value);
+  return LOCATION_ALIASES[key] ?? key;
+}
+
+function locationIdFromCoverage(coverageSlot) {
+  const raw = String(coverageSlot ?? "").toLowerCase();
+  const ordered = [
+    ["eye", /\beyes?\b/],
+    ["ear", /\bears?\b/],
+    ["hand", /\bhands?\b/],
+    ["head", /\bhead\b/],
+    ["neck", /\b(neck|throat)\b/],
+    ["heart", /\bheart\b/],
+    ["vitals", /\bvitals?\b/],
+    ["chest", /\b(chest|torso|body)\b/],
+    ["leg", /\b(legs?|feet|foot)\b/],
+    ["arm", /\b(arms?|wings?)\b/]
+  ];
+  for (const [locationId, pattern] of ordered) {
+    if (pattern.test(raw)) return locationId;
+  }
   const slots = parseArmorCoverageSlots(coverageSlot);
-  if (slots.includes("head") && settingEnabled(SETTINGS.enableExposedHeadshots, false)) {
-    return { key: "head", label: "Head" };
+  return normalizeCalledShotLocationId(slots[0] ?? "");
+}
+
+function explicitLocationIdFromInput(locationOrPayload) {
+  if (locationOrPayload && typeof locationOrPayload === "object") {
+    return normalizeCalledShotLocationId(locationOrPayload.locationId ?? locationOrPayload.id);
   }
-  if (slots.includes("hands") && settingEnabled(SETTINGS.enableExposedHandShots, false)) {
-    return { key: "hands", label: "Hands" };
+  return normalizeCalledShotLocationId(locationOrPayload);
+}
+
+function defaultProtectionForLocationId(locationId) {
+  return DEFAULT_LOCAL_ARMOR_PROTECTION_MAP[normalizeCalledShotLocationId(locationId)] ?? null;
+}
+
+function locationIdFromPayload(payload) {
+  const explicitId = normalizeCalledShotLocationId(payload?.locationId);
+  if (defaultProtectionForLocationId(explicitId)) return explicitId;
+  return locationIdFromCoverage(payload?.coverageSlot) || explicitId;
+}
+
+function normalizePacsSourceKey(value) {
+  const key = compactKey(value);
+  if (key === "torso" || key === "pacstorso" || key === "chest" || key === "body") return PIECE_CATEGORIES.torso;
+  if (key === "arms" || key === "arm" || key === "pacsarms") return PIECE_CATEGORIES.arms;
+  if (key === "legs" || key === "leg" || key === "pacslegs" || key === "feet") return PIECE_CATEGORIES.legs;
+  return "";
+}
+
+function uniqueNormalized(values, normalizer, allowedValues) {
+  const allowed = new Set(allowedValues);
+  const normalized = [];
+  for (const value of Array.isArray(values) ? values : []) {
+    const key = normalizer(value);
+    if (!key || !allowed.has(key) || normalized.includes(key)) continue;
+    normalized.push(key);
   }
-  return null;
+  return Object.freeze(normalized);
+}
+
+function normalizeProtectionEntry(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return Object.freeze({
+    pacs: uniqueNormalized(value.pacs, normalizePacsSourceKey, LOCAL_ARMOR_PACS_SOURCES),
+    native: uniqueNormalized(value.native, normalizeNativeSlotKey, LOCAL_ARMOR_NATIVE_SOURCES)
+  });
+}
+
+export function normalizeCalledShotLocalArmorCoverageMap(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const normalized = {};
+  for (const [rawKey, rawEntry] of Object.entries(source)) {
+    const locationId = normalizeCalledShotLocationId(rawKey);
+    const entry = normalizeProtectionEntry(rawEntry);
+    if (!locationId || !entry) continue;
+    normalized[locationId] = entry;
+  }
+  return normalized;
+}
+
+export function normalizeCalledShotLocalArmorAggregation(value, fallback = LOCAL_ARMOR_AGGREGATION_MODES.sum) {
+  if (value === LOCAL_ARMOR_AGGREGATION_MODES.highest) return LOCAL_ARMOR_AGGREGATION_MODES.highest;
+  if (value === LOCAL_ARMOR_AGGREGATION_MODES.perLocation) return LOCAL_ARMOR_AGGREGATION_MODES.perLocation;
+  if (fallback === null) return null;
+  return fallback === LOCAL_ARMOR_AGGREGATION_MODES.highest
+    ? LOCAL_ARMOR_AGGREGATION_MODES.highest
+    : LOCAL_ARMOR_AGGREGATION_MODES.sum;
+}
+
+export function normalizeCalledShotLocalArmorAggregationMap(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const normalized = {};
+  for (const [rawKey, rawMode] of Object.entries(source)) {
+    const locationId = normalizeCalledShotLocationId(rawKey);
+    if (!locationId) continue;
+    const mode = normalizeCalledShotLocalArmorAggregation(rawMode, null);
+    if (mode === LOCAL_ARMOR_AGGREGATION_MODES.sum || mode === LOCAL_ARMOR_AGGREGATION_MODES.highest) {
+      normalized[locationId] = mode;
+    }
+  }
+  return normalized;
+}
+
+function localArmorCoverageOverrides() {
+  return normalizeCalledShotLocalArmorCoverageMap(settingObject(SETTINGS.calledShotLocalArmorCoverageMap));
+}
+
+function localArmorAggregationOverrides() {
+  return normalizeCalledShotLocalArmorAggregationMap(settingObject(SETTINGS.calledShotLocalArmorAggregationMap));
+}
+
+function defaultProtectionForInput(locationOrPayload) {
+  const fallbackId = locationOrPayload && typeof locationOrPayload === "object"
+    ? locationIdFromPayload(locationOrPayload)
+    : normalizeCalledShotLocationId(locationOrPayload);
+  const protection = defaultProtectionForLocationId(fallbackId);
+  return { locationId: fallbackId, protection };
+}
+
+export function defaultCalledShotLocalArmorProtectionForLocation(locationOrPayload) {
+  const { locationId, protection } = defaultProtectionForInput(locationOrPayload);
+  const fallback = protection ?? Object.freeze({ pacs: Object.freeze([]), native: Object.freeze([]) });
+  return protectionDetails(locationId, fallback);
+}
+
+function protectionForInput(locationOrPayload, overrides = localArmorCoverageOverrides()) {
+  const explicitId = explicitLocationIdFromInput(locationOrPayload);
+  if (explicitId && hasOwn(overrides, explicitId)) {
+    return { locationId: explicitId, protection: overrides[explicitId] };
+  }
+  const { locationId, protection } = defaultProtectionForInput(locationOrPayload);
+  if (locationId && hasOwn(overrides, locationId)) {
+    return { locationId, protection: overrides[locationId] };
+  }
+  return { locationId, protection };
+}
+
+function protectionForLocationId(locationId) {
+  return protectionForInput(locationId).protection;
+}
+
+function protectionDetails(locationId, protection) {
+  const pacsCategories = protection?.pacs ?? [];
+  const nativeSlots = protection?.native ?? [];
+  const labels = [
+    ...pacsCategories.map((category) => PACS_CATEGORY_LABELS[category] ?? category),
+    ...nativeSlots.map((slot) => NATIVE_SLOT_LABELS[slot] ?? slot)
+  ];
+  return {
+    locationId,
+    pacsCategories,
+    nativeSlots,
+    labels,
+    displayLabel: labels.length ? labels.join(", ") : "no mapped local armor source",
+    protection
+  };
+}
+
+export function calledShotLocalArmorProtectionForLocation(locationOrPayload, coverageMap = null) {
+  const overrides = coverageMap === null ? localArmorCoverageOverrides() : normalizeCalledShotLocalArmorCoverageMap(coverageMap);
+  const { locationId, protection } = protectionForInput(locationOrPayload, overrides);
+  return protectionDetails(locationId, protection);
+}
+
+export function calledShotLocalArmorProtectionLabel(locationOrPayload, coverageMap = null) {
+  return calledShotLocalArmorProtectionForLocation(locationOrPayload, coverageMap).displayLabel;
+}
+
+export function calledShotLocalArmorCoverageSourceOptions() {
+  return {
+    pacs: LOCAL_ARMOR_PACS_SOURCES.map((value) => ({
+      value,
+      label: PACS_CATEGORY_LABELS[value] ?? value
+    })),
+    native: LOCAL_ARMOR_NATIVE_SOURCES.map((value) => ({
+      value,
+      label: NATIVE_SLOT_LABELS[value] ?? value
+    }))
+  };
 }
 
 function localArmorLocationEnabled(payload) {
+  if (!settingEnabled(SETTINGS.enableArmor, true)) return false;
+  if (!settingEnabled(SETTINGS.enableCalledShots, true)) return false;
   if (!settingEnabled(SETTINGS.enableCalledShotLocalArmor, false)) return false;
-  const locationId = String(payload?.locationId ?? "").trim();
+  const locationId = normalizeCalledShotLocationId(payload?.locationId) || locationIdFromPayload(payload);
   if (!locationId) return true;
   const locations = settingObject(SETTINGS.calledShotLocalArmorLocations);
   return locations[locationId] !== false;
 }
 
-function isEquippedInNativeSlot(item, slotKey) {
+function normalizeNativeSlotKey(value) {
+  const key = compactKey(value);
+  return NATIVE_SLOT_ALIASES[key] ?? key;
+}
+
+function isActiveEquipmentItem(item) {
   return item?.type === "equipment" &&
     item.system?.equipped === true &&
     item.system?.carried !== false &&
     item.system?.melded !== true &&
-    item.system?.slot === slotKey;
+    item.broken !== true;
+}
+
+function isEquippedInNativeSlot(item, slotKey) {
+  return isActiveEquipmentItem(item) && normalizeNativeSlotKey(item.system?.slot) === normalizeNativeSlotKey(slotKey);
+}
+
+function activeNativeSlotItems(actor, slotKeys) {
+  const keys = new Set((Array.isArray(slotKeys) ? slotKeys : [slotKeys]).map(normalizeNativeSlotKey).filter(Boolean));
+  if (!keys.size) return [];
+  return getItems(actor).filter((item) => isActiveEquipmentItem(item) && keys.has(normalizeNativeSlotKey(item.system?.slot)));
 }
 
 function activeNativeSlotItem(actor, slotKey) {
-  return getItems(actor).find((item) => isEquippedInNativeSlot(item, slotKey)) ?? null;
+  return activeNativeSlotItems(actor, slotKey)[0] ?? null;
 }
 
 function isNativeArmorContributor(item) {
@@ -153,6 +443,86 @@ function isNativeArmorContributor(item) {
 function nativeArmorContribution(item) {
   return numberOr(getProperty(item, "system.armor.value"), 0) +
     numberOr(getProperty(item, "system.armor.enh"), 0);
+}
+
+function hasOwn(source, key) {
+  return Boolean(source && Object.prototype.hasOwnProperty.call(source, key));
+}
+
+function numberIfPresent(source, key) {
+  if (!hasOwn(source, key)) return null;
+  const number = Number(source[key]);
+  return Number.isFinite(number) ? number : null;
+}
+
+function explicitFlagArmorValue(flag) {
+  if (!flag || typeof flag !== "object") return null;
+  const localArmor = numberIfPresent(flag, "localArmorBonus");
+  if (localArmor !== null) return localArmor;
+  const armorBonus = numberIfPresent(flag, "armorBonus");
+  if (armorBonus !== null) {
+    return armorBonus + numberOr(flag.enhancementBonus, 0);
+  }
+  return null;
+}
+
+function nativeSlotLocalArmorValue(item) {
+  const piecemeal = explicitFlagArmorValue(getFlagData(item, FLAGS.piecemeal));
+  if (piecemeal !== null) return piecemeal;
+  const helmet = explicitFlagArmorValue(getFlagData(item, FLAGS.helmet));
+  if (helmet !== null) return helmet;
+
+  const armorBonus = numberOr(getProperty(item, "system.armor.value"), 0);
+  const armorAlt = numberOr(getProperty(item, "system.armor.ac"), 0) || numberOr(getProperty(item, "system.armor.bonus"), 0);
+  const acValue = numberOr(getProperty(item, "system.ac.value"), 0);
+  const enhancement = numberOr(getProperty(item, "system.armor.enh"), 0);
+  const total = Math.max(armorBonus, armorAlt, acValue) + enhancement;
+  return total > 0 ? total : 0;
+}
+
+export function calledShotLocalArmorAggregationForLocation(locationOrPayload, aggregationMap = null) {
+  const value = (() => {
+    try {
+      return globalThis.game?.settings?.get?.(MODULE_ID, SETTINGS.calledShotLocalArmorAggregation);
+    } catch (_error) {
+      return null;
+    }
+  })();
+  const globalMode = normalizeCalledShotLocalArmorAggregation(value);
+  if (globalMode !== LOCAL_ARMOR_AGGREGATION_MODES.perLocation) return globalMode;
+  const locationId = locationOrPayload && typeof locationOrPayload === "object"
+    ? locationIdFromPayload(locationOrPayload)
+    : normalizeCalledShotLocationId(locationOrPayload);
+  const overrides = aggregationMap === null
+    ? localArmorAggregationOverrides()
+    : normalizeCalledShotLocalArmorAggregationMap(aggregationMap);
+  return overrides[locationId] === LOCAL_ARMOR_AGGREGATION_MODES.highest
+    ? LOCAL_ARMOR_AGGREGATION_MODES.highest
+    : LOCAL_ARMOR_AGGREGATION_MODES.sum;
+}
+
+function localArmorAggregationMode(locationOrPayload = null) {
+  return calledShotLocalArmorAggregationForLocation(locationOrPayload);
+}
+
+function aggregateLocalArmorSources(sources, mode = localArmorAggregationMode()) {
+  if (mode === LOCAL_ARMOR_AGGREGATION_MODES.highest) {
+    return sources.reduce((highest, source) => Math.max(highest, numberOr(source.value)), 0);
+  }
+  return sources.reduce((total, source) => total + numberOr(source.value), 0);
+}
+
+function dedupeLocalArmorSource(sources, source) {
+  if (!source?.sourceKey) {
+    sources.push(source);
+    return;
+  }
+  const existingIndex = sources.findIndex((entry) => entry.sourceKey === source.sourceKey);
+  if (existingIndex < 0) {
+    sources.push(source);
+    return;
+  }
+  if (numberOr(source.value) > numberOr(sources[existingIndex].value)) sources[existingIndex] = source;
 }
 
 export function calculateActiveArmorContribution(actor) {
@@ -202,15 +572,19 @@ export function calculateActiveArmorContribution(actor) {
 
 function exposedArmorSourceName(exposed, payload, mode) {
   const label = payload?.locationLabel ?? payload?.coverageSlot ?? exposed.coverageSlot;
+  const slots = exposed.nativeSlotLabel ?? "mapped";
   const suffix = mode === LOCAL_ARMOR_MODES.display ? " (advisory)" : "";
-  return `Called Shot Exposed ${label}: no ${exposed.nativeSlotLabel}-slot item (armor ${exposed.aggregateTotal} -> 0)${suffix}`;
+  return `Called Shot Exposed ${label}: no ${slots} item (armor ${exposed.aggregateTotal} -> 0)${suffix}`;
 }
 
 function localArmorSourceName(localArmor, payload, mode) {
   const label = payload?.locationLabel ?? payload?.coverageSlot ?? localArmor.coverageSlot;
   const sourceLabel = localArmor.profileSourceLabel ?? "profile";
+  const localLabel = localArmor.aggregation === LOCAL_ARMOR_AGGREGATION_MODES.highest
+    ? "highest local source"
+    : "local sources";
   const suffix = mode === LOCAL_ARMOR_MODES.display ? " (advisory)" : "";
-  return `Called Shot Local Armor: ${label} (${sourceLabel} ${localArmor.aggregateTotal} -> local piece ${localArmor.localTotal})${suffix}`;
+  return `Called Shot Local Armor: ${label} (${sourceLabel} ${localArmor.aggregateTotal} -> ${localLabel} ${localArmor.localTotal})${suffix}`;
 }
 
 function localArmorMode() {
@@ -366,70 +740,138 @@ function profileSourceLabel(resolution) {
   return resolution?.status === ARMOR_PROFILE_STATUS.nativeArmor ? "full armor" : "profile";
 }
 
-function calculateLocalArmorPieceAdjustment(actor, payload) {
-  const coverageSlot = payload?.coverageSlot;
-  const normalizedSlots = parseArmorCoverageSlots(coverageSlot);
-  if (!actor || !normalizedSlots.length || !localArmorLocationEnabled(payload)) return null;
-
-  let resolution;
+function resolveArmorProfileForLocalArmor(actor) {
   try {
-    resolution = resolveArmorProfile(actor);
+    const resolution = resolveArmorProfile(actor);
+    if (resolution?.status !== ARMOR_PROFILE_STATUS.needsPieceValues) return resolution;
   } catch (_error) {
-    return null;
+    // Fall through to native/aggregate contribution inspection.
   }
-  if (!resolution?.pieces?.length || resolution.status === ARMOR_PROFILE_STATUS.needsPieceValues) return null;
+  return null;
+}
 
+function localArmorContributionFromResolution(resolution) {
+  if (!resolution?.pieces?.length) return null;
   const summary = resolution.summary ?? {};
-  const aggregateTotal = numberOr(summary.armorBonus) + numberOr(summary.enhancementBonus);
-  if (!aggregateTotal) return null;
+  const total = numberOr(summary.armorBonus) + numberOr(summary.enhancementBonus);
+  return total > 0 ? {
+    total,
+    source: resolution.status,
+    armorBonus: numberOr(summary.armorBonus),
+    enhancementBonus: numberOr(summary.enhancementBonus)
+  } : null;
+}
 
+function collectPacsLocalArmorSources(resolution, protection) {
+  if (!resolution?.pieces?.length || !protection?.pacs?.length) return [];
+  const summary = resolution.summary ?? {};
+  const categories = new Set(protection.pacs);
   const activePieces = Array.isArray(summary.activePieces) && summary.activePieces.length
     ? summary.activePieces
     : resolution.pieces;
-  const matchingPieces = activePieces.filter((piece) => armorCoverageOverlaps(piece.coverageSlots, coverageSlot));
-  const localTotal = matchingPieces.reduce((total, piece) => total + calculateArmorPieceLocalTotal(summary, piece), 0);
+  const sources = [];
+  for (const piece of activePieces) {
+    if (!categories.has(piece.pieceCategory)) continue;
+    dedupeLocalArmorSource(sources, {
+      sourceKey: `pacs:${piece.id ?? piece.pieceCategory ?? piece.name}`,
+      type: "pacs",
+      value: calculateArmorPieceLocalTotal(summary, piece),
+      label: piece.sourceItemName ?? piece.name ?? PACS_CATEGORY_LABELS[piece.pieceCategory] ?? "PAcS piece",
+      piece
+    });
+  }
+  return sources;
+}
+
+function collectNativeLocalArmorSources(actor, protection) {
+  if (!protection?.native?.length) return [];
+  const sources = [];
+  for (const item of activeNativeSlotItems(actor, protection.native)) {
+    const slotKey = normalizeNativeSlotKey(item.system?.slot);
+    dedupeLocalArmorSource(sources, {
+      sourceKey: `native:${item.id ?? item._id ?? item.name ?? slotKey}`,
+      type: "native",
+      value: nativeSlotLocalArmorValue(item),
+      label: item.name ?? NATIVE_SLOT_LABELS[slotKey] ?? slotKey,
+      nativeSlot: slotKey,
+      item
+    });
+  }
+  return sources;
+}
+
+function calculateLocalArmorPieceAdjustment(actor, payload) {
+  const coverageSlot = payload?.coverageSlot;
+  const normalizedSlots = parseArmorCoverageSlots(coverageSlot);
+  const protectionContext = calledShotLocalArmorProtectionForLocation(payload);
+  const locationId = protectionContext.locationId;
+  const protection = protectionContext.protection;
+  if (!actor || !protection || !localArmorLocationEnabled(payload)) return null;
+
+  const resolution = resolveArmorProfileForLocalArmor(actor);
+  const armorContribution = localArmorContributionFromResolution(resolution) ?? calculateActiveArmorContribution(actor);
+  if (!armorContribution?.total) return null;
+
+  const aggregation = localArmorAggregationMode(payload);
+  const sources = [];
+  for (const source of collectPacsLocalArmorSources(resolution, protection)) dedupeLocalArmorSource(sources, source);
+  for (const source of collectNativeLocalArmorSources(actor, protection)) dedupeLocalArmorSource(sources, source);
+  if (!resolution?.pieces?.length && !sources.length && armorContribution.source === "nativeArmor") return null;
+  const localTotal = aggregateLocalArmorSources(sources, aggregation);
+  const aggregateTotal = armorContribution.total;
   const adjustment = localTotal - aggregateTotal;
   return {
     coverageSlot,
-    normalizedSlot: normalizedSlots[0],
+    normalizedSlot: normalizedSlots[0] ?? locationId,
     normalizedSlots,
+    locationId,
     aggregateTotal,
     localTotal,
     adjustment,
-    pieceCount: matchingPieces.length,
+    pieceCount: sources.length,
     source: "localArmor",
-    profileSourceLabel: profileSourceLabel(resolution),
-    armorContribution: {
-      total: aggregateTotal,
-      source: resolution.status,
-      armorBonus: numberOr(summary.armorBonus),
-      enhancementBonus: numberOr(summary.enhancementBonus)
-    },
-    pieces: matchingPieces
+    aggregation,
+    protection,
+    profileSourceLabel: resolution ? profileSourceLabel(resolution) : (armorContribution.source === "nativeArmor" ? "armor" : "profile"),
+    armorContribution,
+    pieces: sources.filter((entry) => entry.type === "pacs").map((entry) => entry.piece),
+    nativeItems: sources.filter((entry) => entry.type === "native").map((entry) => entry.item),
+    sources
   };
 }
 
 function calculateExposedArmorAdjustment(actor, payload) {
+  if (!settingEnabled(SETTINGS.enableCalledShots, true)) return null;
   const coverageSlot = payload?.coverageSlot;
   const normalizedSlots = parseArmorCoverageSlots(coverageSlot);
-  if (!actor || !normalizedSlots.length) return null;
-  const exposedSlot = exposedSlotForCoverage(coverageSlot);
-  if (!exposedSlot) return null;
-  const occupyingItem = activeNativeSlotItem(actor, exposedSlot.key);
+  const protectionContext = calledShotLocalArmorProtectionForLocation(payload);
+  const locationId = protectionContext.locationId;
+  if (!actor || (!normalizedSlots.length && !locationId)) return null;
+  const isHeadLocation = ["head", "eye", "ear"].includes(locationId);
+  const isHandLocation = locationId === "hand";
+  if (isHeadLocation && !settingEnabled(SETTINGS.enableExposedHeadshots, false)) return null;
+  if (isHandLocation && !settingEnabled(SETTINGS.enableExposedHandShots, false)) return null;
+  if (!isHeadLocation && !isHandLocation) return null;
+  const nativeSlots = protectionContext.nativeSlots ?? [];
+  const occupyingItem = activeNativeSlotItems(actor, nativeSlots)[0] ?? null;
   if (occupyingItem) return null;
   const armorContribution = calculateActiveArmorContribution(actor);
   if (!armorContribution?.total) return null;
   return {
     coverageSlot,
-    normalizedSlot: normalizedSlots[0],
+    normalizedSlot: normalizedSlots[0] ?? locationId,
     normalizedSlots,
+    locationId,
     aggregateTotal: armorContribution.total,
     localTotal: 0,
     adjustment: -armorContribution.total,
     pieceCount: 0,
     source: "exposed",
-    nativeSlot: exposedSlot.key,
-    nativeSlotLabel: exposedSlot.label,
+    nativeSlot: nativeSlots[0] ?? null,
+    nativeSlots,
+    nativeSlotLabel: nativeSlots.length
+      ? nativeSlots.map((slot) => NATIVE_SLOT_LABELS[slot] ?? slot).join("/")
+      : "mapped slots",
     armorContribution,
     pieces: []
   };

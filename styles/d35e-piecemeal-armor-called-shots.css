@@ -326,6 +326,51 @@
   display: none !important;
 }
 
+.d35e-pacs-settings-aggregation-row {
+  align-items: start;
+  border-top: 1px solid rgba(120, 120, 120, 0.22);
+  display: grid;
+  gap: 4px 8px;
+  grid-template-columns: minmax(140px, max-content) minmax(0, 1fr);
+  margin: 2px 0;
+  min-width: 0;
+  padding: 6px 0 2px;
+}
+
+.d35e-pacs-settings-aggregation-row label {
+  margin: 0;
+}
+
+.d35e-pacs-settings-aggregation-row .form-fields {
+  min-width: 0;
+}
+
+.d35e-pacs-settings-aggregation-row select {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.d35e-pacs-settings-child-tools {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.d35e-pacs-settings-child-tools button {
+  max-width: 100%;
+}
+
+.d35e-pacs-settings-aggregation-row .notes,
+.d35e-pacs-settings-aggregation-row .hint,
+.d35e-pacs-settings-aggregation-row .form-hint,
+.d35e-pacs-settings-aggregation-row .setting-hint,
+.d35e-pacs-settings-aggregation-row .form-group-description,
+.d35e-pacs-settings-aggregation-row > p,
+.d35e-pacs-settings-aggregation-row > small {
+  grid-column: 1 / -1;
+}
+
 .d35e-pacs-settings-child-grid {
   display: grid;
   gap: 6px;
@@ -335,6 +380,22 @@
 .d35e-pacs-settings-child-block-inactive .d35e-pacs-settings-child-grid {
   filter: grayscale(0.35);
   opacity: 0.48;
+}
+
+.d35e-pacs-settings-panel-locked {
+  filter: grayscale(0.25);
+  opacity: 0.58;
+}
+
+.d35e-pacs-settings-lock-notice,
+.d35e-pacs-settings-dependent-locked .notes {
+  color: inherit;
+  font-style: italic;
+}
+
+.d35e-pacs-settings-dependent-locked {
+  filter: grayscale(0.2);
+  opacity: 0.56;
 }
 
 .d35e-pacs-settings-child-toggle {
@@ -352,6 +413,80 @@
 
 .d35e-pacs-settings-child-toggle small {
   line-height: 1.2;
+}
+
+.d35e-pacs-coverage-editor {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.d35e-pacs-coverage-editor .d35e-pacs-profile-toolbar {
+  align-items: center;
+}
+
+.d35e-pacs-coverage-locations {
+  display: grid;
+  gap: 10px;
+  max-height: 560px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.d35e-pacs-coverage-location {
+  border: 1px solid rgba(120, 120, 120, 0.35);
+  border-radius: 4px;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.d35e-pacs-coverage-location > header {
+  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.d35e-pacs-coverage-location > header div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.d35e-pacs-coverage-aggregation {
+  display: grid;
+  gap: 2px;
+  margin: 4px 0;
+  max-width: 320px;
+}
+
+.d35e-pacs-coverage-aggregation select {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.d35e-pacs-coverage-source-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+.d35e-pacs-coverage-source-grid fieldset {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  min-width: 0;
+}
+
+.d35e-pacs-coverage-source-grid label {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  margin: 0;
 }
 
 .d35e-pacs-chat-card h3 {

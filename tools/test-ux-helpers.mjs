@@ -30,12 +30,23 @@ globalThis.game = {
 };
 
 const { getDefaultCalledShotProfiles } = await import("../scripts/profiles.js");
-const { FLAGS, FULL_ATTACK_FEAT_RULE_MODES, FULL_ATTACK_MODES, MODULE_ID, OUTCOME_MODES, SETTINGS } = await import("../scripts/constants.js");
+const {
+  FLAGS,
+  FULL_ATTACK_FEAT_RULE_MODES,
+  FULL_ATTACK_MODES,
+  LOCAL_ARMOR_AGGREGATION_MODES,
+  MODULE_ID,
+  OUTCOME_MODES,
+  SETTINGS
+} = await import("../scripts/constants.js");
 const {
   buildLocalArmorLocationSettingsContext,
+  buildLocalArmorCoverageEditorContext,
   buildProfileManagerContext,
   createLocalArmorLocationSettingsElement,
   registerSettings,
+  updateLocalArmorAggregationMap,
+  updateLocalArmorCoverageMap,
   updateLocalArmorLocationSettings,
   updateProfilesFromProfileManager
 } = await import("../scripts/settings.js");
@@ -60,16 +71,29 @@ assert.equal(registeredSettings.get(SETTINGS.enableArmor).name, "Enable piecemea
 assert.equal(registeredSettings.get(SETTINGS.enableCalledShots).name, "Enable called shots");
 assert.equal(registeredSettings.get(SETTINGS.enableExposedHeadshots).name, "Enable exposed headshots");
 assert.equal(registeredSettings.get(SETTINGS.enableExposedHeadshots).default, false);
-assert.match(registeredSettings.get(SETTINGS.enableExposedHeadshots).hint, /any equipped Head-slot equipment keeps the defender's full armor bonus/);
+assert.match(registeredSettings.get(SETTINGS.enableExposedHeadshots).hint, /Eyes, Head, or Headband keeps the defender's full armor bonus/);
 assert.equal(registeredSettings.get(SETTINGS.enableExposedHandShots).name, "Enable exposed hand shots");
 assert.equal(registeredSettings.get(SETTINGS.enableExposedHandShots).default, false);
-assert.match(registeredSettings.get(SETTINGS.enableExposedHandShots).hint, /any equipped Hands-slot equipment keeps the defender's full armor bonus/);
+assert.match(registeredSettings.get(SETTINGS.enableExposedHandShots).hint, /Hands or Wrists keeps the defender's full armor bonus/);
 assert.equal(registeredSettings.get(SETTINGS.enableCalledShotLocalArmor).name, "Called shots use local armor piece AC");
 assert.equal(registeredSettings.get(SETTINGS.enableCalledShotLocalArmor).default, false);
 assert.match(registeredSettings.get(SETTINGS.enableCalledShotLocalArmor).hint, /almost always makes called shots easier/);
+assert.equal(registeredSettings.get(SETTINGS.calledShotLocalArmorAggregation).name, "Local armor AC source handling");
+assert.equal(registeredSettings.get(SETTINGS.calledShotLocalArmorAggregation).default, LOCAL_ARMOR_AGGREGATION_MODES.sum);
+assert.deepEqual(Object.keys(registeredSettings.get(SETTINGS.calledShotLocalArmorAggregation).choices), [
+  LOCAL_ARMOR_AGGREGATION_MODES.sum,
+  LOCAL_ARMOR_AGGREGATION_MODES.highest,
+  LOCAL_ARMOR_AGGREGATION_MODES.perLocation
+]);
+assert.equal(registeredSettings.get(SETTINGS.calledShotLocalArmorAggregation).choices[LOCAL_ARMOR_AGGREGATION_MODES.perLocation], "Use per-location overrides");
+assert.equal(registeredSettings.get(SETTINGS.calledShotLocalArmorAggregationMap).config, false);
+assert.deepEqual(registeredSettings.get(SETTINGS.calledShotLocalArmorAggregationMap).default, {});
+assert.equal(registeredSettings.get(SETTINGS.calledShotLocalArmorCoverageMap).config, false);
+assert.deepEqual(registeredSettings.get(SETTINGS.calledShotLocalArmorCoverageMap).default, {});
 assert.equal(registeredSettings.get(SETTINGS.enableHelmetHeadCoverage).config, false);
 assert.equal(registeredSettings.get(SETTINGS.enableHelmetHeadCoverage).default, false);
 assert.equal(registeredSettings.get(SETTINGS.enableHelmetSkillPenalties).name, "Apply helmet Spot/Listen penalties");
+assert.match(registeredSettings.get(SETTINGS.enableHelmetSkillPenalties).hint, /stays available even when piecemeal armor or called shots are off/);
 assert.equal(registeredSettings.get(SETTINGS.enableHelmetSkillPenalties).default, false);
 assert.equal(registeredSettings.get(SETTINGS.defaultHelmetSpotPenalty).name, "Default helmet Spot penalty");
 assert.equal(registeredSettings.get(SETTINGS.defaultHelmetSpotPenalty).default, -2);
@@ -164,6 +188,23 @@ class FakeClassList {
     for (const className of classNames) this.values.delete(className);
   }
 
+  toggle(className, force) {
+    if (force === true) {
+      this.values.add(className);
+      return true;
+    }
+    if (force === false) {
+      this.values.delete(className);
+      return false;
+    }
+    if (this.values.has(className)) {
+      this.values.delete(className);
+      return false;
+    }
+    this.values.add(className);
+    return true;
+  }
+
   contains(className) {
     return this.values.has(className);
   }
@@ -208,12 +249,27 @@ class FakeElement {
   }
 
   querySelectorAll(selector) {
+    if (selector.includes(",")) {
+      const seen = new Set();
+      const combined = [];
+      for (const part of selector.split(",").map((entry) => entry.trim()).filter(Boolean)) {
+        for (const element of this.querySelectorAll(part)) {
+          if (seen.has(element)) continue;
+          seen.add(element);
+          combined.push(element);
+        }
+      }
+      return combined;
+    }
     const results = [];
     const matches = (element) => {
       if (!(element instanceof FakeElement)) return false;
       if (selector.startsWith(".")) return element.classList.contains(selector.slice(1));
       if (selector === "details") return element.tagName === "DETAILS";
       if (selector === "section") return element.tagName === "SECTION";
+      if (selector === "input" || selector === "select" || selector === "textarea" || selector === "button") {
+        return element.tagName.toLowerCase() === selector;
+      }
       const nameMatch = selector.match(/^\[name="(.+)"\]$/);
       if (nameMatch) return element.name === nameMatch[1];
       return element.tagName.toLowerCase() === selector.toLowerCase();
@@ -326,9 +382,23 @@ const masterFields = new FakeElement("div");
 masterFields.classList.add("form-fields");
 masterFields.append(masterInput);
 masterRow.append(masterLabel, masterNotes, masterHint, masterFields);
+const aggregationRow = new FakeElement("div");
+const aggregationLabel = new FakeElement("label");
+aggregationLabel.textContent = "Local armor AC source handling";
+const aggregationSelect = new FakeElement("select");
+aggregationSelect.name = `${MODULE_ID}.${SETTINGS.calledShotLocalArmorAggregation}`;
+const aggregationNotes = new FakeElement("p");
+aggregationNotes.classList.add("notes");
+aggregationNotes.textContent = "Controls how multiple mapped local armor sources are combined.";
+const aggregationFields = new FakeElement("div");
+aggregationFields.classList.add("form-fields");
+aggregationFields.append(aggregationSelect);
+aggregationRow.append(aggregationLabel, aggregationFields, aggregationNotes);
 const localArmorElement = createLocalArmorLocationSettingsElement(localArmorContext, fakeDoc, {
   masterEnabled: false,
-  masterRow
+  masterRow,
+  aggregationRow,
+  lockReason: "Enable piecemeal armor above to use local armor piece AC."
 });
 assert.ok(localArmorElement.classList.contains("d35e-pacs-settings-child-block"));
 assert.ok(localArmorElement.classList.contains("d35e-pacs-settings-child-block-inactive"));
@@ -336,22 +406,108 @@ assert.equal(localArmorElement.dataset.d35ePacsSettingsChild, "called-shot-local
 assert.equal(localArmorElement.dataset.localArmorEnabled, "false");
 assert.ok(localArmorElement.querySelector(".d35e-pacs-settings-child-header"));
 assert.ok(localArmorElement.querySelector(".d35e-pacs-settings-master-toggle"));
+assert.ok(localArmorElement.querySelector(".d35e-pacs-settings-aggregation-row"));
 assert.ok(localArmorElement.querySelector(".form-fields"));
 assert.ok(localArmorElement.querySelector(`[name="${MODULE_ID}.${SETTINGS.enableCalledShotLocalArmor}"]`));
+assert.ok(localArmorElement.querySelector(`[name="${MODULE_ID}.${SETTINGS.calledShotLocalArmorAggregation}"]`));
 assert.ok(localArmorElement.textContent.includes("Local armor piece AC"));
 assert.ok(localArmorElement.textContent.includes("Enable for called shots"));
+assert.ok(localArmorElement.textContent.includes("Enable piecemeal armor above to use local armor piece AC."));
 assert.equal(masterNotes.hidden, true);
 assert.equal(masterHint.hidden, true);
 assert.equal(localArmorElement.textContent.includes("Long native setting hint."), false);
 assert.equal(localArmorElement.textContent.includes("Second native setting hint."), false);
-assert.ok(localArmorElement.textContent.includes("Armor/equipment slot: arm"));
-assert.ok(localArmorElement.textContent.includes("Coverage: arms"));
+assert.ok(localArmorElement.textContent.includes("Edit coverage map"));
+assert.ok(localArmorElement.textContent.includes("Location is covered by: PAcS Arms, Wrists, Shoulders"));
+assert.ok(localArmorElement.textContent.includes("Location is covered by: Hands, Wrists"));
+assert.equal(localArmorElement.textContent.includes("Armor/equipment slot:"), false);
+assert.equal(localArmorElement.textContent.includes("Coverage:"), false);
 assert.ok(localArmorElement.querySelector(`[name="location.arm.enabled"]`));
 assert.ok(localArmorElement.querySelector(`[name="location.hand.enabled"]`));
 assert.equal(updateLocalArmorLocationSettings({ hand: false }, {
   "location.arm.enabled": "on",
   "location.hand.enabled": false
 }, profiles).hand, false);
+
+const coverageContext = buildLocalArmorCoverageEditorContext(profiles, {
+  eye: { pacs: [], native: ["head"] }
+}, {
+  eye: LOCAL_ARMOR_AGGREGATION_MODES.highest
+});
+const eyeCoverage = coverageContext.locations.find((location) => location.id === "eye");
+assert.equal(coverageContext.profileLabel, "PF1e Ultimate Combat RAW-adapted defaults");
+assert.equal(eyeCoverage.protectionLabel, "Head");
+assert.equal(eyeCoverage.defaultLabel, "Eyes, Head, Headband");
+assert.equal(eyeCoverage.nativeOptions.find((option) => option.value === "head").checked, true);
+assert.equal(eyeCoverage.nativeOptions.find((option) => option.value === "eyes").checked, false);
+assert.equal(eyeCoverage.aggregation, LOCAL_ARMOR_AGGREGATION_MODES.highest);
+assert.equal(eyeCoverage.aggregationLabel, "Use highest applicable bonus");
+assert.equal(eyeCoverage.aggregationOverridden, true);
+assert.equal(eyeCoverage.aggregationOptions.find((option) => option.value === LOCAL_ARMOR_AGGREGATION_MODES.highest).selected, true);
+const coverageMap = updateLocalArmorCoverageMap({}, {
+  "coverage.eye.present": "1",
+  "coverage.eye.native.head": "on"
+}, profiles);
+assert.deepEqual(coverageMap.eye, { pacs: [], native: ["head"] });
+const resetCoverageMap = updateLocalArmorCoverageMap({ eye: { pacs: [], native: ["head"] } }, {
+  "coverage.eye.present": "1",
+  "coverage.eye.native.eyes": "on",
+  "coverage.eye.native.head": "on",
+  "coverage.eye.native.headband": "on"
+}, profiles);
+assert.equal(Object.prototype.hasOwnProperty.call(resetCoverageMap, "eye"), false);
+const unorderedDefaultCoverageMap = updateLocalArmorCoverageMap({}, {
+  "coverage.arm.present": "1",
+  "coverage.arm.pacs.arms": "on",
+  "coverage.arm.native.shoulders": "on",
+  "coverage.arm.native.wrists": "on"
+}, profiles);
+assert.equal(Object.prototype.hasOwnProperty.call(unorderedDefaultCoverageMap, "arm"), false);
+const emptyCoverageMap = updateLocalArmorCoverageMap({}, {
+  "coverage.eye.present": "1"
+}, profiles);
+assert.deepEqual(emptyCoverageMap.eye, { pacs: [], native: [] });
+const aggregationMap = updateLocalArmorAggregationMap({}, {
+  "coverage.eye.present": "1",
+  "aggregation.eye": LOCAL_ARMOR_AGGREGATION_MODES.highest
+}, profiles);
+assert.deepEqual(aggregationMap, { eye: LOCAL_ARMOR_AGGREGATION_MODES.highest });
+const resetAggregationMap = updateLocalArmorAggregationMap({ eye: LOCAL_ARMOR_AGGREGATION_MODES.highest }, {
+  "coverage.eye.present": "1",
+  "aggregation.eye": LOCAL_ARMOR_AGGREGATION_MODES.sum
+}, profiles);
+assert.deepEqual(resetAggregationMap, {});
+const customProfiles = {
+  schemaVersion: profiles.schemaVersion,
+  activeProfileId: "custom",
+  profiles: [{
+    id: "custom",
+    label: "Custom profile",
+    locations: [{
+    id: "Tail-Spike",
+    label: "Tail Spike",
+    enabled: true,
+    difficulty: "easy",
+    penalty: -2,
+    coverageSlot: "legs",
+    outcomes: {
+      normal: [],
+      critical: [],
+      debilitating: []
+    }
+  }]
+  }]
+};
+const customCoverageMap = updateLocalArmorCoverageMap({}, {
+  "coverage.Tail-Spike.present": "1",
+  "coverage.Tail-Spike.native.feet": "on"
+}, customProfiles);
+assert.deepEqual(customCoverageMap.tailspike, { pacs: [], native: ["feet"] });
+const customCoverageContext = buildLocalArmorCoverageEditorContext(customProfiles, customCoverageMap);
+const tailCoverage = customCoverageContext.locations.find((location) => location.id === "Tail-Spike");
+assert.equal(tailCoverage.protectionLabel, "Feet");
+assert.equal(tailCoverage.defaultLabel, "PAcS Legs, Feet");
+assert.equal(tailCoverage.overridden, true);
 
 const updated = updateProfilesFromProfileManager(profiles, {
   profileLabel: "Table Defaults",

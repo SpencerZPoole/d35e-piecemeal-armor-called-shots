@@ -1,0 +1,51 @@
+<div class="d35e-pacs-coverage-editor">
+  <header class="d35e-pacs-profile-toolbar">
+    <div>
+      <strong>Active profile: {{profileLabel}}</strong>
+      <p class="notes">Choose which PAcS pieces and native D35E equipment slots can protect each called-shot location when local armor piece AC is enabled.</p>
+    </div>
+    <button type="button" data-action="reset-all-coverage"><i class="fas fa-undo"></i> Reset All Defaults</button>
+    <button type="button" data-action="cancel-coverage">Cancel</button>
+    <button type="submit"><i class="fas fa-save"></i> Save</button>
+  </header>
+
+  <section class="d35e-pacs-coverage-locations">
+    {{#each locations}}
+      <article class="d35e-pacs-coverage-location" data-location-id="{{id}}">
+        <input type="hidden" name="coverage.{{id}}.present" value="1">
+        <header>
+          <div>
+            <strong>{{label}}</strong>
+            <small data-coverage-current>Location is covered by: {{protectionLabel}}</small>
+            <label class="d35e-pacs-coverage-aggregation">
+              <span>Source handling</span>
+              <select name="aggregation.{{id}}">
+                {{#each aggregationOptions}}
+                  <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+                {{/each}}
+              </select>
+            </label>
+            <small>Default: {{defaultLabel}}</small>
+          </div>
+          <button type="button" data-action="reset-location-coverage" data-location-id="{{id}}">Reset Location</button>
+        </header>
+
+        <div class="d35e-pacs-coverage-source-grid">
+          <fieldset>
+            <legend>PAcS armor pieces</legend>
+            {{#each pacsOptions}}
+              <label><input type="checkbox" name="coverage.{{../id}}.pacs.{{value}}" {{#if checked}}checked{{/if}}> {{label}}</label>
+            {{/each}}
+          </fieldset>
+
+          <fieldset>
+            <legend>D35E native slots</legend>
+            {{#each nativeOptions}}
+              <label><input type="checkbox" name="coverage.{{../id}}.native.{{value}}" {{#if checked}}checked{{/if}}> {{label}}</label>
+            {{/each}}
+          </fieldset>
+        </div>
+      </article>
+    {{/each}}
+  </section>
+</div>
