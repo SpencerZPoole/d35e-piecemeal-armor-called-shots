@@ -260,7 +260,7 @@
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px 16px;
   justify-content: space-between;
 }
 
@@ -269,11 +269,20 @@
   margin: 0;
 }
 
+.d35e-pacs-settings-child-header h4 {
+  flex: 0 0 auto;
+  max-width: 100%;
+  overflow-wrap: normal;
+  white-space: nowrap;
+  word-break: normal;
+}
+
 .d35e-pacs-settings-master-toggle {
   align-items: center;
   display: flex;
-  flex: 0 0 auto;
+  flex: 1 1 220px;
   gap: 8px;
+  justify-content: flex-end;
   margin: 0;
   min-width: 0;
   padding: 0;
@@ -288,8 +297,15 @@
   flex: 0 0 auto;
 }
 
-.d35e-pacs-settings-master-toggle .notes {
-  display: none;
+.d35e-pacs-settings-master-toggle .notes,
+.d35e-pacs-settings-master-toggle .hint,
+.d35e-pacs-settings-master-toggle .form-hint,
+.d35e-pacs-settings-master-toggle .setting-hint,
+.d35e-pacs-settings-master-toggle .form-group-description,
+.d35e-pacs-settings-master-toggle .d35e-pacs-settings-master-hidden,
+.d35e-pacs-settings-master-toggle > p,
+.d35e-pacs-settings-master-toggle > small {
+  display: none !important;
 }
 
 .d35e-pacs-settings-child-grid {

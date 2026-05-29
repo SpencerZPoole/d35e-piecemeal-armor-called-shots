@@ -197,8 +197,13 @@ function prepareLocalArmorMasterRow(row) {
   row.dataset.d35ePacsSettingsMaster = "called-shot-local-armor";
   const label = row.querySelector?.("label");
   if (label) label.textContent = "Enable for called shots";
-  const note = row.querySelector?.(".notes");
-  if (note) note.hidden = true;
+  for (const selector of [".notes", ".hint", ".form-hint", ".setting-hint", ".form-group-description", "p", "small"]) {
+    for (const hint of row.querySelectorAll?.(selector) ?? []) {
+      hint.textContent = "";
+      hint.hidden = true;
+      hint.classList?.add?.("d35e-pacs-settings-master-hidden");
+    }
+  }
   return row;
 }
 

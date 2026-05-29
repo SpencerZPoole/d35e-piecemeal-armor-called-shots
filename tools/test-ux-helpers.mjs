@@ -315,11 +315,14 @@ masterLabel.textContent = "Called shots use local armor piece AC";
 const masterNotes = new FakeElement("p");
 masterNotes.classList.add("notes");
 masterNotes.textContent = "Long native setting hint.";
+const masterHint = new FakeElement("small");
+masterHint.classList.add("hint");
+masterHint.textContent = "Second native setting hint.";
 const masterInput = new FakeElement("input");
 masterInput.type = "checkbox";
 masterInput.checked = false;
 masterInput.name = `${MODULE_ID}.${SETTINGS.enableCalledShotLocalArmor}`;
-masterRow.append(masterLabel, masterNotes, masterInput);
+masterRow.append(masterLabel, masterNotes, masterHint, masterInput);
 const localArmorElement = createLocalArmorLocationSettingsElement(localArmorContext, fakeDoc, {
   masterEnabled: false,
   masterRow
@@ -334,6 +337,9 @@ assert.ok(localArmorElement.querySelector(`[name="${MODULE_ID}.${SETTINGS.enable
 assert.ok(localArmorElement.textContent.includes("Local armor piece AC"));
 assert.ok(localArmorElement.textContent.includes("Enable for called shots"));
 assert.equal(masterNotes.hidden, true);
+assert.equal(masterHint.hidden, true);
+assert.equal(localArmorElement.textContent.includes("Long native setting hint."), false);
+assert.equal(localArmorElement.textContent.includes("Second native setting hint."), false);
 assert.ok(localArmorElement.textContent.includes("Armor/equipment slot: arm"));
 assert.ok(localArmorElement.textContent.includes("Coverage: arms"));
 assert.ok(localArmorElement.querySelector(`[name="location.arm.enabled"]`));
