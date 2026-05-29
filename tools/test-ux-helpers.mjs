@@ -322,7 +322,10 @@ const masterInput = new FakeElement("input");
 masterInput.type = "checkbox";
 masterInput.checked = false;
 masterInput.name = `${MODULE_ID}.${SETTINGS.enableCalledShotLocalArmor}`;
-masterRow.append(masterLabel, masterNotes, masterHint, masterInput);
+const masterFields = new FakeElement("div");
+masterFields.classList.add("form-fields");
+masterFields.append(masterInput);
+masterRow.append(masterLabel, masterNotes, masterHint, masterFields);
 const localArmorElement = createLocalArmorLocationSettingsElement(localArmorContext, fakeDoc, {
   masterEnabled: false,
   masterRow
@@ -333,6 +336,7 @@ assert.equal(localArmorElement.dataset.d35ePacsSettingsChild, "called-shot-local
 assert.equal(localArmorElement.dataset.localArmorEnabled, "false");
 assert.ok(localArmorElement.querySelector(".d35e-pacs-settings-child-header"));
 assert.ok(localArmorElement.querySelector(".d35e-pacs-settings-master-toggle"));
+assert.ok(localArmorElement.querySelector(".form-fields"));
 assert.ok(localArmorElement.querySelector(`[name="${MODULE_ID}.${SETTINGS.enableCalledShotLocalArmor}"]`));
 assert.ok(localArmorElement.textContent.includes("Local armor piece AC"));
 assert.ok(localArmorElement.textContent.includes("Enable for called shots"));

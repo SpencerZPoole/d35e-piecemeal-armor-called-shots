@@ -278,23 +278,41 @@
 }
 
 .d35e-pacs-settings-master-toggle {
+  align-content: center;
   align-items: center;
-  display: flex;
+  align-self: center;
+  display: inline-grid;
   flex: 1 1 220px;
   gap: 8px;
+  grid-template-columns: max-content auto;
   justify-content: flex-end;
+  line-height: 1;
   margin: 0;
   min-width: 0;
   padding: 0;
 }
 
 .d35e-pacs-settings-master-toggle label {
+  align-self: center;
+  line-height: 1.2;
   margin: 0;
   white-space: nowrap;
 }
 
 .d35e-pacs-settings-master-toggle .form-fields {
+  align-items: center;
+  display: flex;
   flex: 0 0 auto;
+  justify-content: flex-end;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+}
+
+.d35e-pacs-settings-master-toggle input[type="checkbox"] {
+  align-self: center;
+  margin: 0;
+  vertical-align: middle;
 }
 
 .d35e-pacs-settings-master-toggle .notes,
